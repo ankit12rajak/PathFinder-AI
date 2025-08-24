@@ -1,214 +1,306 @@
-import { GraduationCap, Calculator, Target, DollarSign, BookOpen, Award } from "lucide-react";
+import { GraduationCap, Calculator, Target, DollarSign, BookOpen, Award, TrendingUp, Star, AlertCircle, CheckCircle2, Clock, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import DashboardLayout from "@/components/DashboardLayout";
 
 const CollegeAdmissionDashboard = () => {
-  const features = [
+  const mainFeatures = [
     {
       title: "College Comparison Tool",
-      description: "Compare colleges based on placements, fees, alumni network, and location preferences",
+      description: "AI-powered college analysis with placement data, fees, and ROI calculations",
       icon: Target,
       color: "from-blue-500/20 to-purple-500/20",
-      action: "Compare Colleges"
+      action: "Compare Colleges",
+      progress: 85,
+      status: "Active"
     },
     {
-      title: "Career vs Interest Matchmaker",
-      description: "AI-powered suggestions for Engineering branches, Medical specialties, Commerce majors, and more",
+      title: "Branch Selection AI",
+      description: "Smart matching for Engineering, Medical, Commerce specialties based on interests",
       icon: GraduationCap,
       color: "from-green-500/20 to-teal-500/20",
-      action: "Find Matches"
+      action: "Find Matches",
+      progress: 70,
+      status: "Popular"
     },
     {
-      title: "ROI Calculator",
-      description: "Analyze cost vs expected opportunities considering time, money, and career stability",
+      title: "ROI Calculator Pro",
+      description: "Advanced cost-benefit analysis with career trajectory predictions",
       icon: Calculator,
       color: "from-orange-500/20 to-red-500/20",
-      action: "Calculate ROI"
+      action: "Calculate ROI",
+      progress: 60,
+      status: "Updated"
     },
     {
-      title: "What If Simulator",
-      description: "Explore different scenarios - Medical vs Engineering vs Commerce career journeys",
-      icon: BookOpen,
-      color: "from-pink-500/20 to-purple-500/20",
-      action: "Run Simulation"
-    },
-    {
-      title: "Scholarship & Funding Guides",
-      description: "Access government scholarships, private funding, and education loan information",
+      title: "Scholarship Finder",
+      description: "Government schemes, private funding, and education loan optimization",
       icon: DollarSign,
-      color: "from-yellow-500/20 to-orange-500/20",
-      action: "Find Funding"
-    },
-    {
-      title: "Admission Strategy",
-      description: "Personalized application strategy based on your profile and target colleges",
-      icon: Award,
-      color: "from-cyan-500/20 to-blue-500/20",
-      action: "Get Strategy"
+      color: "from-purple-500/20 to-pink-500/20",
+      action: "Find Funding",
+      progress: 45,
+      status: "New"
     }
   ];
 
   const collegeShortlist = [
-    { name: "IIT Delhi", branch: "Computer Science", rank: "#1", fees: "₹2.5L/year", placement: "₹25L avg" },
-    { name: "BITS Pilani", branch: "Electronics", rank: "#8", fees: "₹4.5L/year", placement: "₹18L avg" },
-    { name: "IIIT Bangalore", branch: "Information Technology", rank: "#12", fees: "₹3.2L/year", placement: "₹22L avg" },
-    { name: "VIT Vellore", branch: "Computer Science", rank: "#18", fees: "₹2.8L/year", placement: "₹12L avg" }
+    { name: "IIT Delhi", branch: "Computer Science", rank: "#1", fees: "₹2.5L/year", placement: "₹25L avg", roi: "8.5x", status: "applied" },
+    { name: "BITS Pilani", branch: "Electronics", rank: "#8", fees: "₹4.5L/year", placement: "₹18L avg", roi: "5.2x", status: "shortlisted" },
+    { name: "IIIT Bangalore", branch: "Information Technology", rank: "#12", fees: "₹3.2L/year", placement: "₹22L avg", roi: "6.8x", status: "applied" },
+    { name: "VIT Vellore", branch: "Computer Science", rank: "#18", fees: "₹2.8L/year", placement: "₹12L avg", roi: "4.1x", status: "pending" }
+  ];
+
+  const applicationDeadlines = [
+    {
+      title: "IIT JEE Advanced Registration",
+      date: "Dec 30, 2024",
+      timeLeft: "5 days",
+      priority: "high",
+      status: "urgent"
+    },
+    {
+      title: "BITS Admission Form",
+      date: "Jan 10, 2025",
+      timeLeft: "16 days",
+      priority: "medium",
+      status: "upcoming"
+    },
+    {
+      title: "State Counselling",
+      date: "Feb 1, 2025",
+      timeLeft: "38 days",
+      priority: "medium",
+      status: "planned"
+    }
+  ];
+
+  const recentUpdates = [
+    { title: "New Scholarship Available", amount: "₹50K", type: "Merit-based", priority: "high" },
+    { title: "Placement Data Updated", college: "IIIT Hyderabad", change: "+12%", priority: "medium" },
+    { title: "Fee Structure Change", college: "VIT", impact: "Reduced by 8%", priority: "low" }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-orange-500/20 to-red-500/20 flex items-center justify-center">
-              <GraduationCap className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Post-12th Dashboard</h1>
-              <p className="text-muted-foreground">College Admission Stage</p>
-            </div>
-          </div>
-          <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
-            Make informed decisions about your higher education. Compare colleges, evaluate courses, 
-            and ensure you get the best return on your educational investment.
-          </p>
-        </div>
-
-        {/* College Shortlist */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Your College Shortlist</h2>
-          <div className="space-y-4">
-            {collegeShortlist.map((college, index) => (
-              <Card key={index} className="feature-card">
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                    <div>
-                      <div className="font-semibold text-lg">{college.name}</div>
-                      <div className="text-muted-foreground">{college.branch}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">NIRF Rank</div>
-                      <div className="font-semibold">{college.rank}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">Annual Fees</div>
-                      <div className="font-semibold">{college.fees}</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-muted-foreground">Avg Package</div>
-                      <div className="font-semibold text-green-500">{college.placement}</div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">Compare</Button>
-                      <Button size="sm" className="btn-secondary">Details</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <Card className="feature-card">
-            <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-primary mb-2">18</div>
-              <div className="text-sm text-muted-foreground">Colleges Compared</div>
-            </CardContent>
-          </Card>
-          <Card className="feature-card">
-            <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-secondary mb-2">₹45L</div>
-              <div className="text-sm text-muted-foreground">Scholarships Found</div>
-            </CardContent>
-          </Card>
-          <Card className="feature-card">
-            <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-accent mb-2">12</div>
-              <div className="text-sm text-muted-foreground">Applications Tracked</div>
-            </CardContent>
-          </Card>
-          <Card className="feature-card">
-            <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-primary mb-2">4.2x</div>
-              <div className="text-sm text-muted-foreground">Best ROI Found</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {features.map((feature, index) => {
-            const IconComponent = feature.icon;
-            return (
-              <Card key={index} className="feature-card group">
-                <CardHeader>
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                    <IconComponent className="w-6 h-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                  <CardDescription className="text-muted-foreground">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full btn-secondary">
-                    {feature.action}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Application Status */}
-        <div>
-          <Card className="feature-card">
-            <CardHeader>
-              <CardTitle className="text-xl">Application Status Tracker</CardTitle>
-              <CardDescription>Keep track of your college applications and deadlines</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-green-500/5 border border-green-500/20">
-                  <div>
-                    <div className="font-medium">IIT Delhi - Computer Science</div>
-                    <div className="text-sm text-muted-foreground">Application submitted successfully</div>
-                  </div>
-                  <div className="text-sm font-medium text-green-500">Submitted</div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 rounded-lg bg-yellow-500/5 border border-yellow-500/20">
-                  <div>
-                    <div className="font-medium">BITS Pilani - Electronics</div>
-                    <div className="text-sm text-muted-foreground">Documents under review</div>
-                  </div>
-                  <div className="text-sm font-medium text-yellow-600">In Review</div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                  <div>
-                    <div className="font-medium">IIIT Bangalore - IT</div>
-                    <div className="text-sm text-muted-foreground">Application in progress</div>
-                  </div>
-                  <div className="text-sm font-medium text-blue-500">In Progress</div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 rounded-lg bg-red-500/5 border border-red-500/20">
-                  <div>
-                    <div className="font-medium">VIT Vellore - Computer Science</div>
-                    <div className="text-sm text-muted-foreground">Deadline approaching</div>
-                  </div>
-                  <div className="text-sm font-medium text-red-500">2 days left</div>
-                </div>
+    <DashboardLayout 
+      title="College Admission Hub" 
+      description="Strategic guidance for your higher education journey"
+    >
+      <div className="p-6 space-y-8">
+        {/* Performance Overview */}
+        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6 border border-primary/20">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+                <GraduationCap className="w-8 h-8 text-white" />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <h2 className="text-2xl font-bold">Your Admission Dashboard 🎯</h2>
+                <p className="text-muted-foreground">Smart college selection and application tracking</p>
+              </div>
+            </div>
+            <Badge className="bg-primary/20 text-primary">
+              4 Active Applications
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">18</div>
+              <div className="text-sm text-muted-foreground">Colleges Analyzed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-secondary">₹45L</div>
+              <div className="text-sm text-muted-foreground">Scholarships Found</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-accent">8.5x</div>
+              <div className="text-sm text-muted-foreground">Best ROI Option</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">85%</div>
+              <div className="text-sm text-muted-foreground">Profile Match Score</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* College Shortlist */}
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Your Shortlisted Colleges</h3>
+              <div className="space-y-4">
+                {collegeShortlist.map((college, index) => (
+                  <Card key={index} className="feature-card">
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+                        <div>
+                          <div className="font-semibold text-lg">{college.name}</div>
+                          <div className="text-muted-foreground text-sm">{college.branch}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">NIRF Rank</div>
+                          <div className="font-semibold">{college.rank}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">Annual Fees</div>
+                          <div className="font-semibold">{college.fees}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">Avg Package</div>
+                          <div className="font-semibold text-primary">{college.placement}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">ROI</div>
+                          <div className="font-semibold text-secondary">{college.roi}</div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Badge variant={college.status === 'applied' ? 'default' : college.status === 'shortlisted' ? 'secondary' : 'outline'} className="text-xs">
+                            {college.status}
+                          </Badge>
+                          <Button size="sm" className="btn-secondary">Details</Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Strategic Tools */}
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Strategic Tools</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                {mainFeatures.map((feature, index) => {
+                  const IconComponent = feature.icon;
+                  return (
+                    <Card key={index} className="feature-card group hover:shadow-lg transition-all duration-300">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                            <IconComponent className="w-6 h-6 text-primary" />
+                          </div>
+                          <Badge variant={feature.status === "Active" ? "default" : feature.status === "Popular" ? "secondary" : "outline"}>
+                            {feature.status}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-lg">{feature.title}</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm">
+                          {feature.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-sm">
+                            <span>Usage</span>
+                            <span>{feature.progress}%</span>
+                          </div>
+                          <Progress value={feature.progress} className="h-2" />
+                          <Button className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                            {feature.action}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Critical Deadlines */}
+            <Card className="feature-card">
+              <CardHeader>
+                <CardTitle className="flex items-center text-red-500">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Critical Deadlines
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {applicationDeadlines.map((deadline, index) => (
+                    <div key={index} className={`p-3 rounded-lg border ${
+                      deadline.priority === 'high' ? 'bg-red-500/10 border-red-500/30' :
+                      'bg-yellow-500/10 border-yellow-500/30'
+                    }`}>
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-medium text-sm">{deadline.title}</p>
+                        <Badge 
+                          variant={deadline.priority === 'high' ? 'destructive' : 'outline'}
+                          className="text-xs"
+                        >
+                          {deadline.timeLeft}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{deadline.date}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Updates */}
+            <Card className="feature-card">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <TrendingUp className="w-5 h-5 mr-2" />
+                  Recent Updates
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {recentUpdates.map((update, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Star className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{update.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {update.amount && `Worth: ${update.amount}`}
+                          {update.college && `${update.college}: ${update.change}`}
+                          {update.impact && `${update.college}: ${update.impact}`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card className="feature-card">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CheckCircle2 className="w-5 h-5 mr-2" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Button className="w-full btn-secondary text-left justify-start">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Schedule Counselor Call
+                  </Button>
+                  <Button className="w-full btn-secondary text-left justify-start">
+                    <Trophy className="w-4 h-4 mr-2" />
+                    Check Scholarship Status
+                  </Button>
+                  <Button className="w-full btn-secondary text-left justify-start">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Download Brochures
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
