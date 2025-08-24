@@ -18,27 +18,30 @@ const DashboardLayout = ({ children, title, description }: DashboardLayoutProps)
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
-      setIsAuthenticated(true);
-    };
+    // TEMPORARILY DISABLED FOR TESTING - Skip authentication check
+    setIsAuthenticated(true);
+    
+    // const checkAuth = async () => {
+    //   const { data: { session } } = await supabase.auth.getSession();
+    //   if (!session) {
+    //     navigate('/auth');
+    //     return;
+    //   }
+    //   setIsAuthenticated(true);
+    // };
 
-    checkAuth();
+    // checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate('/auth');
-        setIsAuthenticated(false);
-      } else {
-        setIsAuthenticated(true);
-      }
-    });
+    // const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    //   if (!session) {
+    //     navigate('/auth');
+    //     setIsAuthenticated(false);
+    //   } else {
+    //     setIsAuthenticated(true);
+    //   }
+    // });
 
-    return () => subscription.unsubscribe();
+    // return () => subscription.unsubscribe();
   }, [navigate]);
 
   if (isAuthenticated === null) {

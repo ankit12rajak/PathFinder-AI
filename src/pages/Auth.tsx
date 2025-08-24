@@ -38,21 +38,22 @@ const Auth = () => {
   ];
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('class_level')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (profile) {
-          redirectToDashboard(profile.class_level);
-        }
-      }
-    };
-    checkUser();
+    // TEMPORARILY DISABLED FOR TESTING
+    // const checkUser = async () => {
+    //   const { data: { session } } = await supabase.auth.getSession();
+    //   if (session) {
+    //     const { data: profile } = await supabase
+    //       .from('profiles')
+    //       .select('class_level')
+    //       .eq('user_id', session.user.id)
+    //       .single();
+    //     
+    //     if (profile) {
+    //       redirectToDashboard(profile.class_level);
+    //     }
+    //   }
+    // };
+    // checkUser();
   }, []);
 
   const redirectToDashboard = (classLevel: string) => {
@@ -79,29 +80,24 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginForm.email,
-        password: loginForm.password,
+      // TEMPORARILY DISABLED FOR TESTING - Skip Supabase authentication
+      // const { data, error } = await supabase.auth.signInWithPassword({
+      //   email: loginForm.email,
+      //   password: loginForm.password,
+      // });
+
+      // if (error) throw error;
+
+      // Simulate loading delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // For testing, redirect to early-stage dashboard by default
+      redirectToDashboard('8-10');
+      
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in. (Testing Mode)",
       });
-
-      if (error) throw error;
-
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('class_level')
-          .eq('user_id', data.user.id)
-          .single();
-        
-        if (profile) {
-          redirectToDashboard(profile.class_level);
-        }
-        
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        });
-      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -137,40 +133,43 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: signupForm.email,
-        password: signupForm.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: signupForm.fullName,
-          }
-        }
+      // TEMPORARILY DISABLED FOR TESTING - Skip Supabase authentication
+      // const { data, error } = await supabase.auth.signUp({
+      //   email: signupForm.email,
+      //   password: signupForm.password,
+      //   options: {
+      //     emailRedirectTo: `${window.location.origin}/`,
+      //     data: {
+      //       full_name: signupForm.fullName,
+      //     }
+      //   }
+      // });
+
+      // if (error) throw error;
+
+      // if (data.user) {
+      //   // Update profile with additional information
+      //   const { error: profileError } = await supabase
+      //     .from('profiles')
+      //     .update({
+      //       full_name: signupForm.fullName,
+      //       class_level: signupForm.classLevel,
+      //       interests: signupForm.interests,
+      //       career_goals: signupForm.careerGoals
+      //     })
+      //     .eq('user_id', data.user.id);
+
+      //   if (profileError) throw profileError;
+
+      // Simulate loading delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      redirectToDashboard(signupForm.classLevel);
+      
+      toast({
+        title: "Account created!",
+        description: "Welcome to SkillAdvisor. Your personalized dashboard is ready. (Testing Mode)",
       });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // Update profile with additional information
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            full_name: signupForm.fullName,
-            class_level: signupForm.classLevel,
-            interests: signupForm.interests,
-            career_goals: signupForm.careerGoals
-          })
-          .eq('user_id', data.user.id);
-
-        if (profileError) throw profileError;
-
-        redirectToDashboard(signupForm.classLevel);
-        
-        toast({
-          title: "Account created!",
-          description: "Welcome to SkillAdvisor. Your personalized dashboard is ready.",
-        });
-      }
     } catch (error: any) {
       toast({
         title: "Error",
