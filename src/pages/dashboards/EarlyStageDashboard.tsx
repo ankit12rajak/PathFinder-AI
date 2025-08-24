@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const EarlyStageDashboard = () => {
+  const navigate = useNavigate();
+
   const features = [
     {
       title: "Aptitude Assessment",
@@ -14,7 +17,8 @@ const EarlyStageDashboard = () => {
       color: "from-blue-500/20 to-purple-500/20",
       action: "Take Assessment",
       progress: 75,
-      status: "In Progress"
+      status: "In Progress",
+      path: "/dashboard/early-stage/aptitude"
     },
     {
       title: "Career Explorer",
@@ -23,7 +27,8 @@ const EarlyStageDashboard = () => {
       color: "from-green-500/20 to-teal-500/20",
       action: "Start Exploring",
       progress: 40,
-      status: "Started"
+      status: "Started",
+      path: "/dashboard/early-stage/careers"
     },
     {
       title: "Skill Building Games",
@@ -32,7 +37,8 @@ const EarlyStageDashboard = () => {
       color: "from-orange-500/20 to-red-500/20",
       action: "Play Now",
       progress: 90,
-      status: "Expert"
+      status: "Expert",
+      path: "/dashboard/early-stage/games"
     },
     {
       title: "Study Smart Program",
@@ -41,7 +47,8 @@ const EarlyStageDashboard = () => {
       color: "from-pink-500/20 to-purple-500/20",
       action: "Learn Techniques",
       progress: 25,
-      status: "New"
+      status: "New",
+      path: "/dashboard/early-stage/study"
     }
   ];
 
@@ -137,7 +144,10 @@ const EarlyStageDashboard = () => {
                             <span>{feature.progress}%</span>
                           </div>
                           <Progress value={feature.progress} className="h-2" />
-                          <Button className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <Button 
+                            className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                            onClick={() => navigate(feature.path)}
+                          >
                             <PlayCircle className="w-4 h-4 mr-2" />
                             {feature.action}
                           </Button>

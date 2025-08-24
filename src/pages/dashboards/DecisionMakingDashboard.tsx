@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const DecisionMakingDashboard = () => {
+  const navigate = useNavigate();
+
   const mainFeatures = [
     {
       title: "Career Pathway Analysis",
@@ -14,7 +17,8 @@ const DecisionMakingDashboard = () => {
       color: "from-blue-500/20 to-purple-500/20",
       action: "Analyze Paths",
       progress: 85,
-      status: "Active"
+      status: "Active",
+      path: "/dashboard/decision-making/pathways"
     },
     {
       title: "Exam Preparation Hub",
@@ -23,16 +27,28 @@ const DecisionMakingDashboard = () => {
       color: "from-green-500/20 to-teal-500/20",
       action: "Start Prep",
       progress: 60,
-      status: "In Progress"
+      status: "In Progress",
+      path: "/dashboard/decision-making/exams"
     },
     {
-      title: "College Comparison Tool",
+      title: "College Insights",
       description: "Detailed analysis of colleges, branches, placements, and ROI calculations",
       icon: Calculator,
       color: "from-purple-500/20 to-pink-500/20",
-      action: "Compare Now",
-      progress: 40,
-      status: "New"
+      action: "Explore Colleges",
+      progress: 70,
+      status: "New",
+      path: "/dashboard/decision-making/college-insights"
+    },
+    {
+      title: "Alternative Careers",
+      description: "Explore unconventional career paths and emerging opportunities",
+      icon: Brain,
+      color: "from-indigo-500/20 to-blue-500/20",
+      action: "Discover Paths",
+      progress: 45,
+      status: "Trending",
+      path: "/dashboard/decision-making/alternative-careers"
     },
     {
       title: "Mentor Network",
@@ -41,7 +57,28 @@ const DecisionMakingDashboard = () => {
       color: "from-orange-500/20 to-red-500/20",
       action: "Find Mentors",
       progress: 75,
-      status: "Popular"
+      status: "Popular",
+      path: "/dashboard/decision-making/mentors"
+    },
+    {
+      title: "Mock Tests",
+      description: "Practice with comprehensive mock tests and improve your performance",
+      icon: Trophy,
+      color: "from-yellow-500/20 to-orange-500/20",
+      action: "Take Tests",
+      progress: 88,
+      status: "Active",
+      path: "/dashboard/decision-making/mock-tests"
+    },
+    {
+      title: "Progress Analytics",
+      description: "Track your learning journey with detailed insights and recommendations",
+      icon: TrendingUp,
+      color: "from-teal-500/20 to-green-500/20",
+      action: "View Analytics",
+      progress: 92,
+      status: "Updated",
+      path: "/dashboard/decision-making/analytics"
     }
   ];
 
@@ -193,7 +230,10 @@ const DecisionMakingDashboard = () => {
                             <span>{feature.progress}%</span>
                           </div>
                           <Progress value={feature.progress} className="h-2" />
-                          <Button className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <Button 
+                            className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                            onClick={() => navigate(feature.path)}
+                          >
                             {feature.action}
                           </Button>
                         </div>

@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const CollegeAdmissionDashboard = () => {
+  const navigate = useNavigate();
+
   const mainFeatures = [
     {
       title: "College Comparison Tool",
@@ -14,7 +17,8 @@ const CollegeAdmissionDashboard = () => {
       color: "from-blue-500/20 to-purple-500/20",
       action: "Compare Colleges",
       progress: 85,
-      status: "Active"
+      status: "Active",
+      path: "/dashboard/college-admission/compare"
     },
     {
       title: "Branch Selection AI",
@@ -23,7 +27,8 @@ const CollegeAdmissionDashboard = () => {
       color: "from-green-500/20 to-teal-500/20",
       action: "Find Matches",
       progress: 70,
-      status: "Popular"
+      status: "Popular",
+      path: "/dashboard/college-admission/matcher"
     },
     {
       title: "ROI Calculator Pro",
@@ -32,7 +37,8 @@ const CollegeAdmissionDashboard = () => {
       color: "from-orange-500/20 to-red-500/20",
       action: "Calculate ROI",
       progress: 60,
-      status: "Updated"
+      status: "Updated",
+      path: "/dashboard/college-admission/roi"
     },
     {
       title: "Scholarship Finder",
@@ -41,7 +47,8 @@ const CollegeAdmissionDashboard = () => {
       color: "from-purple-500/20 to-pink-500/20",
       action: "Find Funding",
       progress: 45,
-      status: "New"
+      status: "New",
+      path: "/dashboard/college-admission/scholarships"
     }
   ];
 
@@ -198,7 +205,10 @@ const CollegeAdmissionDashboard = () => {
                             <span>{feature.progress}%</span>
                           </div>
                           <Progress value={feature.progress} className="h-2" />
-                          <Button className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <Button 
+                            className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                            onClick={() => navigate(feature.path)}
+                          >
                             {feature.action}
                           </Button>
                         </div>

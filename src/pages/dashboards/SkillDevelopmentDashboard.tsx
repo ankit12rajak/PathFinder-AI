@@ -1,47 +1,80 @@
-import { Briefcase, TrendingUp, Target, Users, BookOpen, Award, Code, Brain, Star, PlayCircle, Calendar, Trophy, CheckCircle2, AlertCircle } from "lucide-react";
+import { Briefcase, TrendingUp, Target, Users, BookOpen, Award, Code, Brain, Star, PlayCircle, Calendar, Trophy, CheckCircle2, AlertCircle, Monitor, Zap, MessageSquare, FileText, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const SkillDevelopmentDashboard = () => {
+  const navigate = useNavigate();
+
   const mainFeatures = [
     {
-      title: "AI Skill Gap Analyzer",
-      description: "Smart analysis of your profile vs industry requirements with personalized roadmaps",
-      icon: Brain,
-      color: "from-blue-500/20 to-purple-500/20",
-      action: "Analyze Skills",
-      progress: 85,
-      status: "Active"
-    },
-    {
-      title: "Learning Path Engine",
-      description: "Adaptive learning tracks for Web Dev, AI/ML, Data Science, and emerging technologies",
+      title: "Learning Paths",
+      description: "AI-powered personalized learning journeys with industry-relevant curricula and hands-on projects",
       icon: BookOpen,
-      color: "from-green-500/20 to-teal-500/20",
+      color: "from-blue-500/20 to-purple-500/20",
       action: "Start Learning",
-      progress: 70,
-      status: "Popular"
+      progress: 75,
+      status: "Active",
+      path: "/dashboard/skill-development/learning-paths",
+      features: ["Adaptive Learning", "AI Mentor", "Real Projects", "Certifications"]
     },
     {
-      title: "Project-Based Learning",
-      description: "Real-world projects with mentorship and industry collaboration opportunities",
+      title: "Industry Trends",
+      description: "AI-powered insights into emerging skills, market demands, and salary trends in your field",
+      icon: TrendingUp,
+      color: "from-green-500/20 to-teal-500/20",
+      action: "View Trends",
+      progress: 82,
+      status: "Updated",
+      path: "/dashboard/skill-development/industry-trends",
+      features: ["Market Analysis", "Skill Demand", "Salary Insights", "Future Outlook"]
+    },
+    {
+      title: "Projects & Internships",
+      description: "Real-world opportunities to build your portfolio with mentorship and industry connections",
       icon: Code,
       color: "from-orange-500/20 to-red-500/20",
-      action: "Find Projects",
-      progress: 60,
-      status: "Updated"
+      action: "Find Opportunities",
+      progress: 68,
+      status: "Popular",
+      path: "/dashboard/skill-development/projects-internships",
+      features: ["Live Projects", "Mentorship", "Industry Connect", "Portfolio Building"]
     },
     {
-      title: "Placement Accelerator",
-      description: "Complete placement preparation with resume optimization and mock interviews",
-      icon: Award,
+      title: "Skill Training",
+      description: "Comprehensive training programs with AI-powered practice environments and assessments",
+      icon: Monitor,
       color: "from-purple-500/20 to-pink-500/20",
+      action: "Start Training",
+      progress: 60,
+      status: "Enhanced",
+      path: "/dashboard/skill-development/skill-training",
+      features: ["Interactive Labs", "AI Feedback", "Practice Tests", "Skill Badges"]
+    },
+    {
+      title: "Interview Prep",
+      description: "AI-powered interview preparation with mock interviews, real-time feedback, and coaching",
+      icon: MessageSquare,
+      color: "from-indigo-500/20 to-blue-500/20",
+      action: "Start Practice",
+      progress: 55,
+      status: "AI Powered",
+      path: "/dashboard/skill-development/interview-prep",
+      features: ["Mock Interviews", "AI Coach", "Real-time Feedback", "Performance Analytics"]
+    },
+    {
+      title: "Placement Kit",
+      description: "Complete placement toolkit with ATS-optimized resumes, job matching, and application tracking",
+      icon: Briefcase,
+      color: "from-emerald-500/20 to-green-500/20",
       action: "Get Ready",
       progress: 45,
-      status: "New"
+      status: "ATS Ready",
+      path: "/dashboard/skill-development/placement-kit",
+      features: ["ATS Scanning", "Resume Builder", "Job Matching", "Application Tracker"]
     }
   ];
 
@@ -211,7 +244,10 @@ const SkillDevelopmentDashboard = () => {
                             <span>{feature.progress}%</span>
                           </div>
                           <Progress value={feature.progress} className="h-2" />
-                          <Button className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <Button 
+                            className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                            onClick={() => navigate(feature.path)}
+                          >
                             {feature.action}
                           </Button>
                         </div>
