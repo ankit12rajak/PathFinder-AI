@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { Target, BookOpen, Users, Calculator, Award, TrendingUp, Brain, Calendar, Clock, AlertCircle, CheckCircle, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -89,29 +90,62 @@ const DecisionMakingDashboard = () => {
     { exam: "CLAT", progress: 45, color: "bg-orange-500", nextTest: "Legal Reasoning", rank: "National: 5,670" }
   ];
 
-  const upcomingDeadlines = [
-    {
-      title: "JEE Main Registration",
-      date: "Dec 28, 2024",
-      timeLeft: "3 days",
-      priority: "high",
-      status: "urgent"
-    },
-    {
-      title: "NEET Application",
-      date: "Jan 15, 2025",
-      timeLeft: "21 days",
-      priority: "medium",
-      status: "upcoming"
-    },
-    {
-      title: "College Counselling",
-      date: "Feb 5, 2025",
-      timeLeft: "42 days",
-      priority: "low",
-      status: "planned"
-    }
-  ];
+  // --- Real-time deadlines state ---
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
+  const [loadingDeadlines, setLoadingDeadlines] = useState(true);
+
+  useEffect(() => {
+    // Fetch deadlines from backend API
+    fetch("http://localhost:3001/api/deadlines")
+      .then((res) => res.json())
+      .then((data) => {
+        // Calculate time left for each deadline
+        const today = new Date();
+        const formatted = data.map((item) => {
+          const deadlineDate = new Date(item.date);
+          const diffTime = deadlineDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          let priority = "low";
+          if (diffDays <= 7) priority = "high";
+          else if (diffDays <= 21) priority = "medium";
+          return {
+            title: item.name,
+            date: deadlineDate.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+            timeLeft: diffDays > 0 ? `${diffDays} days` : "Today",
+            priority,
+            status: diffDays <= 0 ? "urgent" : "upcoming"
+          };
+        });
+        setUpcomingDeadlines(formatted);
+        setLoadingDeadlines(false);
+      })
+      .catch(() => setLoadingDeadlines(false));
+    // Optionally, refresh every day
+    const interval = setInterval(() => {
+      fetch("http://localhost:3001/api/deadlines")
+        .then((res) => res.json())
+        .then((data) => {
+          const today = new Date();
+          const formatted = data.map((item) => {
+            const deadlineDate = new Date(item.date);
+            const diffTime = deadlineDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            let priority = "low";
+            if (diffDays <= 7) priority = "high";
+            else if (diffDays <= 21) priority = "medium";
+            return {
+              title: item.name,
+              date: deadlineDate.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+              timeLeft: diffDays > 0 ? `${diffDays} days` : "Today",
+              priority,
+              status: diffDays <= 0 ? "urgent" : "upcoming"
+            };
+          });
+          setUpcomingDeadlines(formatted);
+        });
+    }, 24 * 60 * 60 * 1000); // 24 hours
+    return () => clearInterval(interval);
+  }, []);
 
   const recentAchievements = [
     { title: "Mock Test Champion", score: "95%", subject: "Physics", icon: Trophy },
@@ -257,24 +291,30 @@ const DecisionMakingDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {upcomingDeadlines.map((deadline, index) => (
-                    <div key={index} className={`p-3 rounded-lg border ${
-                      deadline.priority === 'high' ? 'bg-red-500/10 border-red-500/30' :
-                      deadline.priority === 'medium' ? 'bg-yellow-500/10 border-yellow-500/30' :
-                      'bg-blue-500/10 border-blue-500/30'
-                    }`}>
-                      <div className="flex justify-between items-start mb-1">
-                        <p className="font-medium text-sm">{deadline.title}</p>
-                        <Badge 
-                          variant={deadline.priority === 'high' ? 'destructive' : 'outline'}
-                          className="text-xs"
-                        >
-                          {deadline.timeLeft}
-                        </Badge>
+                  {loadingDeadlines ? (
+                    <div>Loading deadlines...</div>
+                  ) : upcomingDeadlines.length === 0 ? (
+                    <div>No upcoming deadlines found.</div>
+                  ) : (
+                    upcomingDeadlines.map((deadline, index) => (
+                      <div key={index} className={`p-3 rounded-lg border ${
+                        deadline.priority === 'high' ? 'bg-red-500/10 border-red-500/30' :
+                        deadline.priority === 'medium' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                        'bg-blue-500/10 border-blue-500/30'
+                      }`}>
+                        <div className="flex justify-between items-start mb-1">
+                          <p className="font-medium text-sm">{deadline.title}</p>
+                          <Badge 
+                            variant={deadline.priority === 'high' ? 'destructive' : 'outline'}
+                            className="text-xs"
+                          >
+                            {deadline.timeLeft}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{deadline.date}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">{deadline.date}</p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
