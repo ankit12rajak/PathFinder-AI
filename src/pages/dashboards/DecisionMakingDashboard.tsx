@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Target, BookOpen, Users, Calculator, Award, TrendingUp, Brain, Calendar, Clock, AlertCircle, CheckCircle, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
+// Animation library
+import { motion, AnimatePresence } from "framer-motion";
 
 const DecisionMakingDashboard = () => {
   const navigate = useNavigate();
+  const [deadlines, setDeadlines] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const mainFeatures = [
     {
@@ -91,60 +95,39 @@ const DecisionMakingDashboard = () => {
   ];
 
   // --- Real-time deadlines state ---
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
-  const [loadingDeadlines, setLoadingDeadlines] = useState(true);
-
   useEffect(() => {
     // Fetch deadlines from backend API
     fetch("http://localhost:3001/api/deadlines")
       .then((res) => res.json())
       .then((data) => {
-        // Calculate time left for each deadline
         const today = new Date();
         const formatted = data.map((item) => {
           const deadlineDate = new Date(item.date);
           const diffTime = deadlineDate.getTime() - today.getTime();
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          let priority = "low";
-          if (diffDays <= 7) priority = "high";
-          else if (diffDays <= 21) priority = "medium";
+          let status = "upcoming";
+          if (diffDays < 0) status = "expired";
+          else if (diffDays === 0) status = "today";
           return {
-            title: item.name,
-            date: deadlineDate.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
-            timeLeft: diffDays > 0 ? `${diffDays} days` : "Today",
-            priority,
-            status: diffDays <= 0 ? "urgent" : "upcoming"
+            ...item,
+            status,
+            timeLeft:
+              status === "expired"
+                ? "Expired"
+                : status === "today"
+                ? "Today"
+                : `${diffDays} days left`,
+            formattedDate: deadlineDate.toLocaleDateString("en-IN", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }),
           };
         });
-        setUpcomingDeadlines(formatted);
-        setLoadingDeadlines(false);
+        setDeadlines(formatted);
+        setLoading(false);
       })
-      .catch(() => setLoadingDeadlines(false));
-    // Optionally, refresh every day
-    const interval = setInterval(() => {
-      fetch("http://localhost:3001/api/deadlines")
-        .then((res) => res.json())
-        .then((data) => {
-          const today = new Date();
-          const formatted = data.map((item) => {
-            const deadlineDate = new Date(item.date);
-            const diffTime = deadlineDate.getTime() - today.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            let priority = "low";
-            if (diffDays <= 7) priority = "high";
-            else if (diffDays <= 21) priority = "medium";
-            return {
-              title: item.name,
-              date: deadlineDate.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
-              timeLeft: diffDays > 0 ? `${diffDays} days` : "Today",
-              priority,
-              status: diffDays <= 0 ? "urgent" : "upcoming"
-            };
-          });
-          setUpcomingDeadlines(formatted);
-        });
-    }, 24 * 60 * 60 * 1000); // 24 hours
-    return () => clearInterval(interval);
+      .catch(() => setLoading(false));
   }, []);
 
   const recentAchievements = [
@@ -291,29 +274,112 @@ const DecisionMakingDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {loadingDeadlines ? (
-                    <div>Loading deadlines...</div>
-                  ) : upcomingDeadlines.length === 0 ? (
-                    <div>No upcoming deadlines found.</div>
+                  {loading ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      style={{ marginTop: "2rem", fontSize: "1.2rem" }}
+                    >
+                      Loading deadlines...
+                    </motion.div>
+                  ) : deadlines.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      style={{ marginTop: "2rem", fontSize: "1.2rem" }}
+                    >
+                      No deadlines found.
+                    </motion.div>
                   ) : (
-                    upcomingDeadlines.map((deadline, index) => (
-                      <div key={index} className={`p-3 rounded-lg border ${
-                        deadline.priority === 'high' ? 'bg-red-500/10 border-red-500/30' :
-                        deadline.priority === 'medium' ? 'bg-yellow-500/10 border-yellow-500/30' :
-                        'bg-blue-500/10 border-blue-500/30'
-                      }`}>
-                        <div className="flex justify-between items-start mb-1">
-                          <p className="font-medium text-sm">{deadline.title}</p>
-                          <Badge 
-                            variant={deadline.priority === 'high' ? 'destructive' : 'outline'}
-                            className="text-xs"
+                    <ul style={{ marginTop: "1rem", listStyle: "none", padding: 0 }}>
+                      <AnimatePresence>
+                        {deadlines.map((dl, idx) => (
+                          <motion.li
+                            key={idx}
+                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                            transition={{ duration: 0.5, type: "spring" }}
+                            style={{
+                              marginBottom: "1.5rem",
+                              padding: "1.2rem",
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                              background:
+                                dl.status === "expired"
+                                  ? "linear-gradient(90deg, #f3f4f6 60%, #fee2e2 100%)"
+                                  : dl.status === "today"
+                                  ? "linear-gradient(90deg, #fef3c7 60%, #fde68a 100%)"
+                                  : "linear-gradient(90deg, #e0f2fe 60%, #bae6fd 100%)",
+                              color: dl.status === "expired" ? "#ef4444" : "#0f172a",
+                              border:
+                                dl.status === "expired"
+                                  ? "2px solid #ef4444"
+                                  : "2px solid #38bdf8",
+                              position: "relative",
+                              overflow: "hidden",
+                            }}
+                            whileHover={{ scale: 1.03, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
                           >
-                            {deadline.timeLeft}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{deadline.date}</p>
-                      </div>
-                    ))
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: "100%" }}
+                              transition={{ duration: 1, delay: 0.2 }}
+                              style={{
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                height: "100%",
+                                background:
+                                  dl.status === "expired"
+                                    ? "rgba(239,68,68,0.08)"
+                                    : dl.status === "today"
+                                    ? "rgba(253,224,71,0.10)"
+                                    : "rgba(59,130,246,0.07)",
+                                zIndex: 0,
+                              }}
+                            />
+                            <div style={{ position: "relative", zIndex: 1 }}>
+                              <strong style={{ fontSize: "1.1rem" }}>{dl.name}</strong>
+                              <br />
+                              <span style={{ fontSize: "0.95rem" }}>{dl.formattedDate}</span>
+                              <br />
+                              <motion.span
+                                initial={{ scale: 0.8 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.4 }}
+                                style={{
+                                  fontWeight: "bold",
+                                  fontSize: "1rem",
+                                  color:
+                                    dl.status === "expired"
+                                      ? "#ef4444"
+                                      : dl.status === "today"
+                                      ? "#f59e42"
+                                      : "#2563eb",
+                                  background:
+                                    dl.status === "expired"
+                                      ? "#fee2e2"
+                                      : dl.status === "today"
+                                      ? "#fef3c7"
+                                      : "#e0f2fe",
+                                  borderRadius: "6px",
+                                  padding: "0.2rem 0.7rem",
+                                  marginTop: "0.5rem",
+                                  display: "inline-block",
+                                }}
+                              >
+                                {dl.status === "expired"
+                                  ? "Expired"
+                                  : dl.status === "today"
+                                  ? "Today"
+                                  : dl.timeLeft}
+                              </motion.span>
+                            </div>
+                          </motion.li>
+                        ))}
+                      </AnimatePresence>
+                    </ul>
                   )}
                 </div>
               </CardContent>

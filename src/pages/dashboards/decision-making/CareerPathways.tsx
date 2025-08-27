@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/DashboardLayout";
+import FlowchartDisplay from "@/components/FlowchartDisplay"; // Import the new component
 
 const CareerPathways = () => {
   const [selectedPathway, setSelectedPathway] = useState<string | null>(null);
+  const [showFlowchart, setShowFlowchart] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview"); // New state for active tab
 
   const pathways = [
     {
@@ -39,7 +42,16 @@ const CareerPathways = () => {
         { name: "Mechanical", demand: 75, salary: "₹5-18 LPA" },
         { name: "Civil", demand: 70, salary: "₹4-15 LPA" }
       ],
-      exams: ["JEE Main", "JEE Advanced", "State CETs", "BITSAT"]
+      exams: ["JEE Main", "JEE Advanced", "State CETs", "BITSAT"],
+      flowchart: {
+        title: "Engineering Course Flowchart",
+        steps: [
+          { name: "10+2 Science (PCM)", description: "Physics, Chemistry, Mathematics" },
+          { name: "Entrance Exams", description: "JEE Main, JEE Advanced, BITSAT, State CETs" },
+          { name: "B.Tech/B.E. (4 years)", description: "Specializations: Computer Science, Mechanical, Civil, Electrical, Electronics, etc." },
+          { name: "Further Studies/Career", description: "M.Tech/M.S., MBA, Software Engineer, Data Scientist, Core Engineer, Consultant" }
+        ]
+      }
     },
     {
       id: "medical",
@@ -69,7 +81,17 @@ const CareerPathways = () => {
         { name: "Pharmacy", demand: 80, salary: "₹4-15 LPA" },
         { name: "Nursing", demand: 85, salary: "₹3-12 LPA" }
       ],
-      exams: ["NEET UG", "NEET PG", "AIIMS", "JIPMER"]
+      exams: ["NEET UG", "NEET PG", "AIIMS", "JIPMER"],
+      flowchart: {
+        title: "Medical Course Flowchart",
+        steps: [
+          { name: "10+2 Science (PCB)", description: "Physics, Chemistry, Biology" },
+          { name: "Entrance Exams", description: "NEET UG, AIIMS, JIPMER" },
+          { name: "MBBS/BDS (5.5 years)", description: "Bachelor of Medicine, Bachelor of Surgery / Bachelor of Dental Surgery" },
+          { name: "Internship (1 year)", description: "Compulsory practical training" },
+          { name: "PG/Specialization", description: "MD/MS (3 years), DM/M.Ch (3 years), General Physician, Surgeon, Specialist" }
+        ]
+      }
     },
     {
       id: "commerce",
@@ -99,7 +121,16 @@ const CareerPathways = () => {
         { name: "Banking", demand: 75, salary: "₹4-15 LPA" },
         { name: "Economics", demand: 70, salary: "₹5-18 LPA" }
       ],
-      exams: ["CA Foundation", "CUET", "CAT", "Banking Exams"]
+      exams: ["CA Foundation", "CUET", "CAT", "Banking Exams"],
+      flowchart: {
+        title: "Commerce & Business Course Flowchart",
+        steps: [
+          { name: "10+2 Commerce/Any Stream", description: "Commerce, Arts, Science" },
+          { name: "Undergraduate Degree (3 years)", description: "B.Com, BBA, BA Economics, BMS" },
+          { name: "Professional Courses/PG", description: "CA, CS, CMA, MBA, M.Com, Actuarial Science" },
+          { name: "Career", description: "Accountant, Financial Analyst, Marketing Manager, HR Manager, Entrepreneur" }
+        ]
+      }
     },
     {
       id: "law",
@@ -129,7 +160,16 @@ const CareerPathways = () => {
         { name: "Civil Law", demand: 70, salary: "₹4-18 LPA" },
         { name: "Constitutional Law", demand: 65, salary: "₹6-25 LPA" }
       ],
-      exams: ["CLAT", "AILET", "LSAT India", "State Law Entrance"]
+      exams: ["CLAT", "AILET", "LSAT India", "State Law Entrance"],
+      flowchart: {
+        title: "Law Course Flowchart",
+        steps: [
+          { name: "10+2 Any Stream", description: "Arts, Commerce, Science" },
+          { name: "Entrance Exams", description: "CLAT, AILET, LSAT India, State Law Entrance" },
+          { name: "Integrated Law Degree (5 years)", description: "BA LLB, BBA LLB, B.Sc LLB" },
+          { name: "Further Studies/Career", description: "LL.M., Ph.D. in Law, Advocate, Corporate Counsel, Judge, Legal Advisor" }
+        ]
+      }
     }
   ];
 
@@ -140,6 +180,18 @@ const CareerPathways = () => {
     { metric: "Social Impact", engineering: 75, medical: 95, commerce: 60, law: 85 },
     { metric: "Growth Potential", engineering: 90, medical: 80, commerce: 85, law: 75 }
   ];
+
+  const handleExploreClick = (pathwayId: string) => {
+    setSelectedPathway(pathwayId);
+    setShowFlowchart(true);
+    setActiveTab("detailed"); // Switch to detailed tab
+  };
+
+  const handleBackToOverview = () => {
+    setShowFlowchart(false);
+    setSelectedPathway(null);
+    setActiveTab("overview"); // Switch back to overview tab
+  };
 
   return (
     <DashboardLayout 
@@ -180,7 +232,7 @@ const CareerPathways = () => {
           <Button className="mt-4">Generate Detailed Comparison Report</Button>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">Pathway Overview</TabsTrigger>
             <TabsTrigger value="detailed">Detailed Analysis</TabsTrigger>
@@ -194,7 +246,7 @@ const CareerPathways = () => {
                   className={`hover:shadow-lg transition-all cursor-pointer ${
                     selectedPathway === pathway.id ? 'ring-2 ring-primary' : ''
                   }`}
-                  onClick={() => setSelectedPathway(selectedPathway === pathway.id ? null : pathway.id)}
+                  onClick={() => setSelectedPathway(pathway.id)} // Keep selection for detailed view
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -225,7 +277,7 @@ const CareerPathways = () => {
                         <span className="font-bold text-primary">{pathway.avgSalary}</span>
                       </div>
                       
-                      <Button className="w-full" size="sm">
+                      <Button className="w-full" size="sm" onClick={() => handleExploreClick(pathway.id)}>
                         Explore {pathway.title}
                       </Button>
                     </div>
@@ -236,7 +288,17 @@ const CareerPathways = () => {
           </TabsContent>
 
           <TabsContent value="detailed" className="space-y-6">
-            {selectedPathway && (
+            {showFlowchart && selectedPathway ? (
+              <div className="space-y-6">
+                <Button onClick={handleBackToOverview} variant="outline">
+                  ← Back to Pathway Details
+                </Button>
+                <FlowchartDisplay 
+                  title={pathways.find(p => p.id === selectedPathway)?.flowchart?.title || ""}
+                  steps={pathways.find(p => p.id === selectedPathway)?.flowchart?.steps || []}
+                />
+              </div>
+            ) : selectedPathway && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl">
