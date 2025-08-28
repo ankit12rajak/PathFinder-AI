@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Brain, Target, Users, TrendingUp, BookOpen, Award, Filter, Search, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/DashboardLayout";
+import { courseRecommendations, type Course } from "@/data/courseData";
 
 const CourseMatcher = () => {
+  const navigate = useNavigate();
   const [interests, setInterests] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [careerGoals, setCareerGoals] = useState<string[]>([]);
@@ -23,6 +26,8 @@ const CourseMatcher = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStream, setSelectedStream] = useState("");
+  const [visibleCoursesCount, setVisibleCoursesCount] = useState(5); // Start with 5 courses
+  const coursesPerLoad = 5; // Load 5 more courses each time
 
   const interestOptions = [
     "Mathematics", "Physics", "Chemistry", "Biology", "Computer Science",
@@ -44,99 +49,6 @@ const CourseMatcher = () => {
     "Flexible Work", "Continuous Learning", "Recognition", "Helping Others"
   ];
 
-  const courseRecommendations = [
-    {
-      id: 1,
-      name: "Computer Science Engineering",
-      stream: "Engineering",
-      matchScore: 95,
-      avgSalary: "₹8-25 LPA",
-      jobOutlook: "Excellent",
-      growth: "+22%",
-      topColleges: ["IIT", "IIIT", "NIT", "BITS"],
-      skills: ["Programming", "Problem Solving", "Analytical Thinking"],
-      careers: ["Software Developer", "Data Scientist", "Product Manager", "AI Engineer"],
-      marketDemand: 95,
-      workLifeBalance: 75,
-      description: "Design and develop software systems, work with cutting-edge technologies"
-    },
-    {
-      id: 2,
-      name: "MBBS (Medical)",
-      stream: "Medical",
-      matchScore: 88,
-      avgSalary: "₹6-50 LPA",
-      jobOutlook: "Very Good",
-      growth: "+15%",
-      topColleges: ["AIIMS", "JIPMER", "King George", "Maulana Azad"],
-      skills: ["Biology", "Chemistry", "Communication", "Problem Solving"],
-      careers: ["Doctor", "Surgeon", "Researcher", "Public Health Officer"],
-      marketDemand: 90,
-      workLifeBalance: 60,
-      description: "Diagnose and treat patients, contribute to healthcare and medical research"
-    },
-    {
-      id: 3,
-      name: "Business Administration (BBA/MBA)",
-      stream: "Management",
-      matchScore: 82,
-      avgSalary: "₹5-30 LPA",
-      jobOutlook: "Good",
-      growth: "+18%",
-      topColleges: ["IIM", "ISB", "FMS", "XLRI"],
-      skills: ["Leadership", "Communication", "Analytical Thinking", "Team Work"],
-      careers: ["Business Analyst", "Consultant", "Manager", "Entrepreneur"],
-      marketDemand: 85,
-      workLifeBalance: 70,
-      description: "Lead business operations, strategic planning, and organizational management"
-    },
-    {
-      id: 4,
-      name: "Economics Honours",
-      stream: "Commerce",
-      matchScore: 78,
-      avgSalary: "₹4-20 LPA",
-      jobOutlook: "Good",
-      growth: "+12%",
-      topColleges: ["LSR", "Hindu College", "Hansraj", "SRCC"],
-      skills: ["Mathematics", "Analytical Thinking", "Research", "Critical Thinking"],
-      careers: ["Economist", "Financial Analyst", "Policy Researcher", "Banking"],
-      marketDemand: 80,
-      workLifeBalance: 85,
-      description: "Analyze economic trends, policy impact, and market behaviors"
-    },
-    {
-      id: 5,
-      name: "Psychology",
-      stream: "Arts",
-      matchScore: 75,
-      avgSalary: "₹3-15 LPA",
-      jobOutlook: "Moderate",
-      growth: "+14%",
-      topColleges: ["JNU", "DU", "Jamia", "BHU"],
-      skills: ["Communication", "Research", "Critical Thinking", "Helping Others"],
-      careers: ["Psychologist", "Counselor", "HR Professional", "Researcher"],
-      marketDemand: 70,
-      workLifeBalance: 90,
-      description: "Study human behavior, provide therapy and counseling services"
-    },
-    {
-      id: 6,
-      name: "Mechanical Engineering",
-      stream: "Engineering",
-      matchScore: 72,
-      avgSalary: "₹4-18 LPA",
-      jobOutlook: "Good",
-      growth: "+8%",
-      topColleges: ["IIT", "NIT", "VIT", "Manipal"],
-      skills: ["Mathematics", "Physics", "Problem Solving", "Technical Skills"],
-      careers: ["Design Engineer", "Manufacturing Engineer", "Project Manager", "Consultant"],
-      marketDemand: 75,
-      workLifeBalance: 80,
-      description: "Design and manufacture mechanical systems, vehicles, and machinery"
-    }
-  ];
-
   const toggleSelection = (item: string, list: string[], setList: (list: string[]) => void) => {
     if (list.includes(item)) {
       setList(list.filter(i => i !== item));
@@ -145,7 +57,7 @@ const CourseMatcher = () => {
     }
   };
 
-  const calculateCompatibilityScore = (course: any) => {
+  const calculateCompatibilityScore = (course: Course) => {
     let score = course.matchScore;
     
     // Adjust based on preferences
@@ -167,6 +79,11 @@ const CourseMatcher = () => {
       compatibilityScore: calculateCompatibilityScore(course)
     }))
     .sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+
+  // Reset visible courses count when filters change
+  useEffect(() => {
+    setVisibleCoursesCount(5);
+  }, [searchTerm, selectedStream]);
 
   const getMatchColor = (score: number) => {
     if (score >= 90) return "text-green-600";
@@ -368,11 +285,15 @@ const CourseMatcher = () => {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Personalized Course Recommendations</h2>
-            <Badge variant="secondary">{filteredCourses.length} matches found</Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary">
+                Showing {Math.min(visibleCoursesCount, filteredCourses.length)} of {filteredCourses.length} courses
+              </Badge>
+            </div>
           </div>
           
           <div className="space-y-6">
-            {filteredCourses.map((course, index) => (
+            {filteredCourses.slice(0, visibleCoursesCount).map((course, index) => (
               <Card key={course.id} className="feature-card hover:shadow-lg transition-all">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -452,7 +373,11 @@ const CourseMatcher = () => {
                   </div>
                   
                   <div className="flex gap-4">
-                    <Button size="sm" className="btn-secondary">
+                    <Button 
+                      size="sm" 
+                      className="btn-secondary"
+                      onClick={() => navigate(`/dashboard/college-admission/course-tree/${course.id}?courseName=${encodeURIComponent(course.name)}`)}
+                    >
                       <BookOpen className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
@@ -468,6 +393,38 @@ const CourseMatcher = () => {
                 </CardContent>
               </Card>
             ))}
+            
+            {/* View More Button */}
+            {visibleCoursesCount < filteredCourses.length && (
+              <div className="text-center pt-6">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setVisibleCoursesCount(prev => prev + coursesPerLoad)}
+                  className="w-full md:w-auto"
+                >
+                  View {Math.min(coursesPerLoad, filteredCourses.length - visibleCoursesCount)} More Courses
+                  <TrendingUp className="w-4 h-4 ml-2" />
+                </Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {filteredCourses.length - visibleCoursesCount} more courses available
+                </p>
+              </div>
+            )}
+            
+            {/* Show All Button (appears after loading some courses) */}
+            {visibleCoursesCount >= 15 && visibleCoursesCount < filteredCourses.length && (
+              <div className="text-center pt-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setVisibleCoursesCount(filteredCourses.length)}
+                  className="text-muted-foreground"
+                >
+                  Or view all {filteredCourses.length} courses at once
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
