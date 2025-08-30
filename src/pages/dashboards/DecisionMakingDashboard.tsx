@@ -291,94 +291,21 @@ const DecisionMakingDashboard = () => {
                       No deadlines found.
                     </motion.div>
                   ) : (
-                    <ul style={{ marginTop: "1rem", listStyle: "none", padding: 0 }}>
-                      <AnimatePresence>
-                        {deadlines.map((dl, idx) => (
-                          <motion.li
-                            key={idx}
-                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -30, scale: 0.95 }}
-                            transition={{ duration: 0.5, type: "spring" }}
-                            style={{
-                              marginBottom: "1.5rem",
-                              padding: "1.2rem",
-                              borderRadius: "12px",
-                              boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
-                              background:
-                                dl.status === "expired"
-                                  ? "linear-gradient(90deg, #f3f4f6 60%, #fee2e2 100%)"
-                                  : dl.status === "today"
-                                  ? "linear-gradient(90deg, #fef3c7 60%, #fde68a 100%)"
-                                  : "linear-gradient(90deg, #e0f2fe 60%, #bae6fd 100%)",
-                              color: dl.status === "expired" ? "#ef4444" : "#0f172a",
-                              border:
-                                dl.status === "expired"
-                                  ? "2px solid #ef4444"
-                                  : "2px solid #38bdf8",
-                              position: "relative",
-                              overflow: "hidden",
-                            }}
-                            whileHover={{ scale: 1.03, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
-                          >
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: "100%" }}
-                              transition={{ duration: 1, delay: 0.2 }}
-                              style={{
-                                position: "absolute",
-                                left: 0,
-                                top: 0,
-                                height: "100%",
-                                background:
-                                  dl.status === "expired"
-                                    ? "rgba(239,68,68,0.08)"
-                                    : dl.status === "today"
-                                    ? "rgba(253,224,71,0.10)"
-                                    : "rgba(59,130,246,0.07)",
-                                zIndex: 0,
-                              }}
-                            />
-                            <div style={{ position: "relative", zIndex: 1 }}>
-                              <strong style={{ fontSize: "1.1rem" }}>{dl.name}</strong>
-                              <br />
-                              <span style={{ fontSize: "0.95rem" }}>{dl.formattedDate}</span>
-                              <br />
-                              <motion.span
-                                initial={{ scale: 0.8 }}
-                                animate={{ scale: 1 }}
-                                transition={{ duration: 0.4 }}
-                                style={{
-                                  fontWeight: "bold",
-                                  fontSize: "1rem",
-                                  color:
-                                    dl.status === "expired"
-                                      ? "#ef4444"
-                                      : dl.status === "today"
-                                      ? "#f59e42"
-                                      : "#2563eb",
-                                  background:
-                                    dl.status === "expired"
-                                      ? "#fee2e2"
-                                      : dl.status === "today"
-                                      ? "#fef3c7"
-                                      : "#e0f2fe",
-                                  borderRadius: "6px",
-                                  padding: "0.2rem 0.7rem",
-                                  marginTop: "0.5rem",
-                                  display: "inline-block",
-                                }}
-                              >
-                                {dl.status === "expired"
-                                  ? "Expired"
-                                  : dl.status === "today"
-                                  ? "Today"
-                                  : dl.timeLeft}
-                              </motion.span>
-                            </div>
-                          </motion.li>
-                        ))}
-                      </AnimatePresence>
+                    <ul className="space-y-4">
+                      {deadlines.map((dl, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-center justify-between p-4 rounded-lg shadow-md bg-blue-100 border border-blue-300"
+                        >
+                          <div>
+                            <p className="font-semibold text-lg text-blue-900">{dl.name}</p>
+                            <p className="text-sm text-blue-700">{dl.formattedDate}</p>
+                          </div>
+                          <div className="px-3 py-1 rounded-full text-sm font-medium bg-blue-500 text-white">
+                            {dl.timeLeft}
+                          </div>
+                        </li>
+                      ))}
                     </ul>
                   )}
                 </div>

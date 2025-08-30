@@ -38,46 +38,89 @@ const CollegeInsights = () => {
 	const [selectedFilter, setSelectedFilter] = useState("all");
 	const [searchTerm, setSearchTerm] = useState("");
 	const [colleges, setColleges] = useState<any[]>([]);
+	const [initialColleges, setInitialColleges] = useState<any[]>([]); // Store initial colleges
 	const [searchResults, setSearchResults] = useState<any[]>([]);
 	const [showDropdown, setShowDropdown] = useState(false);
+	const [isSearchMode, setIsSearchMode] = useState(false); // Track if in search mode
 	const searchRef = useRef<HTMLInputElement>(null);
 
+	// Load initial colleges
 	useEffect(() => {
 		fetch("http://localhost:3001/api/colleges/top")
 			.then((res) => res.json())
-			.then((data) => setColleges(data));
+			.then((data) => {
+				setColleges(data);
+				setInitialColleges(data); // Store the initial colleges
+			});
 	}, []);
 
 	// Search API call with debounce
 	useEffect(() => {
-		if (!searchTerm) {
+		if (!searchTerm.trim()) {
+			// When search is cleared, return to initial colleges
 			setSearchResults([]);
 			setShowDropdown(false);
+			setIsSearchMode(false);
+			setColleges(initialColleges);
 			return;
 		}
+
+		setIsSearchMode(true);
 		const timer = setTimeout(() => {
 			fetch(`http://localhost:3001/api/colleges/search?q=${encodeURIComponent(searchTerm)}`)
 				.then((res) => res.json())
 				.then((data) => {
 					setSearchResults(data);
 					setShowDropdown(true);
+				})
+				.catch((error) => {
+					console.error('Search error:', error);
+					setSearchResults([]);
+					setShowDropdown(false);
 				});
 		}, 300);
 		return () => clearTimeout(timer);
-	}, [searchTerm]);
+	}, [searchTerm, initialColleges]);
 
 	// Handle dropdown selection
 	const handleSelectCollege = (college: any) => {
 		setColleges([college]);
 		setSearchTerm(college.name);
 		setShowDropdown(false);
+		setIsSearchMode(true);
 	};
 
-	// Filter logic
-	const filteredColleges = colleges.filter((college) => {
-		const matchesSearch =
-			college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			(college.location && college.location.toLowerCase().includes(searchTerm.toLowerCase()));
+	// Handle search input change
+	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setSearchTerm(value);
+		
+		// If search is cleared, immediately show dropdown with recent results
+		if (!value.trim() && searchResults.length > 0) {
+			setShowDropdown(true);
+		}
+	};
+
+	// Handle clearing search manually
+	const handleClearSearch = () => {
+		setSearchTerm("");
+		setSearchResults([]);
+		setShowDropdown(false);
+		setIsSearchMode(false);
+		setColleges(initialColleges);
+		if (searchRef.current) {
+			searchRef.current.focus();
+		}
+	};
+
+	// Filter logic - use appropriate college list based on search mode
+	const filteredColleges = (isSearchMode ? colleges : initialColleges).filter((college) => {
+		// If not in search mode, don't apply search term filter
+		const matchesSearch = isSearchMode 
+			? (college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			   (college.location && college.location.toLowerCase().includes(searchTerm.toLowerCase())))
+			: true;
+
 		if (selectedFilter === "all") return matchesSearch;
 		if (selectedFilter === "engineering")
 			return (
@@ -99,19 +142,31 @@ const CollegeInsights = () => {
 				{/* Search and Filters */}
 				<div className="flex flex-col md:flex-row gap-4 relative">
 					<div className="flex-1 relative">
-						<Input
-							ref={searchRef}
-							placeholder="Search colleges by name or location..."
-							value={searchTerm}
-							onChange={(e) => {
-								setSearchTerm(e.target.value);
-								setShowDropdown(true);
-							}}
-							className="w-full"
-							autoComplete="off"
-							onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
-							onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-						/>
+						<div className="relative">
+							<Input
+								ref={searchRef}
+								placeholder="Search colleges by name or location..."
+								value={searchTerm}
+								onChange={handleSearchChange}
+								className="w-full pr-10"
+								autoComplete="off"
+								onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
+								onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+							/>
+							{/* Clear button */}
+							{searchTerm && (
+								<button
+									onClick={handleClearSearch}
+									className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+									type="button"
+								>
+									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+							)}
+						</div>
+						
 						{/* Animated Dropdown */}
 						<AnimatePresence>
 							{showDropdown && searchResults.length > 0 && (
@@ -125,13 +180,25 @@ const CollegeInsights = () => {
 									{searchResults.map((college, idx) => (
 										<li
 											key={college.id || idx}
-											className="px-4 py-2 cursor-pointer hover:bg-blue-50 text-black"
+											className="px-4 py-2 cursor-pointer hover:bg-blue-50 text-black border-b border-gray-100 last:border-b-0"
 											onMouseDown={() => handleSelectCollege(college)}
 										>
-											<span className="font-medium">{college.name}</span>
-											<span className="text-xs text-muted-foreground ml-2">{college.location}</span>
+											<div className="flex items-center justify-between">
+												<div>
+													<span className="font-medium">{college.name}</span>
+													<div className="text-xs text-muted-foreground">{college.location}</div>
+												</div>
+												<Badge variant="outline" className="text-xs">
+													#{college.ranking || 'N/A'}
+												</Badge>
+											</div>
 										</li>
 									))}
+									{!searchTerm && (
+										<li className="px-4 py-2 text-center text-sm text-muted-foreground border-t">
+											Clear search to see all colleges
+										</li>
+									)}
 								</motion.ul>
 							)}
 						</AnimatePresence>
@@ -150,6 +217,26 @@ const CollegeInsights = () => {
 					</Select>
 				</div>
 
+				{/* Search Status Indicator */}
+				{isSearchMode && searchTerm && (
+					<div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+						<div className="flex items-center gap-2">
+							<div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+							<span className="text-sm text-blue-700">
+								Showing search results for "{searchTerm}" • {filteredColleges.length} colleges found
+							</span>
+						</div>
+						<Button 
+							variant="outline" 
+							size="sm" 
+							onClick={handleClearSearch}
+							className="text-blue-700 border-blue-300 hover:bg-blue-100"
+						>
+							Show All Colleges
+						</Button>
+					</div>
+				)}
+
 				<Tabs defaultValue="colleges" className="space-y-6">
 					<TabsList className="grid w-full grid-cols-3">
 						<TabsTrigger value="colleges">Top Colleges</TabsTrigger>
@@ -158,124 +245,146 @@ const CollegeInsights = () => {
 					</TabsList>
 
 					<TabsContent value="colleges" className="space-y-6">
-						<div className="grid gap-6">
-							{filteredColleges.map((college) => (
-								<motion.div
-									key={college.id}
-									initial={{ opacity: 0, y: 20 }}
-									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, y: 20 }}
-									transition={{ duration: 0.3 }}
-								>
-									<Card className="hover:shadow-lg transition-shadow">
-										<CardHeader>
-											<div className="flex items-start justify-between">
-												<div>
-													<CardTitle className="flex items-center gap-2">
-														<Building className="w-5 h-5" />
-														{college.name}
-														<Badge variant="secondary">#{college.ranking}</Badge>
-													</CardTitle>
-													<CardDescription className="flex items-center gap-2 mt-1">
-														<MapPin className="w-4 h-4" />
-														{college.location} • {college.type}
-													</CardDescription>
-												</div>
-												<div className="flex items-center gap-1">
-													<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-													<span className="font-semibold">{college.rating}</span>
-												</div>
-											</div>
-										</CardHeader>
-										<CardContent>
-											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-												<div className="space-y-1">
-													<div className="text-sm text-muted-foreground">Annual Fees</div>
-													<div className="font-semibold">{college.fees}</div>
-												</div>
-												<div className="space-y-1">
-													<div className="text-sm text-muted-foreground">Avg Package</div>
-													<div className="font-semibold text-green-600">{college.averagePlacement}</div>
-												</div>
-												<div className="space-y-1">
-													<div className="text-sm text-muted-foreground">Highest Package</div>
-													<div className="font-semibold text-blue-600">{college.highestPlacement}</div>
-												</div>
-												<div className="space-y-1">
-													<div className="text-sm text-muted-foreground">Placement Rate</div>
-													<div className="flex items-center gap-2">
-														<Progress value={college.placementRate} className="flex-1" />
-														<span className="text-sm font-semibold">{college.placementRate}%</span>
+						{filteredColleges.length === 0 ? (
+							<Card>
+								<CardContent className="flex flex-col items-center justify-center py-12">
+									<div className="text-center">
+										<Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+										<h3 className="text-lg font-semibold text-gray-900 mb-2">No colleges found</h3>
+										<p className="text-gray-600 mb-4">
+											{isSearchMode 
+												? `No colleges match your search for "${searchTerm}"`
+												: "Try adjusting your filters or search criteria"
+											}
+										</p>
+										{isSearchMode && (
+											<Button onClick={handleClearSearch} variant="outline">
+												Clear Search
+											</Button>
+										)}
+									</div>
+								</CardContent>
+							</Card>
+						) : (
+							<div className="grid gap-6">
+								{filteredColleges.map((college) => (
+									<motion.div
+										key={college.id}
+										initial={{ opacity: 0, y: 20 }}
+										animate={{ opacity: 1, y: 0 }}
+										exit={{ opacity: 0, y: 20 }}
+										transition={{ duration: 0.3 }}
+									>
+										<Card className="hover:shadow-lg transition-shadow">
+											<CardHeader>
+												<div className="flex items-start justify-between">
+													<div>
+														<CardTitle className="flex items-center gap-2">
+															<Building className="w-5 h-5" />
+															{college.name}
+															<Badge variant="secondary">#{college.ranking}</Badge>
+														</CardTitle>
+														<CardDescription className="flex items-center gap-2 mt-1">
+															<MapPin className="w-4 h-4" />
+															{college.location} • {college.type}
+														</CardDescription>
+													</div>
+													<div className="flex items-center gap-1">
+														<Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+														<span className="font-semibold">{college.rating}</span>
 													</div>
 												</div>
-											</div>
-
-											<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-												<div className="text-center">
-													<div className="text-sm text-muted-foreground">Infrastructure</div>
-													<div className="font-semibold">{college.infrastructure}/5</div>
-												</div>
-												<div className="text-center">
-													<div className="text-sm text-muted-foreground">Faculty</div>
-													<div className="font-semibold">{college.faculty}/5</div>
-												</div>
-												<div className="text-center">
-													<div className="text-sm text-muted-foreground">Placements</div>
-													<div className="font-semibold">{college.placements}/5</div>
-												</div>
-												<div className="text-center">
-													<div className="text-sm text-muted-foreground">Campus Life</div>
-													<div className="font-semibold">{college.campusLife}/5</div>
-												</div>
-											</div>
-
-											<div className="space-y-3">
-												<div>
-													<div className="text-sm font-medium mb-1">Popular Courses</div>
-													<div className="flex flex-wrap gap-1">
-														{college.courses?.map((course: string, idx: number) => (
-															<Badge key={idx} variant="outline">
-																{course}
-															</Badge>
-														))}
+											</CardHeader>
+											<CardContent>
+												<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+													<div className="space-y-1">
+														<div className="text-sm text-muted-foreground">Annual Fees</div>
+														<div className="font-semibold">{college.fees}</div>
+													</div>
+													<div className="space-y-1">
+														<div className="text-sm text-muted-foreground">Avg Package</div>
+														<div className="font-semibold text-green-600">{college.averagePlacement}</div>
+													</div>
+													<div className="space-y-1">
+														<div className="text-sm text-muted-foreground">Highest Package</div>
+														<div className="font-semibold text-blue-600">{college.highestPlacement}</div>
+													</div>
+													<div className="space-y-1">
+														<div className="text-sm text-muted-foreground">Placement Rate</div>
+														<div className="flex items-center gap-2">
+															<Progress value={college.placementRate} className="flex-1" />
+															<span className="text-sm font-semibold">{college.placementRate}%</span>
+														</div>
 													</div>
 												</div>
-												<div>
-													<div className="text-sm font-medium mb-1">Top Recruiters</div>
-													<div className="flex flex-wrap gap-1">
-														{college.topRecruiters?.slice(0, 4).map((recruiter: string, idx: number) => (
-															<Badge key={idx} variant="secondary">
-																{recruiter}
-															</Badge>
-														))}
+
+												<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+													<div className="text-center">
+														<div className="text-sm text-muted-foreground">Infrastructure</div>
+														<div className="font-semibold">{college.infrastructure}/5</div>
+													</div>
+													<div className="text-center">
+														<div className="text-sm text-muted-foreground">Faculty</div>
+														<div className="font-semibold">{college.faculty}/5</div>
+													</div>
+													<div className="text-center">
+														<div className="text-sm text-muted-foreground">Placements</div>
+														<div className="font-semibold">{college.placements}/5</div>
+													</div>
+													<div className="text-center">
+														<div className="text-sm text-muted-foreground">Campus Life</div>
+														<div className="font-semibold">{college.campusLife}/5</div>
 													</div>
 												</div>
-											</div>
 
-											<div className="flex gap-2 mt-4">
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => window.open(college.website, "_blank")}
-												>
-													View Details
-												</Button>
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => window.open(college.applyLink, "_blank")}
-												>
-													Apply Now
-												</Button>
-												<Button variant="outline" size="sm">
-													Compare
-												</Button>
-											</div>
-										</CardContent>
-									</Card>
-								</motion.div>
-							))}
-						</div>
+												<div className="space-y-3">
+													<div>
+														<div className="text-sm font-medium mb-1">Popular Courses</div>
+														<div className="flex flex-wrap gap-1">
+															{college.courses?.map((course: string, idx: number) => (
+																<Badge key={idx} variant="outline">
+																	{course}
+																</Badge>
+															))}
+														</div>
+													</div>
+													<div>
+														<div className="text-sm font-medium mb-1">Top Recruiters</div>
+														<div className="flex flex-wrap gap-1">
+															{college.topRecruiters?.slice(0, 4).map((recruiter: string, idx: number) => (
+																<Badge key={idx} variant="secondary">
+																	{recruiter}
+																</Badge>
+															))}
+														</div>
+													</div>
+												</div>
+
+												<div className="flex gap-2 mt-4">
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => window.open(college.website, "_blank")}
+													>
+														View Details
+													</Button>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => window.open(college.applyLink, "_blank")}
+													>
+														Apply Now
+													</Button>
+													<Button variant="outline" size="sm">
+														Compare
+													</Button>
+												</div>
+											</CardContent>
+										</Card>
+									</motion.div>
+								))}
+							</div>
+						)}
 					</TabsContent>
 
 					<TabsContent value="trends" className="space-y-6">

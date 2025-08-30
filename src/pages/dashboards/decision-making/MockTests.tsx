@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { BookOpen, Clock, Trophy, TrendingUp, Play, BarChart3, Target, CheckCircle, AlertCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,84 +10,90 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DashboardLayout from "@/components/DashboardLayout";
 
 const MockTests = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
   const [selectedExam, setSelectedExam] = useState("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
 
   const mockTests = [
     {
       id: 1,
-      title: "JEE Main Physics - Wave Optics",
+      title: "JEE Main ",
       exam: "JEE Main",
-      subject: "Physics",
-      duration: "1 hour",
-      questions: 30,
+      subject: "Physics, Chemistry, Mathematics",
+      duration: "180 minutes",
+      questions: 75,
       difficulty: "Medium",
       attempted: 1250,
       avgScore: 68,
       maxScore: 100,
-      topics: ["Wave Nature of Light", "Interference", "Diffraction", "Polarization"],
-      type: "Chapter Test",
-      date: "Dec 25, 2024"
+      topics: ["Mechanics", "Electricity", "Optics", "Modern Physics"],
+      type: "Full Syllabus",
+      date: "Dec 25, 2024",
+      route: "/jeemain"
     },
     {
       id: 2,
-      title: "NEET Biology - Human Physiology",
-      exam: "NEET",
-      subject: "Biology",
-      duration: "45 minutes",
-      questions: 45,
-      difficulty: "Hard",
-      attempted: 980,
-      avgScore: 72,
-      maxScore: 100,
-      topics: ["Digestive System", "Respiratory System", "Circulatory System"],
-      type: "Full Syllabus",
-      date: "Dec 26, 2024"
-    },
-    {
-      id: 3,
-      title: "JEE Advanced Mathematics - Calculus",
+      title: "JEE Advanced ",
       exam: "JEE Advanced",
-      subject: "Mathematics",
-      duration: "1.5 hours",
-      questions: 20,
+      subject: "Physics, Chemistry, Mathematics",
+      duration: "180 minutes",
+      questions: 54,
       difficulty: "Hard",
       attempted: 675,
       avgScore: 45,
       maxScore: 100,
-      topics: ["Limits", "Derivatives", "Integrals", "Differential Equations"],
-      type: "Chapter Test",
-      date: "Dec 27, 2024"
+      topics: ["Advanced Calculus", "Quantum Physics", "Organic Mechanisms", "Complex Analysis"],
+      type: "Paper 1",
+      date: "Dec 26, 2024",
+      route: "/jeeadvanced"
+    },
+    {
+      id: 3,
+      title: "NEET ",
+      exam: "NEET",
+      subject: "Physics, Chemistry, Biology",
+      duration: "200 minutes",
+      questions: 180,
+      difficulty: "Hard",
+      attempted: 980,
+      avgScore: 72,
+      maxScore: 100,
+      topics: ["Human Physiology", "Plant Physiology", "Genetics", "Ecology"],
+      type: "Full Syllabus",
+      date: "Dec 27, 2024",
+      route: "/neet"
     },
     {
       id: 4,
-      title: "CUET General Test - Logical Reasoning",
+      title: "CUET ",
       exam: "CUET",
       subject: "General Test",
-      duration: "1 hour",
-      questions: 50,
+      duration: "165 minutes",
+      questions: 200,
       difficulty: "Medium",
       attempted: 1100,
       avgScore: 78,
       maxScore: 100,
-      topics: ["Analytical Reasoning", "Logical Puzzles", "Data Interpretation"],
-      type: "Section Test",
-      date: "Dec 28, 2024"
+      topics: ["General Knowledge", "Current Affairs", "Logical Reasoning", "Quantitative Aptitude"],
+      type: "Full Syllabus",
+      date: "Dec 28, 2024",
+      route: "/cuet" // Add route for future implementation
     },
     {
       id: 5,
-      title: "CLAT Legal Reasoning - Constitutional Law",
+      title: "CLAT ",
       exam: "CLAT",
       subject: "Legal Reasoning",
-      duration: "1 hour",
-      questions: 35,
+      duration: "120 minutes",
+      questions: 150,
       difficulty: "Medium",
       attempted: 450,
       avgScore: 65,
       maxScore: 100,
-      topics: ["Fundamental Rights", "Directive Principles", "Constitutional Amendments"],
-      type: "Chapter Test",
-      date: "Dec 29, 2024"
+      topics: ["Legal Reasoning", "Logical Reasoning", "Reading Comprehension", "Current Affairs"],
+      type: "Full Syllabus",
+      date: "Dec 29, 2024",
+      route: "/clat" // Add route for future implementation
     }
   ];
 
@@ -207,6 +214,28 @@ const MockTests = () => {
     return "text-red-600";
   };
 
+  // Function to handle Start Test button clicks
+  const handleStartTest = (test: any) => {
+    if (test.route) {
+      navigate(test.route);
+    } else {
+      // For tests that don't have implementation yet, show an alert or navigate to a coming soon page
+      alert(`${test.exam} test is coming soon!`);
+    }
+  };
+
+  // Function to get button text and availability status
+  const getTestButtonInfo = (test: any) => {
+    const availableTests = ['/jeemain', '/neet', '/jeeadvanced', '/cuet', '/clat']; // Add CLAT
+    const isAvailable = availableTests.includes(test.route);
+    
+    return {
+      isAvailable,
+      buttonText: isAvailable ? 'Start Test' : 'Coming Soon',
+      buttonVariant: isAvailable ? 'default' : 'secondary'
+    };
+  };
+
   return (
     <DashboardLayout 
       title="Mock Tests Hub" 
@@ -304,74 +333,89 @@ const MockTests = () => {
 
           <TabsContent value="available" className="space-y-6">
             <div className="grid gap-4">
-              {filteredTests.map((test) => (
-                <Card key={test.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-lg">{test.title}</h3>
-                          <Badge 
-                            className={`${getDifficultyColor(test.difficulty)} text-white`}
-                          >
-                            {test.difficulty}
-                          </Badge>
-                          <Badge variant="outline">{test.type}</Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                          <div>
-                            <div className="text-sm text-muted-foreground">Exam</div>
-                            <div className="font-semibold">{test.exam}</div>
+              {filteredTests.map((test) => {
+                const buttonInfo = getTestButtonInfo(test);
+                
+                return (
+                  <Card key={test.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-lg">{test.title}</h3>
+                            <Badge 
+                              className={`${getDifficultyColor(test.difficulty)} text-white`}
+                            >
+                              {test.difficulty}
+                            </Badge>
+                            <Badge variant="outline">{test.type}</Badge>
+                            {buttonInfo.isAvailable && (
+                              <Badge variant="default" className="bg-green-500">
+                                Available
+                              </Badge>
+                            )}
                           </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Duration</div>
-                            <div className="font-semibold">{test.duration}</div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                              <div className="text-sm text-muted-foreground">Exam</div>
+                              <div className="font-semibold">{test.exam}</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-muted-foreground">Duration</div>
+                              <div className="font-semibold">{test.duration}</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-muted-foreground">Questions</div>
+                              <div className="font-semibold">{test.questions}</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-muted-foreground">Attempted by</div>
+                              <div className="font-semibold">{test.attempted} students</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Questions</div>
-                            <div className="font-semibold">{test.questions}</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Attempted by</div>
-                            <div className="font-semibold">{test.attempted} students</div>
-                          </div>
-                        </div>
 
-                        <div className="mb-4">
-                          <div className="text-sm font-medium mb-2">Topics Covered</div>
-                          <div className="flex flex-wrap gap-1">
-                            {test.topics.map((topic, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">{topic}</Badge>
-                            ))}
+                          <div className="mb-4">
+                            <div className="text-sm font-medium mb-2">Topics Covered</div>
+                            <div className="flex flex-wrap gap-1">
+                              {test.topics.map((topic, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">{topic}</Badge>
+                              ))}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-4 mb-4">
-                          <div>
-                            <div className="text-sm text-muted-foreground">Average Score</div>
-                            <div className="flex items-center gap-2">
-                              <Progress value={test.avgScore} className="w-20" />
-                              <span className="font-semibold">{test.avgScore}%</span>
+                          <div className="flex items-center gap-4 mb-4">
+                            <div>
+                              <div className="text-sm text-muted-foreground">Average Score</div>
+                              <div className="flex items-center gap-2">
+                                <Progress value={test.avgScore} className="w-20" />
+                                <span className="font-semibold">{test.avgScore}%</span>
+                              </div>
                             </div>
                           </div>
                         </div>
+                        
+                        <div className="flex flex-col gap-2">
+                          {/* Dynamic Start Test Button based on exam type */}
+                          <Button 
+                            className="w-32"
+                            variant={buttonInfo.buttonVariant as any}
+                            onClick={() => handleStartTest(test)}
+                            disabled={!buttonInfo.isAvailable}
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            {buttonInfo.buttonText}
+                          </Button>
+                          <Button variant="outline" className="w-32">
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Syllabus
+                          </Button>
+                        </div>
                       </div>
-                      
-                      <div className="flex flex-col gap-2">
-                        <Button className="w-32">
-                          <Play className="w-4 h-4 mr-2" />
-                          Start Test
-                        </Button>
-                        <Button variant="outline" className="w-32">
-                          <FileText className="w-4 h-4 mr-2" />
-                          View Syllabus
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </TabsContent>
 
