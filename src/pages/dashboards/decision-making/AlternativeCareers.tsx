@@ -11,6 +11,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 const AlternativeCareers = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [skillLevel, setSkillLevel] = useState("all");
+  const [selectedCareer, setSelectedCareer] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const careerCategories = [
     {
@@ -363,9 +365,9 @@ const AlternativeCareers = () => {
                 <CardContent className="pt-6">
                   <div className="grid gap-4">
                     {category.careers
-                      .filter(career => 
-                        skillLevel === "all" || 
-                        career.difficulty.toLowerCase() === skillLevel
+                      .filter(
+                        (career) =>
+                          skillLevel === "all" || career.difficulty.toLowerCase() === skillLevel
                       )
                       .map((career, idx) => (
                       <Card key={idx} className="border-l-4 border-primary/20">
@@ -375,13 +377,13 @@ const AlternativeCareers = () => {
                               <h4 className="font-semibold text-lg">{career.title}</h4>
                               <p className="text-muted-foreground text-sm">{career.description}</p>
                             </div>
-                            <Badge 
+                            <Badge
                               className={`${getDifficultyColor(career.difficulty)} text-white`}
                             >
                               {career.difficulty}
                             </Badge>
                           </div>
-                          
+
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                             <div>
                               <div className="text-xs text-muted-foreground">Salary Range</div>
@@ -406,7 +408,9 @@ const AlternativeCareers = () => {
                               <div className="text-sm font-medium mb-1">Key Skills Required</div>
                               <div className="flex flex-wrap gap-1">
                                 {career.skills.map((skill, skillIdx) => (
-                                  <Badge key={skillIdx} variant="outline">{skill}</Badge>
+                                  <Badge key={skillIdx} variant="outline">
+                                    {skill}
+                                  </Badge>
                                 ))}
                               </div>
                             </div>
@@ -420,16 +424,152 @@ const AlternativeCareers = () => {
                               <div className="text-sm font-medium mb-1">Potential Employers</div>
                               <div className="flex flex-wrap gap-1">
                                 {career.companies.map((company, companyIdx) => (
-                                  <Badge key={companyIdx} variant="secondary">{company}</Badge>
+                                  <Badge key={companyIdx} variant="secondary">
+                                    {company}
+                                  </Badge>
                                 ))}
                               </div>
                             </div>
                           </div>
 
+                          {/* Updated Buttons */}
                           <div className="flex gap-2 mt-4">
-                            <Button size="sm">Learn More</Button>
-                            <Button variant="outline" size="sm">Find Courses</Button>
-                            <Button variant="outline" size="sm">Connect with Professionals</Button>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCareer(career);
+                                setShowModal(true);
+                              }}
+                            >
+                              Learn More
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (career.title === "UX/UI Designer") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=ui%2Fux+designer", "_blank");
+                                } else if (career.title === "Content Creator") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=content+creator", "_blank");
+                                } else if (career.title === "Graphic Designer") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=Graphic+Designer", "_blank");
+                                } else if (career.title === "Digital Marketing Specialist") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=digital+marketing", "_blank");
+                                } else if (career.title === "App Developer") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=app+developer", "_blank");
+                                } else if (career.title === "Social Media Manager") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=social+media+manager", "_blank");
+                                } else if (career.title === "E-commerce Business") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=e+commerce+buisness", "_blank");
+                                } else if (career.title === "Food Truck/Restaurant") {
+                                  window.open("https://www.udemy.com/course/the-ultimate-food-and-restaurant-business-course/?couponCode=KEEPLEARNING", "_blank");
+                                } else if (career.title === "Consulting Services") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=Consulting+services", "_blank");
+                                } else if (career.title === "Fitness Trainer") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=Fitness+trainer", "_blank");
+                                } else if (career.title === "Yoga Instructor") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=Yoga+instructor", "_blank");
+                                } else if (career.title === "Nutritionist") {
+                                  window.open("https://www.udemy.com/courses/search/?q=nutritionist&src=sgp", "_blank");
+                                } else if (career.title === "YouTuber/Podcaster") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=Youtuber+%2FPodcaster", "_blank");
+                                } else if (career.title === "Photographer") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=Photographer", "_blank");
+                                } else if (career.title === "Gaming Streamer") {
+                                  window.open("https://www.udemy.com/courses/search/?src=ukw&q=Gaming+Streamer", "_blank");
+                                } else {
+                                  alert(`Find courses for ${career.title}`);
+                                }
+                              }}
+                            >
+                              Find Courses
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (career.title === "UX/UI Designer") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=ui%2Fux%20designer&origin=SWITCH_SEARCH_VERTICAL&sid=YrF",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Content Creator") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=Content%20Creator&origin=GLOBAL_SEARCH_HEADER&sid=WCs",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Graphic Designer") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=Graphic%20Designer&origin=GLOBAL_SEARCH_HEADER&sid=oZl",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Digital Marketing Specialist") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=digital%20marketing%20specialist&origin=SPELL_CHECK_DID_YOU_MEAN&sid=vkB&spellCorrectionEnabled=false",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "App Developer") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=App%20developer&origin=GLOBAL_SEARCH_HEADER&sid=O8a",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Social Media Manager") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=Social%20Media%20manager&origin=GLOBAL_SEARCH_HEADER&sid=_e%2C",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "E-commerce Business") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=e%20commerce%20buisness&origin=GLOBAL_SEARCH_HEADER&sid=%3ACV",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Food Truck/Restaurant") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=food%20restraunt&origin=GLOBAL_SEARCH_HEADER&sid=*!5",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Consulting Services") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=Consulting%20Services&origin=GLOBAL_SEARCH_HEADER&sid=dSq",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Fitness Trainer") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=Fitness%20Trainer&origin=GLOBAL_SEARCH_HEADER&sid=1c!",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Yoga Instructor") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=yoga%20Instructor&origin=GLOBAL_SEARCH_HEADER&sid=gT6",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Nutritionist") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=nutritionist&origin=GLOBAL_SEARCH_HEADER&sid=Z0g",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "YouTuber/Podcaster") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=youtuber%20%2F%20podcaster&origin=GLOBAL_SEARCH_HEADER&sid=S9r",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Photographer") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=photographer&origin=GLOBAL_SEARCH_HEADER&sid=(l.",
+                                    "_blank"
+                                  );
+                                } else if (career.title === "Gaming Streamer") {
+                                  window.open(
+                                    "https://www.linkedin.com/search/results/people/?keywords=streamer&origin=GLOBAL_SEARCH_HEADER&sid=J5m",
+                                    "_blank"
+                                  );
+                                } else {
+                                  alert(`Connect with professionals in ${career.title}`);
+                                }
+                              }}
+                            >
+                              Connect with Professionals
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -558,6 +698,55 @@ const AlternativeCareers = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Career Detail Modal */}
+        {showModal && (
+          <div
+            className="fixed inset-0 flex items-center justify-center z-50"
+          >
+            <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-lg shadow-lg p-6 w-full max-w-lg border border-white">
+              <h3 className="text-lg font-semibold text-white mb-4">{selectedCareer.title}</h3>
+              <p className="text-sm text-gray-300 mb-4">{selectedCareer.description}</p>
+              <div className="space-y-2 text-gray-300">
+                <div>
+                  <strong>Skills Required:</strong>
+                  <ul className="list-disc list-inside text-sm">
+                    {selectedCareer.skills.map((skill, idx) => (
+                      <li key={idx}>{skill}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <strong>Salary Range:</strong> {selectedCareer.salaryRange}
+                </div>
+                <div>
+                  <strong>Growth Rate:</strong> {selectedCareer.growth}
+                </div>
+                <div>
+                  <strong>Education:</strong> {selectedCareer.education}
+                </div>
+                <div>
+                  <strong>Job Prospects:</strong> {selectedCareer.prospects}
+                </div>
+                <div>
+                  <strong>Potential Employers:</strong>
+                  <ul className="list-disc list-inside text-sm">
+                    {selectedCareer.companies.map((company, idx) => (
+                      <li key={idx}>{company}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="mt-4 w-full text-white border-gray-300 hover:bg-gray-700"
+                onClick={() => setShowModal(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

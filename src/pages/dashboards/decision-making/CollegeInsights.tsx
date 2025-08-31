@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable"; // Explicitly import autoTable
 
 const trends = [
 	{
@@ -42,6 +44,8 @@ const CollegeInsights = () => {
 	const [searchResults, setSearchResults] = useState<any[]>([]);
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [isSearchMode, setIsSearchMode] = useState(false); // Track if in search mode
+	const [selectedColleges, setSelectedColleges] = useState<any[]>([]);
+	const [showPopup, setShowPopup] = useState(false);
 	const searchRef = useRef<HTMLInputElement>(null);
 
 	// Load initial colleges
@@ -375,7 +379,21 @@ const CollegeInsights = () => {
 													>
 														Apply Now
 													</Button>
-													<Button variant="outline" size="sm">
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => {
+															if (selectedColleges.length === 0) {
+																setSelectedColleges([college]);
+																alert("Select another college to compare.");
+															} else if (selectedColleges.length === 1) {
+																setSelectedColleges([...selectedColleges, college]);
+																setShowPopup(true);
+															} else {
+																alert("You can only compare two colleges at a time.");
+															}
+														}}
+													>
 														Compare
 													</Button>
 												</div>
@@ -469,6 +487,130 @@ const CollegeInsights = () => {
 						</div>
 					</TabsContent>
 				</Tabs>
+
+				{/* Comparison Card - appears when two colleges are selected */}
+				{showPopup && selectedColleges.length === 2 && (
+  <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="bg-gray-900 bg-opacity-70 backdrop-blur-md rounded-lg shadow-lg p-6 w-full max-w-4xl border border-white">
+      <h3 className="text-lg font-semibold mb-4 text-center text-white">Detailed Comparison</h3>
+      <div className="grid grid-cols-3 gap-4 text-white">
+        <div>
+          <div className="text-sm font-medium">Metric</div>
+          <ul className="space-y-2">
+            <li>Annual Fees</li>
+            <li>Average Package</li>
+            <li>Highest Package</li>
+            <li>Placement %</li>
+            <li>Infrastructure</li>
+            <li>Campus Life</li>
+          </ul>
+        </div>
+        {selectedColleges.map((college, idx) => (
+          <div key={idx}>
+            <div className="text-sm font-medium text-center">{college.name}</div>
+            <ul className="space-y-2 text-center">
+              <li>{college.fees}</li>
+              <li className="text-green-400">{college.averagePlacement}</li>
+              <li className="text-blue-400">{college.highestPlacement}</li>
+              <li>{college.placementRate}%</li>
+              <li>{college.infrastructure}/5</li>
+              <li>{college.campusLife}/5</li>
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-4 mt-6 justify-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const doc = new jsPDF();
+
+            // Add title
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(20);
+            doc.setTextColor("#333");
+            doc.text("Detailed Comparison", 105, 15, { align: "center" });
+
+            // Add logos for colleges (if available)
+            const logo1 = selectedColleges[0].logo; // Assuming logo URLs are available in the college data
+            const logo2 = selectedColleges[1].logo;
+
+            if (logo1) {
+              doc.addImage(logo1, "PNG", 20, 20, 30, 30); // Add logo for the first college
+            }
+            if (logo2) {
+              doc.addImage(logo2, "PNG", 160, 20, 30, 30); // Add logo for the second college
+            }
+
+            // Add table headers
+            const headers = [
+              ["Metric", selectedColleges[0].name, selectedColleges[1].name],
+            ];
+
+            // Add table rows
+            const rows = [
+              ["Annual Fees", selectedColleges[0].fees, selectedColleges[1].fees],
+              [
+                "Average Package",
+                selectedColleges[0].averagePlacement,
+                selectedColleges[1].averagePlacement,
+              ],
+              [
+                "Highest Package",
+                selectedColleges[0].highestPlacement,
+                selectedColleges[1].highestPlacement,
+              ],
+              [
+                "Placement %",
+                `${selectedColleges[0].placementRate}%`,
+                `${selectedColleges[1].placementRate}%`,
+              ],
+              [
+                "Infrastructure",
+                `${selectedColleges[0].infrastructure}/5`,
+                `${selectedColleges[1].infrastructure}/5`,
+              ],
+              [
+                "Campus Life",
+                `${selectedColleges[0].campusLife}/5`,
+                `${selectedColleges[1].campusLife}/5`,
+              ],
+            ];
+
+            // Add table to PDF using autoTable
+            autoTable(doc, {
+              head: headers,
+              body: rows,
+              startY: 60,
+              theme: "grid",
+              styles: { fontSize: 12, halign: "center" }, // Correct type for halign
+              headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] },
+            });
+
+            // Save the PDF
+            doc.save("College_Comparison.pdf");
+          }}
+        >
+          Save Comparison
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => alert("Sharing results...")}>
+          Share Results
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setSelectedColleges([]); // Reset the selected colleges
+            setShowPopup(false); // Hide the popup
+          }}
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
 			</div>
 		</DashboardLayout>
 	);

@@ -891,21 +891,25 @@ const JEEAdvancedTestPage = () => {
   };
 
   const handleSubmitTest = (score, rank) => {
-    // Update scores
-    fetch("http://localhost:3001/api/jeemain/scores", {
+    const result = {
+      exam: "JEE Main",
+      score,
+      rank,
+      date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+    };
+
+    // Send result to backend
+    fetch("http://localhost:3001/api/results/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ score }),
-    }).catch((error) => console.error("Error updating scores:", error));
-
-    // Update ranks
-    fetch("http://localhost:3001/api/jeemain/ranks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rank }),
-    }).catch((error) => console.error("Error updating ranks:", error));
-
-    navigate("/dashboard/decision-making/mock-tests");
+      body: JSON.stringify(result),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Result added:", data);
+        navigate("/dashboard/decision-making/mock-tests");
+      })
+      .catch((error) => console.error("Error adding result:", error));
   };
 
   return (
