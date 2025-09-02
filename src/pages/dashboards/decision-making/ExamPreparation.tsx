@@ -7,9 +7,11 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useNavigate } from "react-router-dom";
 
 const ExamPreparation = () => {
   const [selectedExam, setSelectedExam] = useState("jee-main");
+  const navigate = useNavigate(); // Add this line
 
   const exams = [
     {
@@ -140,7 +142,11 @@ const ExamPreparation = () => {
                     <p className="text-sm text-muted-foreground">
                       {exam.upcomingTests[0]?.date} at {exam.upcomingTests[0]?.time}
                     </p>
-                    <Button size="sm" className="mt-2">
+                    <Button
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => navigate("/dashboard/decision-making/mock-tests")}
+                    >
                       Take Test
                     </Button>
                   </CardContent>
@@ -216,7 +222,11 @@ const ExamPreparation = () => {
                             </p>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate("/dashboard/decision-making/mock-tests")}
+                        >
                           Start Test
                         </Button>
                       </div>
