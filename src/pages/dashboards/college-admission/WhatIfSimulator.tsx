@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Lightbulb, Calculator, TrendingUp, DollarSign, GraduationCap, MapPin, Star, Building, Target, BarChart3, Users, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Lightbulb, Calculator, TrendingUp, DollarSign, GraduationCap, MapPin, Star, Building, Target, BarChart3, Users, ArrowRight, Download, Save, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,59 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
 import DashboardLayout from "@/components/DashboardLayout";
 
+interface Scenario {
+  id: number;
+  name: string;
+  college: string;
+  course: string;
+  fees: number;
+  duration: number;
+  startingSalary: number;
+  growthRate: number;
+  isBaseline?: boolean;
+  livingCosts?: number;
+  scholarshipAmount?: number;
+}
+
+interface ScenarioMetrics {
+  totalEducationCost: number;
+  totalEarnings: number;
+  netReturn: number;
+  roiPercentage: number;
+  paybackYears: number;
+  peakMonthlySalary: number;
+  careerStability: number;
+}
+
+interface ScenarioWithMetrics extends Scenario {
+  metrics: ScenarioMetrics;
+}
+
+interface SavedScenarioSet {
+  id: string;
+  name: string;
+  data: {
+    scenarios: Scenario[];
+    simulationParams: {
+      careerDuration: number[];
+      inflationRate: number[];
+      marketGrowth: number[];
+      economicScenario: string;
+    };
+    compareMetrics: string[];
+    savedAt: string;
+    scenarioResults: ScenarioWithMetrics[];
+  };
+}
+
 const WhatIfSimulator = () => {
-  const [scenarios, setScenarios] = useState([
+  const { toast } = useToast();
+  
+  const [scenarios, setScenarios] = useState<Scenario[]>([
     {
       id: 1,
       name: "Current Plan",
@@ -104,7 +153,7 @@ const WhatIfSimulator = () => {
     setScenarios(scenarios.filter(s => s.id !== id && !s.isBaseline));
   };
 
-  const calculateScenarioMetrics = (scenario: any) => {
+  const calculateScenarioMetrics = (scenario: Scenario): ScenarioMetrics => {
     const totalEducationCost = (scenario.fees + (newScenario.livingCosts || 100000)) * scenario.duration - (newScenario.scholarshipAmount || 0);
     const careerYears = simulationParams.careerDuration[0];
     const inflationAdjustment = 1 + (simulationParams.inflationRate[0] / 100);
@@ -186,6 +235,330 @@ const WhatIfSimulator = () => {
       prev.includes(metricId) 
         ? prev.filter(m => m !== metricId)
         : [...prev, metricId]
+    );
+  };
+
+  const generateDetailedReport = () => {
+    if (scenarios.length === 0) {
+      toast({
+        title: "No Scenarios Available",
+        description: "Please create scenarios first before generating report.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.width;
+    const margin = 20;
+    let yPosition = 30;
+
+    // Header
+    pdf.setFontSize(24);
+    pdf.setTextColor(59, 130, 246);
+    pdf.text('What-If Scenario Analysis Report', pageWidth / 2, yPosition, { align: 'center' });
+    
+    yPosition += 15;
+    pdf.setFontSize(12);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+    
+    yPosition += 25;
+
+    // Simulation Parameters
+    pdf.setFontSize(16);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Simulation Parameters', margin, yPosition);
+    yPosition += 10;
+    
+    pdf.setFontSize(11);
+    pdf.text(`Career Duration: ${simulationParams.careerDuration[0]} years`, margin, yPosition);
+    yPosition += 7;
+    pdf.text(`Inflation Rate: ${simulationParams.inflationRate[0]}%`, margin, yPosition);
+    yPosition += 7;
+    pdf.text(`Economic Scenario: ${simulationParams.economicScenario}`, margin, yPosition);
+    yPosition += 15;
+
+    // Scenarios Analysis
+    scenarioResults.forEach((scenario, index) => {
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 30;
+      }
+
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(`Scenario ${index + 1}: ${scenario.name}`, margin, yPosition);
+      pdf.setFont(undefined, 'normal');
+      yPosition += 10;
+
+      pdf.setFontSize(11);
+      pdf.text(`College: ${scenario.college}`, margin, yPosition);
+      yPosition += 7;
+      pdf.text(`Course: ${scenario.course}`, margin, yPosition);
+      yPosition += 7;
+      pdf.text(`Duration: ${scenario.duration} years`, margin, yPosition);
+      yPosition += 7;
+      pdf.text(`Annual Fees: ${formatCurrency(scenario.fees)}`, margin, yPosition);
+      yPosition += 10;
+
+      // Metrics
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Financial Metrics:', margin, yPosition);
+      pdf.setFont(undefined, 'normal');
+      yPosition += 7;
+
+      pdf.setFontSize(10);
+      pdf.text(`• Total Investment: ${formatCurrency(scenario.metrics.totalEducationCost)}`, margin + 5, yPosition);
+      yPosition += 6;
+      pdf.text(`• Lifetime Earnings: ${formatCurrency(scenario.metrics.totalEarnings)}`, margin + 5, yPosition);
+      yPosition += 6;
+      pdf.text(`• Net Return: ${formatCurrency(scenario.metrics.netReturn)}`, margin + 5, yPosition);
+      yPosition += 6;
+      pdf.text(`• ROI Percentage: ${scenario.metrics.roiPercentage.toFixed(1)}%`, margin + 5, yPosition);
+      yPosition += 6;
+      pdf.text(`• Payback Period: ${scenario.metrics.paybackYears.toFixed(1)} years`, margin + 5, yPosition);
+      yPosition += 6;
+      pdf.text(`• Peak Monthly Salary: ${formatCurrency(scenario.metrics.peakMonthlySalary)}`, margin + 5, yPosition);
+      yPosition += 15;
+    });
+
+    // Best Scenario Recommendation
+    if (yPosition > 230) {
+      pdf.addPage();
+      yPosition = 30;
+    }
+
+    pdf.setFontSize(16);
+    pdf.text('Recommendation', margin, yPosition);
+    yPosition += 10;
+    
+    pdf.setFontSize(11);
+    pdf.text(`Based on the analysis, "${bestScenario.name}" offers the best ROI at`, margin, yPosition);
+    yPosition += 7;
+    pdf.text(`${bestScenario.metrics.roiPercentage.toFixed(1)}% with a payback period of ${bestScenario.metrics.paybackYears.toFixed(1)} years.`, margin, yPosition);
+
+    // Save the PDF
+    pdf.save(`What_If_Scenario_Analysis_${new Date().getTime()}.pdf`);
+    
+    toast({
+      title: "Report Generated",
+      description: "Your detailed scenario analysis report has been downloaded.",
+    });
+  };
+
+  const exportComparison = () => {
+    if (scenarios.length === 0) {
+      toast({
+        title: "No Scenarios Available",
+        description: "Please create scenarios first before exporting comparison.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = [
+      'Scenario Name',
+      'College',
+      'Course',
+      'Duration (Years)',
+      'Annual Fees',
+      'Starting Salary',
+      'Growth Rate (%)',
+      'Total Investment',
+      'Lifetime Earnings',
+      'Net Return',
+      'ROI (%)',
+      'Payback Period (Years)',
+      'Peak Monthly Salary',
+      'Career Stability'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...scenarioResults.map(scenario => [
+        `"${scenario.name}"`,
+        `"${scenario.college}"`,
+        `"${scenario.course}"`,
+        scenario.duration,
+        scenario.fees,
+        scenario.startingSalary,
+        scenario.growthRate,
+        scenario.metrics.totalEducationCost,
+        scenario.metrics.totalEarnings,
+        scenario.metrics.netReturn,
+        scenario.metrics.roiPercentage.toFixed(2),
+        scenario.metrics.paybackYears.toFixed(2),
+        scenario.metrics.peakMonthlySalary.toFixed(0),
+        scenario.metrics.careerStability
+      ].join(','))
+    ].join('\n');
+
+    // Create and download CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `scenario_comparison_${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Comparison Exported",
+      description: "Scenario comparison data has been exported to CSV format.",
+    });
+  };
+
+  const saveScenarios = () => {
+    if (scenarios.length === 0) {
+      toast({
+        title: "No Scenarios Available",
+        description: "Please create scenarios first before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Save scenarios to localStorage
+    const scenarioData = {
+      scenarios,
+      simulationParams,
+      compareMetrics,
+      savedAt: new Date().toISOString(),
+      scenarioResults: scenarioResults.map(s => ({
+        ...s,
+        metrics: s.metrics
+      }))
+    };
+
+    const existingScenarios = JSON.parse(localStorage.getItem('whatIfScenarios') || '[]');
+    const scenarioId = `scenario_set_${new Date().getTime()}`;
+    
+    existingScenarios.push({
+      id: scenarioId,
+      name: `Scenario Set - ${new Date().toLocaleDateString()}`,
+      data: scenarioData
+    });
+
+    localStorage.setItem('whatIfScenarios', JSON.stringify(existingScenarios));
+
+    toast({
+      title: "Scenarios Saved",
+      description: `${scenarios.length} scenarios have been saved successfully.`,
+    });
+  };
+
+  // Load saved scenarios on component mount
+  useEffect(() => {
+    const savedScenarios = localStorage.getItem('whatIfScenarios');
+    if (savedScenarios) {
+      try {
+        const parsed = JSON.parse(savedScenarios);
+        console.log('Loaded saved scenarios:', parsed.length);
+      } catch (error) {
+        console.error('Error loading saved scenarios:', error);
+      }
+    }
+  }, []);
+
+  // Saved Scenarios Section Component
+  const SavedScenariosSection = () => {
+    const [savedScenarioSets, setSavedScenarioSets] = useState<SavedScenarioSet[]>([]);
+
+    useEffect(() => {
+      const loadSavedScenarios = () => {
+        const saved = localStorage.getItem('whatIfScenarios');
+        if (saved) {
+          try {
+            setSavedScenarioSets(JSON.parse(saved));
+          } catch (error) {
+            console.error('Error loading saved scenarios:', error);
+          }
+        }
+      };
+      loadSavedScenarios();
+    }, []);
+
+    const loadScenarioSet = (scenarioSet: SavedScenarioSet) => {
+      setScenarios(scenarioSet.data.scenarios);
+      setSimulationParams(scenarioSet.data.simulationParams);
+      setCompareMetrics(scenarioSet.data.compareMetrics);
+      
+      toast({
+        title: "Scenarios Loaded",
+        description: `Loaded ${scenarioSet.data.scenarios.length} scenarios from ${scenarioSet.name}`,
+      });
+    };
+
+    const deleteScenarioSet = (id: string) => {
+      const updated = savedScenarioSets.filter(set => set.id !== id);
+      setSavedScenarioSets(updated);
+      localStorage.setItem('whatIfScenarios', JSON.stringify(updated));
+      
+      toast({
+        title: "Scenario Set Deleted",
+        description: "The saved scenario set has been removed.",
+      });
+    };
+
+    if (savedScenarioSets.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          <Save className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No saved scenario sets found. Save your current scenarios to see them here.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {savedScenarioSets.map((scenarioSet) => (
+          <Card key={scenarioSet.id} className="border border-gray-200">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-medium">{scenarioSet.name}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {scenarioSet.data.scenarios.length} scenarios • Saved on {new Date(scenarioSet.data.savedAt).toLocaleDateString()}
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    {scenarioSet.data.scenarios.slice(0, 3).map((scenario: Scenario, index: number) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {scenario.name}
+                      </Badge>
+                    ))}
+                    {scenarioSet.data.scenarios.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{scenarioSet.data.scenarios.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => loadScenarioSet(scenarioSet)}
+                  >
+                    Load
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => deleteScenarioSet(scenarioSet.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   };
 
@@ -551,17 +924,49 @@ const WhatIfSimulator = () => {
                 </div>
                 
                 <div className="mt-6 flex gap-4">
-                  <Button className="btn-primary">
-                    <BarChart3 className="w-4 h-4 mr-2" />
+                  <Button className="btn-primary" onClick={generateDetailedReport}>
+                    <Download className="w-4 h-4 mr-2" />
                     Generate Detailed Report
                   </Button>
-                  <Button variant="outline">Export Comparison</Button>
-                  <Button variant="outline">Save Scenarios</Button>
+                  <Button variant="outline" onClick={exportComparison}>
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Export Comparison
+                    {scenarios.length > 1 && (
+                      <Badge variant="secondary" className="ml-2">
+                        {scenarios.length}
+                      </Badge>
+                    )}
+                  </Button>
+                  <Button variant="outline" onClick={saveScenarios}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Scenarios
+                    {scenarios.length > 1 && (
+                      <Badge variant="secondary" className="ml-2">
+                        {scenarios.length}
+                      </Badge>
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
+
+        {/* Saved Scenarios Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Save className="w-5 h-5" />
+              Saved Scenario Sets
+            </CardTitle>
+            <CardDescription>
+              Manage and load previously saved scenario comparisons
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SavedScenariosSection />
+          </CardContent>
+        </Card>
 
         {scenarios.length === 1 && (
           <Card>
