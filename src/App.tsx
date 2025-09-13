@@ -31,6 +31,7 @@ import ProgressAnalytics from "./pages/dashboards/decision-making/ProgressAnalyt
 // College Admission Dashboard Components
 import CollegeComparison from "./pages/dashboards/college-admission/CollegeComparison";
 import CourseMatcher from "./pages/dashboards/college-admission/CourseMatcher";
+import CourseDetailTree from "./pages/dashboards/college-admission/CourseDetailTree";
 import ROICalculator from "./pages/dashboards/college-admission/ROICalculator";
 import WhatIfSimulator from "./pages/dashboards/college-admission/WhatIfSimulator";
 import Scholarships from "./pages/dashboards/college-admission/Scholarships";
@@ -86,6 +87,7 @@ const App = () => (
           <Route path="/dashboard/college-admission" element={<CollegeAdmissionDashboard />} />
           <Route path="/dashboard/college-admission/compare" element={<CollegeComparison />} />
           <Route path="/dashboard/college-admission/matcher" element={<CourseMatcher />} />
+          <Route path="/dashboard/college-admission/course-tree/:courseId" element={<CourseDetailTree />} />
           <Route path="/dashboard/college-admission/roi" element={<ROICalculator />} />
           <Route path="/dashboard/college-admission/simulator" element={<WhatIfSimulator />} />
           <Route path="/dashboard/college-admission/scholarships" element={<Scholarships />} />

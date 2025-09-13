@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { DollarSign, Award, BookOpen, Filter, Search, Star, TrendingUp, Users, CheckCircle, ExternalLink, Download } from "lucide-react";
+import { useState, useEffect } from "react";
+import { DollarSign, Award, BookOpen, Filter, Search, Star, TrendingUp, Users, CheckCircle, ExternalLink, Loader2, Sparkles, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import GeminiScholarshipService, { type Scholarship, type ScholarshipSearchParams } from "@/services/geminiScholarshipService";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const Scholarships = () => {
+  const { toast } = useToast();
+  
   const [filters, setFilters] = useState({
     category: "",
     eligibility: "",
@@ -18,10 +22,14 @@ const Scholarships = () => {
     deadline: ""
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [appliedScholarships, setAppliedScholarships] = useState<string[]>([]);
+  const [searchedScholarships, setSearchedScholarships] = useState<string[]>([]);
   const [savedScholarships, setSavedScholarships] = useState<string[]>(["merit-1", "need-2"]);
+  const [aiScholarships, setAiScholarships] = useState<Scholarship[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [lastSearchQuery, setLastSearchQuery] = useState("");
+  const [showAIGenerated, setShowAIGenerated] = useState(false);
 
-  const scholarships = [
+  const scholarships: Scholarship[] = [
     {
       id: "merit-1",
       name: "National Merit Scholarship",
@@ -39,7 +47,8 @@ const Scholarships = () => {
       description: "Comprehensive scholarship for meritorious students from economically weaker sections",
       benefits: ["Full tuition coverage", "Monthly stipend", "Book allowance", "Laptop provided"],
       category: "Government",
-      field: "All Streams"
+      field: "All Streams",
+      applicationUrl: "https://scholarships.gov.in/"
     },
     {
       id: "tech-2",
@@ -58,7 +67,8 @@ const Scholarships = () => {
       description: "Scholarship for pursuing higher education in science and research",
       benefits: ["Tuition fees", "Research funding", "International exposure", "Mentorship"],
       category: "Government",
-      field: "Science & Research"
+      field: "Science & Research",
+      applicationUrl: "https://online-inspire.gov.in/"
     },
     {
       id: "need-2",
@@ -77,7 +87,8 @@ const Scholarships = () => {
       description: "Supporting underprivileged students in professional courses",
       benefits: ["Full tuition", "Living allowance", "Internship opportunity", "Job assistance"],
       category: "Corporate",
-      field: "Engineering/Medical"
+      field: "Engineering/Medical",
+      applicationUrl: "https://scholarships.adityabirla.com/"
     },
     {
       id: "women-3",
@@ -96,7 +107,8 @@ const Scholarships = () => {
       description: "Encouraging girl students in technical education",
       benefits: ["Tuition support", "Skill development", "Career guidance", "Networking"],
       category: "Government",
-      field: "Technical Education"
+      field: "Technical Education",
+      applicationUrl: "https://www.aicte-india.org/schemes"
     },
     {
       id: "minority-4",
@@ -115,7 +127,8 @@ const Scholarships = () => {
       description: "Educational support for minority community students",
       benefits: ["Maintenance allowance", "Reader allowance", "Book allowance"],
       category: "Government",
-      field: "All Streams"
+      field: "All Streams",
+      applicationUrl: "https://scholarships.gov.in/"
     },
     {
       id: "international-5",
@@ -176,6 +189,80 @@ const Scholarships = () => {
     }
   ];
 
+  // AI-powered scholarship search
+  const handleAISearch = async () => {
+    if (!searchTerm.trim() && !filters.category && !filters.eligibility) {
+      toast({
+        title: "Search Query Required",
+        description: "Please enter a search term or select filters to find scholarships.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    setLastSearchQuery(searchTerm);
+
+    try {
+      console.log('🔍 Starting AI scholarship search...');
+      
+      const searchParams: ScholarshipSearchParams = {
+        searchTerm: searchTerm.trim(),
+        category: filters.category,
+        eligibility: filters.eligibility,
+        amount: filters.amount,
+        deadline: filters.deadline
+      };
+
+      const result = await GeminiScholarshipService.searchScholarships(searchParams, scholarships);
+      
+      console.log('✅ Search completed:', result);
+
+      if (result.aiGenerated.length > 0) {
+        setAiScholarships(result.aiGenerated);
+        setShowAIGenerated(true);
+        
+        toast({
+          title: "AI Scholarships Found",
+          description: `Found ${result.aiGenerated.length} additional scholarship opportunities using AI.`,
+        });
+      } else if (result.scholarships.length > 0) {
+        toast({
+          title: "Scholarships Found",
+          description: `Found ${result.scholarships.length} matching scholarships from our database.`,
+        });
+      } else {
+        toast({
+          title: "No Scholarships Found",
+          description: "Try adjusting your search criteria or filters.",
+          variant: "destructive"
+        });
+      }
+      
+    } catch (error) {
+      console.error('❌ Error in AI search:', error);
+      toast({
+        title: "Search Error",
+        description: "There was an error searching for scholarships. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Clear AI results
+  const clearAIResults = () => {
+    setAiScholarships([]);
+    setShowAIGenerated(false);
+    setLastSearchQuery("");
+    
+    toast({
+      title: "AI Results Cleared",
+      description: "Showing only database scholarships.",
+    });
+  };
+
   const filteredScholarships = scholarships.filter(scholarship => {
     const matchesSearch = scholarship.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          scholarship.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -210,8 +297,12 @@ const Scholarships = () => {
     return matchesSearch && matchesCategory && matchesType && matchesAmount && matchesDeadline;
   });
 
+  // Combine regular scholarships with AI scholarships
+  const allScholarships = showAIGenerated ? [...filteredScholarships, ...aiScholarships] : filteredScholarships;
+  const displayScholarships = allScholarships;
+
   const toggleApplied = (scholarshipId: string) => {
-    setAppliedScholarships(prev => 
+    setSearchedScholarships(prev => 
       prev.includes(scholarshipId)
         ? prev.filter(id => id !== scholarshipId)
         : [...prev, scholarshipId]
@@ -280,7 +371,7 @@ const Scholarships = () => {
                 <Award className="w-6 h-6 text-blue-600" />
               </div>
               <div className="text-2xl font-bold text-blue-600">
-                {filteredScholarships.length}
+                {displayScholarships.length}
               </div>
               <div className="text-sm text-muted-foreground">Available Scholarships</div>
             </CardContent>
@@ -304,9 +395,9 @@ const Scholarships = () => {
                 <CheckCircle className="w-6 h-6 text-orange-600" />
               </div>
               <div className="text-2xl font-bold text-orange-600">
-                {appliedScholarships.length}
+                {searchedScholarships.length}
               </div>
-              <div className="text-sm text-muted-foreground">Applications Submitted</div>
+              <div className="text-sm text-muted-foreground">Scholarships Searched</div>
             </CardContent>
           </Card>
         </div>
@@ -327,12 +418,25 @@ const Scholarships = () => {
                     placeholder="Search scholarships by name, provider, or field..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAISearch();
+                      }
+                    }}
                     className="w-full"
                   />
                 </div>
-                <Button className="btn-secondary">
-                  <Search className="w-4 h-4 mr-2" />
-                  AI-Powered Match
+                <Button 
+                  className="btn-secondary" 
+                  onClick={handleAISearch}
+                  disabled={isSearching}
+                >
+                  {isSearching ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-2" />
+                  )}
+                  {isSearching ? 'Searching...' : 'AI-Powered Search'}
                 </Button>
               </div>
               
@@ -392,16 +496,64 @@ const Scholarships = () => {
           </CardContent>
         </Card>
 
+        {/* AI Search Results Section */}
+        {showAIGenerated && aiScholarships.length > 0 && (
+          <Card className="border-2 border-primary/30 bg-primary/5">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2 text-primary">
+                  <Bot className="w-5 h-5" />
+                  AI-Generated Scholarships
+                  <Badge className="bg-primary/20 text-primary">
+                    {aiScholarships.length} new
+                  </Badge>
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={clearAIResults}>
+                  Clear AI Results
+                </Button>
+              </div>
+              <CardDescription>
+                AI discovered these additional scholarship opportunities for "{lastSearchQuery}"
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-muted-foreground mb-4">
+                💡 These scholarships were generated using AI based on your search criteria. 
+                Please verify details and eligibility before applying.
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Scholarship Listings */}
         <Tabs defaultValue="all" className="w-full">
           <TabsList>
-            <TabsTrigger value="all">All Scholarships ({filteredScholarships.length})</TabsTrigger>
+            <TabsTrigger value="all">
+              All Scholarships ({displayScholarships.length})
+              {aiScholarships.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  +{aiScholarships.length} AI
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="saved">Saved ({savedScholarships.length})</TabsTrigger>
-            <TabsTrigger value="applied">Applied ({appliedScholarships.length})</TabsTrigger>
+            <TabsTrigger value="applied">Searched ({searchedScholarships.length})</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all" className="space-y-4 mt-6">
-            {filteredScholarships.map((scholarship) => (
+            {isSearching && (
+              <Card className="border-dashed border-2 border-primary/30">
+                <CardContent className="p-8 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+                  <h3 className="text-lg font-semibold text-primary mb-2">Searching with AI...</h3>
+                  <p className="text-muted-foreground">
+                    Finding scholarships that match your criteria: "{searchTerm}"
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            
+            {displayScholarships.map((scholarship) => (
               <Card key={scholarship.id} className="feature-card hover:shadow-lg transition-all">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -412,6 +564,12 @@ const Scholarships = () => {
                           {scholarship.status}
                         </Badge>
                         <Badge variant="outline">{scholarship.type}</Badge>
+                        {scholarship.isAIGenerated && (
+                          <Badge className="bg-primary/20 text-primary border-primary/30">
+                            <Bot className="w-3 h-3 mr-1" />
+                            AI Generated
+                          </Badge>
+                        )}
                       </div>
                       <CardDescription>
                         {scholarship.provider} • {scholarship.field}
@@ -489,17 +647,33 @@ const Scholarships = () => {
                     <Button 
                       size="sm" 
                       className="btn-primary"
-                      onClick={() => toggleApplied(scholarship.id)}
+                      onClick={() => {
+                        if (searchedScholarships.includes(scholarship.id)) {
+                          return; // Already searched
+                        }
+                        
+                        // Generate Google search URL with scholarship name and provider
+                        const searchQuery = `${scholarship.name} ${scholarship.provider} scholarship application 2025`;
+                        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+                        
+                        // Open Google search in new tab
+                        window.open(googleSearchUrl, '_blank');
+                        
+                        // Mark as searched after opening the search
+                        setSearchedScholarships(prev => [...prev, scholarship.id]);
+                      }}
+                      disabled={searchedScholarships.includes(scholarship.id)}
+                      title={`Search for "${scholarship.name}" on Google to find application details`}
                     >
-                      {appliedScholarships.includes(scholarship.id) ? (
+                      {searchedScholarships.includes(scholarship.id) ? (
                         <>
                           <CheckCircle className="w-4 h-4 mr-2" />
-                          Applied
+                          Searched
                         </>
                       ) : (
                         <>
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Apply Now
+                          <Search className="w-4 h-4 mr-2" />
+                          Search & Apply
                         </>
                       )}
                     </Button>
@@ -512,10 +686,6 @@ const Scholarships = () => {
                       {savedScholarships.includes(scholarship.id) ? 'Saved' : 'Save'}
                     </Button>
                     <Button size="sm" variant="outline">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Form
-                    </Button>
-                    <Button size="sm" variant="outline">
                       <Users className="w-4 h-4 mr-2" />
                       Get Help
                     </Button>
@@ -526,7 +696,7 @@ const Scholarships = () => {
           </TabsContent>
           
           <TabsContent value="saved" className="space-y-4 mt-6">
-            {scholarships.filter(s => savedScholarships.includes(s.id)).map((scholarship) => (
+            {displayScholarships.filter(s => savedScholarships.includes(s.id)).map((scholarship) => (
               <Card key={scholarship.id} className="feature-card">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">
@@ -550,7 +720,7 @@ const Scholarships = () => {
           </TabsContent>
           
           <TabsContent value="applied" className="space-y-4 mt-6">
-            {scholarships.filter(s => appliedScholarships.includes(s.id)).map((scholarship) => (
+            {displayScholarships.filter(s => searchedScholarships.includes(s.id)).map((scholarship) => (
               <Card key={scholarship.id} className="feature-card">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">

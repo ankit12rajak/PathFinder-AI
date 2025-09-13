@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Brain, Target, Users, TrendingUp, BookOpen, Award, Filter, Search, Star } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Brain, Target, Users, TrendingUp, BookOpen, Award, Filter, Search, Star, Sparkles, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
+import { courseRecommendations, type Course } from "@/data/courseData";
+import geminiRecommendationService, { type UserProfile, type RecommendationResult } from "@/services/geminiRecommendationService";
 
 const CourseMatcher = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [interests, setInterests] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [careerGoals, setCareerGoals] = useState<string[]>([]);
@@ -23,6 +30,11 @@ const CourseMatcher = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStream, setSelectedStream] = useState("");
+  const [visibleCoursesCount, setVisibleCoursesCount] = useState(5);
+  const [aiRecommendations, setAiRecommendations] = useState<RecommendationResult | null>(null);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [showAIResults, setShowAIResults] = useState(false);
+  const coursesPerLoad = 5;
 
   const interestOptions = [
     "Mathematics", "Physics", "Chemistry", "Biology", "Computer Science",
@@ -44,99 +56,6 @@ const CourseMatcher = () => {
     "Flexible Work", "Continuous Learning", "Recognition", "Helping Others"
   ];
 
-  const courseRecommendations = [
-    {
-      id: 1,
-      name: "Computer Science Engineering",
-      stream: "Engineering",
-      matchScore: 95,
-      avgSalary: "₹8-25 LPA",
-      jobOutlook: "Excellent",
-      growth: "+22%",
-      topColleges: ["IIT", "IIIT", "NIT", "BITS"],
-      skills: ["Programming", "Problem Solving", "Analytical Thinking"],
-      careers: ["Software Developer", "Data Scientist", "Product Manager", "AI Engineer"],
-      marketDemand: 95,
-      workLifeBalance: 75,
-      description: "Design and develop software systems, work with cutting-edge technologies"
-    },
-    {
-      id: 2,
-      name: "MBBS (Medical)",
-      stream: "Medical",
-      matchScore: 88,
-      avgSalary: "₹6-50 LPA",
-      jobOutlook: "Very Good",
-      growth: "+15%",
-      topColleges: ["AIIMS", "JIPMER", "King George", "Maulana Azad"],
-      skills: ["Biology", "Chemistry", "Communication", "Problem Solving"],
-      careers: ["Doctor", "Surgeon", "Researcher", "Public Health Officer"],
-      marketDemand: 90,
-      workLifeBalance: 60,
-      description: "Diagnose and treat patients, contribute to healthcare and medical research"
-    },
-    {
-      id: 3,
-      name: "Business Administration (BBA/MBA)",
-      stream: "Management",
-      matchScore: 82,
-      avgSalary: "₹5-30 LPA",
-      jobOutlook: "Good",
-      growth: "+18%",
-      topColleges: ["IIM", "ISB", "FMS", "XLRI"],
-      skills: ["Leadership", "Communication", "Analytical Thinking", "Team Work"],
-      careers: ["Business Analyst", "Consultant", "Manager", "Entrepreneur"],
-      marketDemand: 85,
-      workLifeBalance: 70,
-      description: "Lead business operations, strategic planning, and organizational management"
-    },
-    {
-      id: 4,
-      name: "Economics Honours",
-      stream: "Commerce",
-      matchScore: 78,
-      avgSalary: "₹4-20 LPA",
-      jobOutlook: "Good",
-      growth: "+12%",
-      topColleges: ["LSR", "Hindu College", "Hansraj", "SRCC"],
-      skills: ["Mathematics", "Analytical Thinking", "Research", "Critical Thinking"],
-      careers: ["Economist", "Financial Analyst", "Policy Researcher", "Banking"],
-      marketDemand: 80,
-      workLifeBalance: 85,
-      description: "Analyze economic trends, policy impact, and market behaviors"
-    },
-    {
-      id: 5,
-      name: "Psychology",
-      stream: "Arts",
-      matchScore: 75,
-      avgSalary: "₹3-15 LPA",
-      jobOutlook: "Moderate",
-      growth: "+14%",
-      topColleges: ["JNU", "DU", "Jamia", "BHU"],
-      skills: ["Communication", "Research", "Critical Thinking", "Helping Others"],
-      careers: ["Psychologist", "Counselor", "HR Professional", "Researcher"],
-      marketDemand: 70,
-      workLifeBalance: 90,
-      description: "Study human behavior, provide therapy and counseling services"
-    },
-    {
-      id: 6,
-      name: "Mechanical Engineering",
-      stream: "Engineering",
-      matchScore: 72,
-      avgSalary: "₹4-18 LPA",
-      jobOutlook: "Good",
-      growth: "+8%",
-      topColleges: ["IIT", "NIT", "VIT", "Manipal"],
-      skills: ["Mathematics", "Physics", "Problem Solving", "Technical Skills"],
-      careers: ["Design Engineer", "Manufacturing Engineer", "Project Manager", "Consultant"],
-      marketDemand: 75,
-      workLifeBalance: 80,
-      description: "Design and manufacture mechanical systems, vehicles, and machinery"
-    }
-  ];
-
   const toggleSelection = (item: string, list: string[], setList: (list: string[]) => void) => {
     if (list.includes(item)) {
       setList(list.filter(i => i !== item));
@@ -145,7 +64,89 @@ const CourseMatcher = () => {
     }
   };
 
-  const calculateCompatibilityScore = (course: any) => {
+  const handleGetAIRecommendations = async () => {
+    console.log('🎯 Starting AI recommendation process...');
+    
+    // Validate profile
+    const userProfile: UserProfile = {
+      interests,
+      skills,
+      careerGoals,
+      preferences: {
+        jobMarket: preferences.jobMarket[0],
+        salary: preferences.salary[0],
+        workLifeBalance: preferences.workLifeBalance[0],
+        growth: preferences.growth[0]
+      }
+    };
+
+    console.log('👤 User profile:', userProfile);
+
+    const validation = geminiRecommendationService.validateProfile(userProfile);
+    if (!validation.isValid) {
+      console.warn('❌ Profile validation failed:', validation.errors);
+      toast({
+        title: "Profile Incomplete",
+        description: validation.errors.join(', '),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoadingAI(true);
+    
+    try {
+      console.log('🚀 Calling Gemini recommendation service...');
+      
+      const recommendations = await geminiRecommendationService.getPersonalizedRecommendations(
+        userProfile,
+        courseRecommendations
+      );
+      
+      console.log('✅ Received recommendations:', recommendations);
+      console.log('📊 Recommendation details:');
+      recommendations.recommendations.forEach((rec, index) => {
+        console.log(`  ${index + 1}. Course: ${rec.courseName}, Score: ${rec.matchScore}%, ID: ${rec.courseId}`);
+        
+        // Check if course exists in our courseRecommendations
+        const foundCourse = courseRecommendations.find(c => c.id === rec.courseId);
+        console.log(`     Course lookup: ${foundCourse ? '✅ Found' : '❌ Not found'} - ${foundCourse?.name || 'N/A'}`);
+      });
+      
+      if (!recommendations || !recommendations.recommendations) {
+        throw new Error('Invalid recommendations received');
+      }
+      
+      setAiRecommendations(recommendations);
+      setShowAIResults(true);
+      
+      const newCoursesCount = recommendations.newCoursesCreated?.length || 0;
+      
+      toast({
+        title: "AI Analysis Complete!",
+        description: `Generated ${recommendations.recommendations.length} personalized recommendations${newCoursesCount > 0 ? ` including ${newCoursesCount} custom courses created just for you!` : ''}`,
+      });
+      
+      console.log('🎉 AI recommendations completed successfully');
+      
+    } catch (error) {
+      console.error('❌ Error in handleGetAIRecommendations:', error);
+      
+      // Reset loading state
+      setIsLoadingAI(false);
+      setShowAIResults(false);
+      
+      toast({
+        title: "AI Analysis Failed",
+        description: error instanceof Error ? error.message : "Unable to generate recommendations. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+  const calculateCompatibilityScore = (course: Course) => {
     let score = course.matchScore;
     
     // Adjust based on preferences
@@ -167,6 +168,11 @@ const CourseMatcher = () => {
       compatibilityScore: calculateCompatibilityScore(course)
     }))
     .sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+
+  // Reset visible courses count when filters change
+  useEffect(() => {
+    setVisibleCoursesCount(5);
+  }, [searchTerm, selectedStream]);
 
   const getMatchColor = (score: number) => {
     if (score >= 90) return "text-green-600";
@@ -330,14 +336,189 @@ const CourseMatcher = () => {
             </Tabs>
             
             <div className="mt-6 flex gap-4">
-              <Button className="btn-primary">
-                <Target className="w-4 h-4 mr-2" />
-                Get AI Recommendations
+              <Button 
+                className="btn-primary" 
+                onClick={handleGetAIRecommendations}
+                disabled={isLoadingAI}
+              >
+                {isLoadingAI ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing Profile...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Get AI Recommendations
+                  </>
+                )}
               </Button>
               <Button variant="outline">Save Profile</Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* AI Recommendations Section */}
+        {showAIResults && aiRecommendations && (
+          <div className="space-y-6">
+            {/* Error Boundary Wrapper */}
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-6 border border-purple-500/20">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">AI-Powered Recommendations</h2>
+                  <p className="text-muted-foreground">Personalized course matches based on your profile</p>
+                </div>
+              </div>
+
+              {/* Safe Profile Summary */}
+              {aiRecommendations.profileSummary && (
+                <Alert className="mb-6 bg-blue-50 border-blue-200">
+                  <Brain className="h-4 w-4" />
+                  <AlertDescription className="text-sm text-black">
+                    <strong className="text-blue-800">Profile Analysis:</strong> {aiRecommendations.profileSummary}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Safe Overall Insights */}
+              {aiRecommendations.overallInsights && aiRecommendations.overallInsights.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3 text-black">Key Insights</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {aiRecommendations.overallInsights.map((insight, index) => (
+                      <div key={index} className="bg-white/50 rounded-lg p-4 border">
+                        <div className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-black">{insight}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Safe AI Course Recommendations */}
+              {aiRecommendations.recommendations && aiRecommendations.recommendations.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-black">Top Course Matches</h3>
+                  <div className="space-y-4">
+                    {aiRecommendations.recommendations.map((rec, index) => {
+                      // Safe course lookup
+                      const course = courseRecommendations.find(c => c.id === rec.courseId);
+                      
+                      return (
+                        <Card key={`${rec.courseId}-${index}`} className="border-2 border-purple-200 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
+                          <CardHeader>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                                    #{index + 1} AI Match
+                                  </Badge>
+                                  <Badge variant="outline" className="border-green-500 text-green-700">
+                                    {rec.matchScore || 0}% Match
+                                  </Badge>
+                                  {rec.isNewCourse && (
+                                    <Badge className="bg-gradient-to-r from-pink-500 to-violet-500 text-white animate-pulse">
+                                      🚀 AI Created
+                                    </Badge>
+                                  )}
+                                </div>
+                                <CardTitle className="text-xl text-black">{rec.courseName || 'Course Name'}</CardTitle>
+                                <CardDescription className="mt-2 text-gray-700">
+                                  {course?.description || rec.reasoning || 'Course description not available'}
+                                </CardDescription>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-purple-600">{rec.matchScore || 0}%</div>
+                                <div className="text-sm text-gray-600 font-medium">AI Match Score</div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              {/* Safe AI Reasoning */}
+                              {rec.reasoning && (
+                                <div>
+                                  <h4 className="font-medium text-sm mb-2 text-black">Why This Course Matches You:</h4>
+                                  <p className="text-sm text-black">{rec.reasoning}</p>
+                                </div>
+                              )}
+
+                              {/* Safe Key Alignments */}
+                              {rec.keyAlignments && rec.keyAlignments.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium text-sm mb-2 text-black">Key Alignments:</h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {rec.keyAlignments.map((alignment, idx) => (
+                                      <Badge key={idx} variant="secondary" className="text-xs bg-green-100 text-green-700">
+                                        {alignment}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Safe Course Details */}
+                              {course && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                                  <div>
+                                    <div className="text-sm text-gray-600 font-medium">Avg Salary</div>
+                                    <div className="font-semibold text-black">{course.avgSalary || 'N/A'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm text-gray-600 font-medium">Job Outlook</div>
+                                    <div className="font-semibold text-black">{course.jobOutlook || 'N/A'}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm text-gray-600 font-medium">Growth</div>
+                                    <div className="font-semibold text-black">{course.growth || 'N/A'}</div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Safe Action Buttons */}
+                              <div className="flex gap-2 pt-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => course ? navigate(`/dashboard/college-admission/course-tree/${course.id}`) : undefined}
+                                  className="btn-primary"
+                                  disabled={!course}
+                                >
+                                  Explore Course
+                                </Button>
+                                <Button size="sm" variant="outline">
+                                  View Colleges
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Safe Career Path Suggestions */}
+              {aiRecommendations.careerPathSuggestions && aiRecommendations.careerPathSuggestions.length > 0 && (
+                <div className="mt-6 bg-indigo-50 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 text-indigo-800">Alternative Career Paths to Consider:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {aiRecommendations.careerPathSuggestions.map((path, index) => (
+                      <Badge key={index} variant="secondary" className="bg-indigo-100 text-indigo-700">
+                        {path}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Search and Filter */}
         <div className="flex flex-col md:flex-row gap-4">
@@ -367,12 +548,18 @@ const CourseMatcher = () => {
         {/* Recommendations */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Personalized Course Recommendations</h2>
-            <Badge variant="secondary">{filteredCourses.length} matches found</Badge>
+            <h2 className="text-2xl font-bold">
+              {showAIResults ? "All Available Courses" : "Course Recommendations"}
+            </h2>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary">
+                Showing {Math.min(visibleCoursesCount, filteredCourses.length)} of {filteredCourses.length} courses
+              </Badge>
+            </div>
           </div>
           
           <div className="space-y-6">
-            {filteredCourses.map((course, index) => (
+            {filteredCourses.slice(0, visibleCoursesCount).map((course, index) => (
               <Card key={course.id} className="feature-card hover:shadow-lg transition-all">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -452,7 +639,11 @@ const CourseMatcher = () => {
                   </div>
                   
                   <div className="flex gap-4">
-                    <Button size="sm" className="btn-secondary">
+                    <Button 
+                      size="sm" 
+                      className="btn-secondary"
+                      onClick={() => navigate(`/dashboard/college-admission/course-tree/${course.id}?courseName=${encodeURIComponent(course.name)}`)}
+                    >
                       <BookOpen className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
@@ -468,6 +659,38 @@ const CourseMatcher = () => {
                 </CardContent>
               </Card>
             ))}
+            
+            {/* View More Button */}
+            {visibleCoursesCount < filteredCourses.length && (
+              <div className="text-center pt-6">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setVisibleCoursesCount(prev => prev + coursesPerLoad)}
+                  className="w-full md:w-auto"
+                >
+                  View {Math.min(coursesPerLoad, filteredCourses.length - visibleCoursesCount)} More Courses
+                  <TrendingUp className="w-4 h-4 ml-2" />
+                </Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {filteredCourses.length - visibleCoursesCount} more courses available
+                </p>
+              </div>
+            )}
+            
+            {/* Show All Button (appears after loading some courses) */}
+            {visibleCoursesCount >= 15 && visibleCoursesCount < filteredCourses.length && (
+              <div className="text-center pt-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setVisibleCoursesCount(filteredCourses.length)}
+                  className="text-muted-foreground"
+                >
+                  Or view all {filteredCourses.length} courses at once
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
