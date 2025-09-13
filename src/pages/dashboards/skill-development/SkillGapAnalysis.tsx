@@ -255,15 +255,15 @@ const SkillGapAnalysis = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="p-4 bg-blue-200 rounded-lg border border-blue-200">
                     <h4 className="font-semibold text-blue-800">Priority Skills</h4>
                     <p className="text-sm text-blue-600 mt-1">Focus on TypeScript and React.js to close critical gaps</p>
                   </div>
-                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="p-4 bg-green-200 rounded-lg border border-green-200">
                     <h4 className="font-semibold text-green-800">Emerging Opportunities</h4>
                     <p className="text-sm text-green-600 mt-1">Web3 and Mobile Development show high growth potential</p>
                   </div>
-                  <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="p-4 bg-orange-200 rounded-lg border border-orange-200">
                     <h4 className="font-semibold text-orange-800">Long-term Investment</h4>
                     <p className="text-sm text-orange-600 mt-1">AI/ML skills will be valuable across all tech roles</p>
                   </div>

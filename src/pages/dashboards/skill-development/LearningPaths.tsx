@@ -154,7 +154,7 @@ const LearningPaths = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Learning Paths</h1>
+            <h1 className="text-3xl font-bold text-purple-600">Learning Paths</h1>
             <p className="text-gray-600 mt-2">AI-powered personalized learning journeys for your career goals</p>
           </div>
           <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ const LearningPaths = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {aiFeatures.map((feature, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-blue-50">
+                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-500 to-blue-200">
                   <div className="flex items-center gap-2 mb-2">
                     <feature.icon className="w-5 h-5 text-purple-600" />
                     <Badge variant={feature.active ? "default" : "secondary"} className="text-xs">
@@ -259,7 +259,7 @@ const LearningPaths = () => {
                 <TabsContent value="modules" className="mt-6">
                   <div className="space-y-4">
                     {pathDetails.frontend.modules.map((module, index) => (
-                      <div key={index} className="p-4 border rounded-lg bg-gradient-to-r from-gray-50 to-blue-50">
+                      <div key={index} className="p-4 border rounded-lg bg-gradient-to-r from-purple-500 to-blue-300">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -291,7 +291,7 @@ const LearningPaths = () => {
                             </h4>
                             <div className="flex flex-wrap gap-2">
                               {module.aiFeatures.map((feature, featureIndex) => (
-                                <Badge key={featureIndex} variant="outline" className="text-xs bg-purple-50 border-purple-200">
+                                <Badge key={featureIndex} variant="outline" className="text-xs bg-gray-700 border-gray-700">
                                   {feature}
                                 </Badge>
                               ))}

@@ -245,8 +245,8 @@ const IndustryTrends = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Industry Trends</h1>
-            <p className="text-gray-600 mt-2">AI-powered insights into emerging skills and market demands</p>
+            <h1 className="text-3xl font-bold text-purple-600 p-3">Industry Trends</h1>
+            <p className="text-gray-600 mt-2 px-2">AI-powered insights into emerging skills and market demands</p>
           </div>
           <div className="flex items-center gap-3">
             <Badge variant="secondary" className="bg-blue-100 text-blue-700">
@@ -507,7 +507,7 @@ const IndustryTrends = () => {
                   <CardDescription>Machine learning analysis of job market trends</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg">
+                  <div className="bg-gradient-to-r from-purple-600 to-blue-300 p-4 rounded-lg">
                     <h4 className="font-semibold mb-2">Next 6 Months Forecast</h4>
                     <ul className="space-y-2 text-sm">
                       <li>• AI/ML roles expected to grow by 78%</li>
@@ -517,7 +517,7 @@ const IndustryTrends = () => {
                     </ul>
                   </div>
                   
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+                  <div className="bg-gradient-to-r from-green-600 to-emerald-300 p-4 rounded-lg">
                     <h4 className="font-semibold mb-2">Salary Trend Analysis</h4>
                     <ul className="space-y-2 text-sm">
                       <li>• AI specialists: +35% average increase</li>
@@ -557,7 +557,7 @@ const IndustryTrends = () => {
                       </div>
                     </div>
 
-                    <div className="p-3 border rounded-lg bg-yellow-50">
+                    <div className="p-3 border rounded-lg from bg-yellow-600">
                       <h4 className="font-medium mb-2">Emerging Combinations</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
