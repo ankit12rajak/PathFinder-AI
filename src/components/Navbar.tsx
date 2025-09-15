@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Brain, Sparkles } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Menu, X, Sparkles } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -21,6 +22,14 @@ const Navbar = () => {
     { name: "College", href: "/dashboard/skill-development", category: "Development" },
   ];
 
+  const handleSignIn = () => {
+    navigate("/auth"); // Navigate to the Auth page for Sign In
+  };
+
+  const handleGetStarted = () => {
+    navigate("/auth"); // Navigate to the Auth page for Get Started
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,10 +37,14 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
             <div className="relative">
-              <Brain className="w-8 h-8 text-primary group-hover:text-primary-glow transition-colors" />
-              <Sparkles className="w-4 h-4 text-secondary absolute -top-1 -right-1 animate-pulse" />
+              <img 
+                src="/logo.png" 
+                alt="SkillAdvisor Logo" 
+                className="w-20 h-20 group-hover:scale-110 transition-transform duration-200" 
+              />
+              <Sparkles className="w-6 h-6 text-secondary absolute top-1 -left-1 animate-pulse" />
             </div>
-            <span className="text-xl font-bold text-glow">PathfinderAI</span>
+            <span className="text-xl font-bold text-glow">PathFinderAI</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -74,10 +87,10 @@ const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-foreground/80">
+            <Button variant="ghost" className="text-foreground/80" onClick={handleSignIn}>
               Sign In
             </Button>
-            <button className="btn-hero">
+            <button className="btn-hero" onClick={handleGetStarted}>
               Get Started
             </button>
           </div>
@@ -126,10 +139,10 @@ const Navbar = () => {
               </div>
               
               <div className="border-t border-border/50 mt-4 pt-4 space-y-2">
-                <button className="w-full btn-secondary text-left">
+                <button className="w-full btn-secondary text-left" onClick={handleSignIn}>
                   Sign In
                 </button>
-                <button className="w-full btn-hero text-center">
+                <button className="w-full btn-hero text-center" onClick={handleGetStarted}>
                   Get Started
                 </button>
               </div>

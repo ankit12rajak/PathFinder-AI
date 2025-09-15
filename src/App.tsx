@@ -51,6 +51,7 @@ import NEETTestPage from './Test/neet';
 import JEEAdvancedTestPage from './Test/jeeadvanced';
 import CUETTestPage from './Test/cuet';
 import CLATTestPage from './Test/clat';
+import EmailConfirmed from "@/pages/EmailConfirmed";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,9 @@ const App = () => (
           <Route path="/jeeadvanced" element={<JEEAdvancedTestPage />} />
           <Route path="/cuet" element={<CUETTestPage />} />
           <Route path="/clat" element={<CLATTestPage />} />
+          
+          {/* Email Confirmation Route */}
+          <Route path="/email-confirmed" element={<EmailConfirmed />} />
           
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />

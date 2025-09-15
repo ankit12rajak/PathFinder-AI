@@ -1,203 +1,258 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Mail } from "lucide-react";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
-    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    fullName: "",
     classLevel: "",
-    interests: [] as string[],
-    careerGoals: [] as string[]
   });
-  
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const interests = [
-    "Technology", "Science", "Mathematics", "Arts & Design", "Literature",
-    "Sports", "Music", "Business", "Medicine", "Engineering"
-  ];
-
-  const careerGoals = [
-    "Engineering", "Medicine", "Law", "Business", "Arts & Design",
-    "Teaching", "Research", "Entrepreneurship", "Defence", "Civil Services"
-  ];
-
-  useEffect(() => {
-    // TEMPORARILY DISABLED FOR TESTING
-    // const checkUser = async () => {
-    //   const { data: { session } } = await supabase.auth.getSession();
-    //   if (session) {
-    //     const { data: profile } = await supabase
-    //       .from('profiles')
-    //       .select('class_level')
-    //       .eq('user_id', session.user.id)
-    //       .single();
-    //     
-    //     if (profile) {
-    //       redirectToDashboard(profile.class_level);
-    //     }
-    //   }
-    // };
-    // checkUser();
-  }, []);
-
-  const redirectToDashboard = (classLevel: string) => {
-    switch (classLevel) {
-      case '8-10':
-        navigate('/dashboard/early-stage');
-        break;
-      case '11-12':
-        navigate('/dashboard/decision-making');
-        break;
-      case 'college':
-        navigate('/dashboard/college-admission');
-        break;
-      case 'graduate':
-        navigate('/dashboard/skill-development');
-        break;
-      default:
-        navigate('/dashboard/early-stage');
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // TEMPORARILY DISABLED FOR TESTING - Skip Supabase authentication
-      // const { data, error } = await supabase.auth.signInWithPassword({
-      //   email: loginForm.email,
-      //   password: loginForm.password,
-      // });
-
-      // if (error) throw error;
-
-      // Simulate loading delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // For testing, redirect to early-stage dashboard by default
-      redirectToDashboard('8-10');
-      
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in. (Testing Mode)",
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginForm.email,
+        password: loginForm.password,
       });
+
+      if (error) throw error;
+
+      // Get user profile from database to determine class level
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("class_level")
+        .eq("user_id", data.user.id)
+        .single();
+
+      let dashboardRoute = "/dashboard/early-stage"; // default
+
+      if (profile && !profileError) {
+        console.log("User profile class_level:", profile.class_level); // Debug log
+        
+        switch (profile.class_level) {
+          case "8-10":
+            dashboardRoute = "/dashboard/early-stage";
+            break;
+          case "11-12":
+            dashboardRoute = "/dashboard/decision-making";
+            break;
+          case "College":
+            dashboardRoute = "/dashboard/college-admission";
+            break;
+          case "Graduate/Professional":
+            dashboardRoute = "/dashboard/skill-development";
+            break;
+          default:
+            // If class_level doesn't match expected values, check user metadata
+            const userMetadata = data.user.user_metadata;
+            if (userMetadata?.class_level) {
+              switch (userMetadata.class_level) {
+                case "early-stage":
+                  dashboardRoute = "/dashboard/early-stage";
+                  break;
+                case "decision-making":
+                  dashboardRoute = "/dashboard/decision-making";
+                  break;
+                case "college":
+                  dashboardRoute = "/dashboard/college-admission";
+                  break;
+                case "professional":
+                  dashboardRoute = "/dashboard/skill-development";
+                  break;
+              }
+            }
+        }
+      } else {
+        // If no profile found, check user metadata
+        const userMetadata = data.user.user_metadata;
+        console.log("User metadata:", userMetadata); // Debug log
+        
+        if (userMetadata?.class_level) {
+          switch (userMetadata.class_level) {
+            case "early-stage":
+              dashboardRoute = "/dashboard/early-stage";
+              break;
+            case "decision-making":
+              dashboardRoute = "/dashboard/decision-making";
+              break;
+            case "college":
+              dashboardRoute = "/dashboard/college-admission";
+              break;
+            case "professional":
+              dashboardRoute = "/dashboard/skill-development";
+              break;
+          }
+        }
+      }
+
+      console.log("Redirecting to:", dashboardRoute); // Debug log
+      navigate(dashboardRoute);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Login error:", error.message);
+      setPasswordError("Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (signupForm.password !== signupForm.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!signupForm.classLevel) {
-      toast({
-        title: "Error",
-        description: "Please select your class level",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
+    setPasswordError("");
+
+    // Check if passwords match
+    if (signupForm.password !== signupForm.confirmPassword) {
+      setPasswordError("Passwords do not match!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check password length
+    if (signupForm.password.length < 6) {
+      setPasswordError("Password must be at least 6 characters long!");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      // TEMPORARILY DISABLED FOR TESTING - Skip Supabase authentication
-      // const { data, error } = await supabase.auth.signUp({
-      //   email: signupForm.email,
-      //   password: signupForm.password,
-      //   options: {
-      //     emailRedirectTo: `${window.location.origin}/`,
-      //     data: {
-      //       full_name: signupForm.fullName,
-      //     }
-      //   }
-      // });
+      // Map class level values to display text for database storage
+      const getClassLevelText = (value: string) => {
+        switch (value) {
+          case "early-stage":
+            return "8-10";
+          case "decision-making":
+            return "11-12";
+          case "college":
+            return "College";
+          case "professional":
+            return "Graduate/Professional";
+          default:
+            return value;
+        }
+      };
 
-      // if (error) throw error;
-
-      // if (data.user) {
-      //   // Update profile with additional information
-      //   const { error: profileError } = await supabase
-      //     .from('profiles')
-      //     .update({
-      //       full_name: signupForm.fullName,
-      //       class_level: signupForm.classLevel,
-      //       interests: signupForm.interests,
-      //       career_goals: signupForm.careerGoals
-      //     })
-      //     .eq('user_id', data.user.id);
-
-      //   if (profileError) throw profileError;
-
-      // Simulate loading delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      redirectToDashboard(signupForm.classLevel);
-      
-      toast({
-        title: "Account created!",
-        description: "Welcome to SkillAdvisor. Your personalized dashboard is ready. (Testing Mode)",
+      const { data, error } = await supabase.auth.signUp({
+        email: signupForm.email,
+        password: signupForm.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/email-confirmed`, // Add this line
+          data: {
+            full_name: signupForm.fullName,
+            class_level: signupForm.classLevel,
+            class_level_display: getClassLevelText(signupForm.classLevel),
+          },
+        },
       });
+
+      if (error) throw error;
+
+      // Insert user details into the Supabase table
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          user_id: data.user?.id,
+          full_name: signupForm.fullName,
+          class_level: getClassLevelText(signupForm.classLevel),
+          email: signupForm.email,
+        });
+
+      if (insertError) {
+        console.error("Insert error:", insertError);
+      }
+
+      console.log("User created with class_level:", signupForm.classLevel);
+      console.log("Database class_level:", getClassLevelText(signupForm.classLevel));
+
+      // Show email confirmation screen
+      setUserEmail(signupForm.email);
+      setShowEmailConfirmation(true);
+
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Sign-up error:", error.message);
+      setPasswordError(`Sign-up failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const toggleInterest = (interest: string) => {
-    setSignupForm(prev => ({
-      ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
-    }));
+  // Clear password error when user types
+  const handlePasswordChange = (value: string) => {
+    setSignupForm((prev) => ({ ...prev, password: value }));
+    setPasswordError("");
   };
 
-  const toggleCareerGoal = (goal: string) => {
-    setSignupForm(prev => ({
-      ...prev,
-      careerGoals: prev.careerGoals.includes(goal)
-        ? prev.careerGoals.filter(g => g !== goal)
-        : [...prev.careerGoals, goal]
-    }));
+  const handleConfirmPasswordChange = (value: string) => {
+    setSignupForm((prev) => ({ ...prev, confirmPassword: value }));
+    setPasswordError("");
   };
+
+  // Email Confirmation Screen
+  if (showEmailConfirmation) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg">
+          <Card className="feature-card">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+                <Mail className="w-8 h-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Check Your Email</CardTitle>
+              <CardDescription>
+                We've sent a confirmation email to
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <p className="font-medium text-primary">{userEmail}</p>
+              <p className="text-muted-foreground">
+                Please click the confirmation link in your email to verify your account and complete the sign-up process.
+              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  After confirming your email, you'll be automatically redirected to your dashboard.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEmailConfirmation(false);
+                    setSignupForm({
+                      email: "",
+                      password: "",
+                      confirmPassword: "",
+                      fullName: "",
+                      classLevel: "",
+                    });
+                  }}
+                  className="w-full"
+                >
+                  Back to Sign Up
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
@@ -209,18 +264,19 @@ const Auth = () => {
 
         <Card className="feature-card">
           <CardHeader>
-            <CardTitle>Get Started</CardTitle>
+            <CardTitle>Welcome Back</CardTitle>
             <CardDescription>
-              Sign in to your account or create a new one to access your personalized dashboard
+              Sign in to your account or get started with a new one
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="get-started">Get Started</TabsTrigger>
               </TabsList>
-              
+
+              {/* Sign In Tab */}
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
@@ -230,11 +286,13 @@ const Auth = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={loginForm.email}
-                      onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setLoginForm((prev) => ({ ...prev, email: e.target.value }))
+                      }
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <div className="relative">
@@ -243,7 +301,9 @@ const Auth = () => {
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={loginForm.password}
-                        onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                        onChange={(e) =>
+                          setLoginForm((prev) => ({ ...prev, password: e.target.value }))
+                        }
                         required
                       />
                       <Button
@@ -257,48 +317,60 @@ const Auth = () => {
                       </Button>
                     </div>
                   </div>
-                  
+
+                  {passwordError && (
+                    <div className="text-red-500 text-sm mt-2">
+                      {passwordError}
+                    </div>
+                  )}
+
                   <Button type="submit" className="w-full btn-hero" disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Sign In
                   </Button>
                 </form>
               </TabsContent>
-              
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
+
+              {/* Get Started Tab */}
+              <TabsContent value="get-started">
+                <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
+                      type="text"
                       placeholder="Enter your full name"
                       value={signupForm.fullName}
-                      onChange={(e) => setSignupForm(prev => ({ ...prev, fullName: e.target.value }))}
+                      onChange={(e) =>
+                        setSignupForm((prev) => ({ ...prev, fullName: e.target.value }))
+                      }
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="signupEmail">Email</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      id="signupEmail"
+                      id="email"
                       type="email"
                       placeholder="Enter your email"
                       value={signupForm.email}
-                      onChange={(e) => setSignupForm(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setSignupForm((prev) => ({ ...prev, email: e.target.value }))
+                      }
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="signupPassword">Password</Label>
+                    <Label htmlFor="password">Password</Label>
                     <div className="relative">
                       <Input
-                        id="signupPassword"
+                        id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Create a password"
+                        placeholder="Enter your password"
                         value={signupForm.password}
-                        onChange={(e) => setSignupForm(prev => ({ ...prev, password: e.target.value }))}
+                        onChange={(e) => handlePasswordChange(e.target.value)}
                         required
                       />
                       <Button
@@ -312,71 +384,60 @@ const Auth = () => {
                       </Button>
                     </div>
                   </div>
-                  
+
+                  {/* Confirm Password Section */}
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={signupForm.confirmPassword}
-                      onChange={(e) => setSignupForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        value={signupForm.confirmPassword}
+                        onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Error Message */}
+                  {passwordError && (
+                    <div className="text-red-500 text-sm mt-2">
+                      {passwordError}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="classLevel" className="text-sm font-medium">Class Level</Label>
+                    <select
+                      id="classLevel"
+                      className="w-full p-2 border rounded-md bg-gray-800 text-white backdrop-blur-md"
+                      value={signupForm.classLevel}
+                      onChange={(e) =>
+                        setSignupForm((prev) => ({ ...prev, classLevel: e.target.value }))
+                      }
                       required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="classLevel">Class Level</Label>
-                    <Select value={signupForm.classLevel} onValueChange={(value) => setSignupForm(prev => ({ ...prev, classLevel: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your current level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="8-10">Class 8-10 (Early Stage)</SelectItem>
-                        <SelectItem value="11-12">Class 11-12 (Decision Making)</SelectItem>
-                        <SelectItem value="college">College Student</SelectItem>
-                        <SelectItem value="graduate">Graduate/Professional</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    >
+                      <option value="">Select your current level</option>
+                      <option value="early-stage">Class 8-10 (Early Stage)</option>
+                      <option value="decision-making">Class 11-12 (Decision Making)</option>
+                      <option value="college">Post-12th</option>
+                      <option value="professional">College Students</option>
+                    </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Interests (Optional)</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {interests.map((interest) => (
-                        <Button
-                          key={interest}
-                          type="button"
-                          variant={signupForm.interests.includes(interest) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => toggleInterest(interest)}
-                        >
-                          {interest}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Career Goals (Optional)</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {careerGoals.map((goal) => (
-                        <Button
-                          key={goal}
-                          type="button"
-                          variant={signupForm.careerGoals.includes(goal) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => toggleCareerGoal(goal)}
-                        >
-                          {goal}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  
                   <Button type="submit" className="w-full btn-hero" disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Create Account
+                    Get Started
                   </Button>
                 </form>
               </TabsContent>

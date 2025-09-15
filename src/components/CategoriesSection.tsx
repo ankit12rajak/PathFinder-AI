@@ -32,7 +32,7 @@ const CategoriesSection = () => {
         "Develop healthy study habits and stress management"
       ],
       stats: { students: "2.5M+", satisfaction: "94%", timeSpent: "30 min/day" },
-      dashboardLink: "/dashboard/early-stage"
+      dashboardLink: "/auth"
     },
     {
       id: "decision-making",
@@ -49,7 +49,7 @@ const CategoriesSection = () => {
         "Connect with mentors and successful seniors"
       ],
       stats: { students: "1.8M+", satisfaction: "96%", timeSpent: "45 min/day" },
-      dashboardLink: "/dashboard/decision-making"
+      dashboardLink: "/auth"
     },
     {
       id: "college-admission",
@@ -66,7 +66,7 @@ const CategoriesSection = () => {
         "Access scholarship and funding opportunities"
       ],
       stats: { students: "950K+", satisfaction: "97%", timeSpent: "60 min/day" },
-      dashboardLink: "/dashboard/college-admission"
+      dashboardLink: "/auth"
     },
     {
       id: "skill-development",
@@ -83,7 +83,7 @@ const CategoriesSection = () => {
         "Get placement-ready with resume building and interview prep"
       ],
       stats: { students: "1.2M+", satisfaction: "95%", timeSpent: "90 min/day" },
-      dashboardLink: "/dashboard/skill-development"
+      dashboardLink: "/auth"
     }
   ];
 
@@ -166,9 +166,9 @@ const CategoriesSection = () => {
                 </ul>
               </div>
 
-              <Link to={categories[activeCategory].dashboardLink}>
+              <Link to="/auth">
                 <button className="btn-hero flex items-center space-x-2">
-                  <span>Access Dashboard</span>
+                  <span>Get Started</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </Link>

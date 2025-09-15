@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import AppSidebar from "./AppSidebar";
-import { Bell, Search } from "lucide-react";
+import { Search, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface DashboardLayoutProps {
@@ -15,34 +15,58 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, title, description }: DashboardLayoutProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [userName, setUserName] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    // TEMPORARILY DISABLED FOR TESTING - Skip authentication check
-    setIsAuthenticated(true);
-    
-    // const checkAuth = async () => {
-    //   const { data: { session } } = await supabase.auth.getSession();
-    //   if (!session) {
-    //     navigate('/auth');
-    //     return;
-    //   }
-    //   setIsAuthenticated(true);
-    // };
+    const fetchUserProfile = async () => {
+      try {
+        // Get current user session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+        
+        if (session?.user) {
+          setIsAuthenticated(true);
+          
+          // Get user profile from database
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("user_id", session.user.id)
+            .single();
 
-    // checkAuth();
+          if (profileError) {
+            console.error("Profile error:", profileError);
+            // Fallback to user metadata if profile not found
+            const userMetadata = session.user.user_metadata;
+            setUserName(userMetadata?.full_name || userMetadata?.fullName || "User");
+          } else {
+            setUserName(profile.full_name || "User");
+          }
+        } else {
+          setIsAuthenticated(false);
+          navigate("/auth");
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setIsAuthenticated(false);
+        navigate("/auth");
+      }
+    };
 
-    // const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    //   if (!session) {
-    //     navigate('/auth');
-    //     setIsAuthenticated(false);
-    //   } else {
-    //     setIsAuthenticated(true);
-    //   }
-    // });
-
-    // return () => subscription.unsubscribe();
+    fetchUserProfile();
   }, [navigate]);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      navigate("/", { replace: true });
+    }
+  };
 
   if (isAuthenticated === null) {
     return (
@@ -67,8 +91,7 @@ const DashboardLayout = ({ children, title, description }: DashboardLayoutProps)
             <div className="flex items-center space-x-4">
               <SidebarTrigger className="h-8 w-8" />
               <div>
-                {title && <h1 className="text-xl font-semibold">{title}</h1>}
-                {description && <p className="text-sm text-muted-foreground">{description}</p>}
+                <h1 className="text-xl font-semibold">Welcome, {userName}!</h1>
               </div>
             </div>
             
@@ -80,8 +103,15 @@ const DashboardLayout = ({ children, title, description }: DashboardLayoutProps)
                   className="pl-10 bg-background/50"
                 />
               </div>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Bell className="h-4 w-4" />
+              {/* Adjusted Sign-Out Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 flex items-center space-x-2"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
               </Button>
             </div>
           </header>
