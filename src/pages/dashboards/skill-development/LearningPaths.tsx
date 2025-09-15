@@ -181,15 +181,15 @@ const LearningPaths = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {aiFeatures.map((feature, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-500 to-blue-200">
+                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-500 to-blue-500">
                   <div className="flex items-center gap-2 mb-2">
                     <feature.icon className="w-5 h-5 text-purple-600" />
                     <Badge variant={feature.active ? "default" : "secondary"} className="text-xs">
                       {feature.active ? "Active" : "Coming Soon"}
                     </Badge>
                   </div>
-                  <h3 className="font-semibold text-sm mb-1">{feature.title}</h3>
-                  <p className="text-xs text-gray-600">{feature.description}</p>
+                  <h3 className="font-semibold text-sm mb-1 text-gray-800">{feature.title}</h3>
+                  <p className="text-xs text-gray-700">{feature.description}</p>
                 </div>
               ))}
             </div>
@@ -259,7 +259,7 @@ const LearningPaths = () => {
                 <TabsContent value="modules" className="mt-6">
                   <div className="space-y-4">
                     {pathDetails.frontend.modules.map((module, index) => (
-                      <div key={index} className="p-4 border rounded-lg bg-gradient-to-r from-purple-500 to-blue-300">
+                      <div key={index} className="p-4 border rounded-lg bg-gradient-to-r from-purple-500 to-blue-500">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -274,8 +274,8 @@ const LearningPaths = () => {
                               )}
                             </div>
                             <div>
-                              <h3 className="font-semibold">{module.title}</h3>
-                              <p className="text-sm text-gray-600">{module.duration} • {module.lessons} lessons • {module.projects} projects</p>
+                              <h3 className="font-semibold text-gray-800">{module.title}</h3>
+                              <p className="text-sm text-gray-700">{module.duration} • {module.lessons} lessons • {module.projects} projects</p>
                             </div>
                           </div>
                           <Badge variant={module.status === 'completed' ? 'default' : module.status === 'in-progress' ? 'secondary' : 'outline'}>

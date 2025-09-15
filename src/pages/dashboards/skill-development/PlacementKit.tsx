@@ -231,7 +231,7 @@ const PlacementKit = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Placement Kit</h1>
+            <h1 className="text-3xl font-bold text-purple-600">Placement Kit</h1>
             <p className="text-gray-600 mt-2">Complete toolkit for job placement with AI-powered ATS scanning and optimization</p>
           </div>
           <div className="flex items-center gap-3">
@@ -355,7 +355,7 @@ const PlacementKit = () => {
                   <CardDescription>AI-powered resume compatibility analysis</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                  <div className="text-center p-6 bg-gradient-to-r from-blue-500 to-purple-400 rounded-lg">
                     <div className={`text-4xl font-bold mb-2 ${getScoreColor(resumeAnalysis.atsScore)}`}>
                       {resumeAnalysis.atsScore}%
                     </div>
@@ -648,7 +648,7 @@ const PlacementKit = () => {
                             Applied: {application.appliedDate} • Last Update: {application.lastUpdate}
                           </p>
 
-                          <div className="bg-blue-50 p-3 rounded-lg mb-3">
+                          <div className="bg-blue-500 p-3 rounded-lg mb-3">
                             <p className="text-sm">
                               <strong>Current Stage:</strong> {application.stage}
                             </p>
@@ -714,7 +714,7 @@ const PlacementKit = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+                    <div className="p-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg">
                       <h4 className="font-medium mb-2">Short Term (1-3 months):</h4>
                       <ul className="space-y-1 text-sm">
                         <li>• Complete React advanced course</li>
@@ -723,7 +723,7 @@ const PlacementKit = () => {
                       </ul>
                     </div>
                     
-                    <div className="p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg">
+                    <div className="p-4 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg">
                       <h4 className="font-medium mb-2">Medium Term (3-6 months):</h4>
                       <ul className="space-y-1 text-sm">
                         <li>• Learn TypeScript and Next.js</li>
@@ -732,7 +732,7 @@ const PlacementKit = () => {
                       </ul>
                     </div>
                     
-                    <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg">
+                    <div className="p-4 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
                       <h4 className="font-medium mb-2">Long Term (6+ months):</h4>
                       <ul className="space-y-1 text-sm">
                         <li>• Secure senior developer position</li>
