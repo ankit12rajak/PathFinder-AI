@@ -273,7 +273,7 @@ const Auth = () => {
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="get-started">Get Started</TabsTrigger>
+                <TabsTrigger value="get-started">Sign Up</TabsTrigger>
               </TabsList>
 
               {/* Sign In Tab */}
@@ -437,7 +437,7 @@ const Auth = () => {
 
                   <Button type="submit" className="w-full btn-hero" disabled={isLoading}>
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Get Started
+                    Create Account
                   </Button>
                 </form>
               </TabsContent>
