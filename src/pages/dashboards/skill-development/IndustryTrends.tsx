@@ -19,6 +19,101 @@ const IndustryTrends = () => {
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleString());
 
+  // YouTube playlist mappings for popular learning resources
+  const youtubePlaylists = {
+    "Artificial Intelligence & Machine Learning": {
+      url: "https://www.youtube.com/playlist?list=PLZoTAELRMXVPBTrWtJkn3wWQxZkmTXGwe",
+      channel: "Krish Naik",
+      title: "AI & ML Complete Playlist"
+    },
+    "Cloud Computing & DevOps": {
+      url: "https://youtube.com/playlist?list=PLdpzxOOAlwvIKMhk8WhzN1pYoJ1YU8Csa&si=rTUgG0rKtgkrkXBa",
+      channel: "Abhishek Veeramala",
+      title: "DevOps Zero to Hero"
+    },
+    "Cybersecurity": {
+      url: "https://youtube.com/playlist?list=PLLKT__MCUeixqHJ1TRqrHsEd6_EdEvo47&si=Rrhmw9Z11JI5GhND",
+      channel: "The Cyber Mentor",
+      title: "Practical Ethical Hacking"
+    },
+    "Data Science & Analytics": {
+      url: "https://youtube.com/playlist?list=PLjVLYmrlmjGdRs1sGqRrTE-EMraLclJga&si=z4pGhE6RDi91Y-ND",
+      channel: "WS Cube Tech",
+      title: "Data Science Roadmap (Full Bootcamp Series)"
+    },
+    "Full-Stack Development": {
+      url: "https://youtube.com/playlist?list=PLu71SKxNbfoC4nsN2NTFEHPCyvm_CnbDq&si=SKuJ2MnbnYNJ3HS-",
+      channel: "Chai Aur Code by Hitesh sir",
+      title: "Full Stack Developer Course"
+    },
+    "Blockchain & Web3": {
+      url: "https://youtu.be/UKQ3el5zh18?si=1GaBKv2fj9w79YV9",
+      channel: "web3Mantra",
+      title: "Blockchain Developer Tutorials"
+    },
+    "Mobile Development": {
+      url: "https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE",
+      channel: "Android Developers (Google)",
+      title: "Android Basics & Advanced"
+    },
+    "UI/UX Design": {
+      url: "https://www.youtube.com/live/BU_afT-aIn0?si=4mgR2ViVvLgm6Mb5",
+      channel: "Intellipat",
+      title: "UX Design: How To Get Started!"
+    },
+    // Additional popular playlists for related skills
+    "Python": {
+      url: "https://www.youtube.com/playlist?list=PLZoTAELRMXVMhVyr3Ri9IQ-t5QPBtxzJO",
+      channel: "Krish Naik",
+      title: "Python Tutorials"
+    },
+    "React": {
+      url: "https://www.youtube.com/playlist?list=PL4cUxeGkcC9gZD-Tvwfod2gaISzfRiP9",
+      channel: "The Net Ninja",
+      title: "React Tutorial"
+    },
+    "JavaScript": {
+      url: "https://www.youtube.com/playlist?list=PL4cUxeGkcC9haFPT7J25Q9umz4bfeMCB",
+      channel: "The Net Ninja",
+      title: "JavaScript Tutorials"
+    },
+    "AWS": {
+      url: "https://www.youtube.com/playlist?list=PLdpzxOOAlwvJ5PueBXmz5A4wE6L7W0TT",
+      channel: "Abhishek Birmal",
+      title: "AWS Tutorials"
+    },
+    "Docker": {
+      url: "https://www.youtube.com/playlist?list=PLdpzxOOAlwvI2Jlc26fWdrQCEkgO8sUQj",
+      channel: "Abhishek Birmal",
+      title: "Docker Tutorials"
+    },
+    "Kubernetes": {
+      url: "https://www.youtube.com/playlist?list=PLdpzxOOAlwvL7Z8PEHXt0q1i9Od-0eHj",
+      channel: "Abhishek Birmal",
+      title: "Kubernetes Tutorials"
+    }
+  };
+
+  const handleStartLearning = (skillName: string) => {
+    const playlist = youtubePlaylists[skillName as keyof typeof youtubePlaylists];
+
+    if (playlist) {
+      // Track the learning journey (could be extended with analytics)
+      console.log(`Starting learning journey for ${skillName} via ${playlist.channel}`);
+
+      // Open YouTube playlist in new tab
+      window.open(playlist.url, '_blank', 'noopener,noreferrer');
+
+      // Optional: Show a brief success message or toast
+      // You could integrate with a toast notification system here
+    } else {
+      // Fallback to a general search if no specific playlist is found
+      console.log(`No specific playlist found for ${skillName}, redirecting to search`);
+      const searchQuery = encodeURIComponent(`${skillName} tutorial playlist`);
+      window.open(`https://www.youtube.com/results?search_query=${searchQuery}`, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const trendingSkills = [
     {
       id: 1,
@@ -652,10 +747,25 @@ const IndustryTrends = () => {
 
                     {/* Actions */}
                     <div className="flex gap-2">
-                      <Button size="sm" className="flex-1">
-                        <Target className="w-4 h-4 mr-1" />
-                        Start Learning
-                      </Button>
+                      <div className="flex-1">
+                        <Button
+                          size="sm"
+                          className="w-full bg-red-600 hover:bg-red-700 text-white transition-all duration-200 transform hover:scale-105"
+                          onClick={() => handleStartLearning(skill.skill)}
+                          title={youtubePlaylists[skill.skill as keyof typeof youtubePlaylists]
+                            ? `Learn ${skill.skill} from ${youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel} on YouTube`
+                            : `Search for ${skill.skill} tutorials on YouTube`}
+                        >
+                          <Target className="w-4 h-4 mr-1" />
+                          Start Learning
+                          <ExternalLink className="w-3 h-3 ml-1" />
+                        </Button>
+                        {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists] && (
+                          <p className="text-xs text-gray-500 mt-1 text-center">
+                            via {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}
+                          </p>
+                        )}
+                      </div>
                       <Button size="sm" variant="outline">
                         <Bookmark className="w-4 h-4" />
                       </Button>
