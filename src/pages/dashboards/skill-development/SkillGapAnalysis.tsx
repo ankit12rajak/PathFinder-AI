@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BarChart3, Target, TrendingUp, AlertCircle, CheckCircle, User, Code, Download, Settings } from "lucide-react";
+import { BarChart3, Target, TrendingUp, AlertCircle, CheckCircle, User, Code, Download, Settings, Brain, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,10 @@ import {
 import TargetRoleManager from "@/components/TargetRoleManager";
 import SkillInputInterface from "@/components/SkillInputInterface";
 import DynamicLearningPaths from "@/components/DynamicLearningPaths";
+import GeminiTest from "@/components/GeminiTest";
+import DynamicQuiz from "@/components/DynamicQuiz";
+import QuizResults from "@/components/QuizResults";
+import { GapAnalysisResult, LearningPath } from "@/services/geminiService";
 
 const SkillGapAnalysis = () => {
   // State Management
@@ -26,6 +30,11 @@ const SkillGapAnalysis = () => {
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [completedResources, setCompletedResources] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Quiz-related state
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizResults, setQuizResults] = useState<GapAnalysisResult | null>(null);
+  const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
 
   // Initialize with first system role
   useEffect(() => {
@@ -103,6 +112,64 @@ const SkillGapAnalysis = () => {
   const handleResourceStart = (resourceId: string) => {
     // Mark resource as started/completed
     setCompletedResources(prev => [...prev, resourceId]);
+  };
+
+  // Quiz handlers
+  const handleStartQuiz = () => {
+    if (!selectedRole) return;
+    setShowQuiz(true);
+    setQuizResults(null);
+  };
+
+  const handleQuizComplete = (results: GapAnalysisResult) => {
+    setQuizResults(results);
+    setShowQuiz(false);
+    
+    // Update user skills based on quiz results
+    if (results.skillGaps && selectedRole) {
+      const updatedSkills: UserSkill[] = results.skillGaps.map(gap => {
+        const masterSkill = masterSkills.find(ms => ms.name.toLowerCase().includes(gap.skill.toLowerCase()));
+        if (masterSkill) {
+          return {
+            ...masterSkill,
+            currentLevel: gap.currentLevel,
+            targetLevel: gap.requiredLevel,
+            assessmentMethod: 'quiz' as const,
+            lastAssessed: new Date(),
+            confidence: 90
+          };
+        }
+        return null;
+      }).filter(Boolean) as UserSkill[];
+      
+      setUserSkills(prev => {
+        const merged = [...prev];
+        updatedSkills.forEach(newSkill => {
+          const existingIndex = merged.findIndex(s => s.id === newSkill.id);
+          if (existingIndex >= 0) {
+            merged[existingIndex] = newSkill;
+          } else {
+            merged.push(newSkill);
+          }
+        });
+        return merged;
+      });
+    }
+  };
+
+  const handleRetakeQuiz = () => {
+    setQuizResults(null);
+    setShowQuiz(true);
+  };
+
+  const handleStartLearningPath = (path: LearningPath) => {
+    // Navigate to learning path or save to user's learning plan
+    console.log('Starting learning path:', path);
+    // You could integrate with a learning management system here
+  };
+
+  const handleCloseQuizResults = () => {
+    setQuizResults(null);
   };
 
   const handleExportReport = () => {
@@ -214,6 +281,45 @@ const SkillGapAnalysis = () => {
   const skillsByStatus = getSkillsByStatus();
   const skillGaps = getSkillGaps();
 
+  // Show quiz if active
+  if (showQuiz && selectedRole) {
+    return (
+      <DashboardLayout 
+        title="Skill Assessment Quiz" 
+        description={`Take a comprehensive skill test for ${selectedRole.name}`}
+      >
+        <div className="p-6">
+          <DynamicQuiz
+            role={selectedRole.name}
+            skillLevel={skillLevel}
+            onQuizComplete={handleQuizComplete}
+            onCancel={() => setShowQuiz(false)}
+          />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show quiz results if available
+  if (quizResults && selectedRole) {
+    return (
+      <DashboardLayout 
+        title="Quiz Results" 
+        description={`Your skill assessment results for ${selectedRole.name}`}
+      >
+        <div className="p-6">
+          <QuizResults
+            results={quizResults}
+            role={selectedRole.name}
+            onRetakeQuiz={handleRetakeQuiz}
+            onStartLearning={handleStartLearningPath}
+            onClose={handleCloseQuizResults}
+          />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout 
       title="Skill Gap Analysis" 
@@ -236,10 +342,16 @@ const SkillGapAnalysis = () => {
                   <div className="text-4xl font-bold text-primary">{overallScore}%</div>
                   <div className="text-sm text-muted-foreground">Overall Readiness</div>
                 </div>
-                <Button variant="outline" onClick={handleExportReport}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Report
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button onClick={handleStartQuiz} className="min-w-[140px]">
+                    <Brain className="w-4 h-4 mr-2" />
+                    Take Skill Test
+                  </Button>
+                  <Button variant="outline" onClick={handleExportReport}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Report
+                  </Button>
+                </div>
               </div>
             </div>
             
@@ -258,13 +370,12 @@ const SkillGapAnalysis = () => {
         )}
 
         <Tabs defaultValue="roles" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="roles">Target Roles</TabsTrigger>
-            <TabsTrigger value="assessment">Skill Assessment</TabsTrigger>
-            <TabsTrigger value="analysis">Gap Analysis</TabsTrigger>
-            <TabsTrigger value="trends">Market Trends</TabsTrigger>
-            <TabsTrigger value="learning">Learning Path</TabsTrigger>
-          </TabsList>
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="roles">Target Roles</TabsTrigger>
+        <TabsTrigger value="assessment">Skill Assessment</TabsTrigger>
+        <TabsTrigger value="analysis">Gap Analysis</TabsTrigger>
+        <TabsTrigger value="learning">Learning Path</TabsTrigger>
+      </TabsList>
 
           {/* Target Roles Tab */}
           <TabsContent value="roles">
@@ -358,70 +469,7 @@ const SkillGapAnalysis = () => {
             )}
           </TabsContent>
 
-          {/* Market Trends Tab */}
-          <TabsContent value="trends" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Industry Skill Trends</CardTitle>
-                <CardDescription>Most in-demand skills and their growth rates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {skillTrends.map((trend, index) => {
-                    const skill = getSkillById(trend.skillId);
-                    if (!skill) return null;
-                    
-                    return (
-                      <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                        <div>
-                          <div className="font-medium">{skill.name}</div>
-                          <div className="text-sm text-muted-foreground">Market Demand: {trend.demand}%</div>
-                          <div className="text-xs text-muted-foreground">
-                            {trend.jobCount.toLocaleString()} jobs • Avg. salary impact: +{trend.averageSalaryImpact}%
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-green-600">{trend.growth}</div>
-                          <div className="text-sm text-muted-foreground">Growth Rate</div>
-                          <div className="text-xs text-muted-foreground">
-                            Top: {trend.topCompanies.slice(0, 2).join(', ')}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Personalized Recommendations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-blue-800">Priority Skills</h4>
-                    <p className="text-sm text-blue-600 mt-1">
-                      Focus on {skillGaps.filter(g => g.status === 'critical').slice(0, 2).map(g => g.skillName).join(' and ')} to close critical gaps
-                    </p>
-                  </div>
-                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                    <h4 className="font-semibold text-green-800">Emerging Opportunities</h4>
-                    <p className="text-sm text-green-600 mt-1">
-                      {skillTrends.slice(0, 2).map(t => getSkillById(t.skillId)?.name).filter(Boolean).join(' and ')} show high growth potential
-                    </p>
-                  </div>
-                  <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <h4 className="font-semibold text-orange-800">Market Alignment</h4>
-                    <p className="text-sm text-orange-600 mt-1">
-                      Your skill profile aligns {overallScore}% with current {selectedRole?.name || 'target role'} market demands
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Market Trends removed as per request */}
 
           {/* Learning Path Tab */}
           <TabsContent value="learning">
@@ -447,6 +495,8 @@ const SkillGapAnalysis = () => {
               </Card>
             )}
           </TabsContent>
+
+          {/* API Test tab removed */}
         </Tabs>
       </div>
     </DashboardLayout>
