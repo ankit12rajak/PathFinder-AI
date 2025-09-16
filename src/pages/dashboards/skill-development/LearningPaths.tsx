@@ -74,7 +74,14 @@ const LearningPaths = () => {
           lessons: 24,
           projects: 3,
           status: "completed",
-          aiFeatures: ["Code review", "Real-time debugging", "Performance optimization"]
+          aiFeatures: ["Code review", "Real-time debugging", "Performance optimization"],
+          materials: [
+            { title: 'MDN HTML Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTML' },
+            { title: 'CSS Tricks Guide', url: 'https://css-tricks.com/guides/' },
+            { title: 'FreeCodeCamp HTML/CSS', url: 'https://www.freecodecamp.org/learn/responsive-web-design/' },
+            { title: 'W3Schools HTML', url: 'https://www.w3schools.com/html/' },
+            { title: 'Codecademy HTML/CSS', url: 'https://www.codecademy.com/learn/learn-html' }
+          ]
         },
         {
           title: "JavaScript Mastery",
@@ -82,7 +89,14 @@ const LearningPaths = () => {
           lessons: 32,
           projects: 5,
           status: "in-progress",
-          aiFeatures: ["Algorithm explanation", "Code generation", "Error detection"]
+          aiFeatures: ["Algorithm explanation", "Code generation", "Error detection"],
+          materials: [
+            { title: 'MDN JavaScript Guide', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide' },
+            { title: 'Eloquent JavaScript', url: 'https://eloquentjavascript.net/' },
+            { title: 'JavaScript.info', url: 'https://javascript.info/' },
+            { title: 'FreeCodeCamp JS', url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/' },
+            { title: 'Codecademy JS', url: 'https://www.codecademy.com/learn/introduction-to-javascript' }
+          ]
         },
         {
           title: "React Development",
@@ -90,7 +104,14 @@ const LearningPaths = () => {
           lessons: 38,
           projects: 7,
           status: "locked",
-          aiFeatures: ["Component suggestions", "State management", "Performance tuning"]
+          aiFeatures: ["Component suggestions", "State management", "Performance tuning"],
+          materials: [
+            { title: 'React Official Docs', url: 'https://react.dev/learn' },
+            { title: 'React Tutorial', url: 'https://react.dev/learn/tutorial-tic-tac-toe' },
+            { title: 'Scrimba React Course', url: 'https://scrimba.com/learn/learnreact' },
+            { title: 'Codecademy React', url: 'https://www.codecademy.com/learn/react-101' },
+            { title: 'Egghead React', url: 'https://egghead.io/courses/the-beginner-s-guide-to-react' }
+          ]
         },
         {
           title: "Advanced React & TypeScript",
@@ -98,7 +119,14 @@ const LearningPaths = () => {
           lessons: 28,
           projects: 4,
           status: "locked",
-          aiFeatures: ["Type inference", "Refactoring assistance", "Testing automation"]
+          aiFeatures: ["Type inference", "Refactoring assistance", "Testing automation"],
+          materials: [
+            { title: 'TypeScript Handbook', url: 'https://www.typescriptlang.org/docs/' },
+            { title: 'React TypeScript Cheatsheet', url: 'https://react-typescript-cheatsheet.netlify.app/' },
+            { title: 'Total TypeScript', url: 'https://www.totaltypescript.com/' },
+            { title: 'Codecademy TypeScript', url: 'https://www.codecademy.com/learn/learn-typescript' },
+            { title: 'Egghead TypeScript', url: 'https://egghead.io/courses/up-and-running-with-typescript' }
+          ]
         },
         {
           title: "Next.js & Deployment",
@@ -109,7 +137,10 @@ const LearningPaths = () => {
             aiFeatures: ["SEO optimization", "Performance monitoring", "Deployment automation"],
             materials: [
               { title: 'Next.js Docs', url: 'https://nextjs.org/docs' },
-              { title: 'Vercel Deployment', url: 'https://vercel.com/docs' }
+              { title: 'Vercel Deployment', url: 'https://vercel.com/docs' },
+              { title: 'Next.js Tutorial', url: 'https://nextjs.org/learn' },
+              { title: 'Netlify Deployment', url: 'https://docs.netlify.com/' },
+              { title: 'Railway Deployment', url: 'https://docs.railway.app/' }
             ]
         }
       ],
@@ -132,7 +163,10 @@ const LearningPaths = () => {
           aiFeatures: ['API scaffolding', 'Security checks', 'Performance tips'],
           materials: [
             { title: 'Node.js Guide', url: 'https://nodejs.org/en/docs/guides/' },
-            { title: 'Express Docs', url: 'https://expressjs.com/' }
+            { title: 'Express Docs', url: 'https://expressjs.com/' },
+            { title: 'Node.js Tutorial', url: 'https://www.w3schools.com/nodejs/' },
+            { title: 'FreeCodeCamp Node.js', url: 'https://www.freecodecamp.org/learn/back-end-development-and-apis/' },
+            { title: 'Codecademy Node.js', url: 'https://www.codecademy.com/learn/learn-node-js' }
           ]
         },
         {
@@ -144,7 +178,10 @@ const LearningPaths = () => {
           aiFeatures: ['Query optimization', 'Schema suggestions'],
           materials: [
             { title: 'Postgres Tutorial', url: 'https://www.postgresql.org/docs/' },
-            { title: 'SQLBolt', url: 'https://sqlbolt.com/' }
+            { title: 'SQLBolt', url: 'https://sqlbolt.com/' },
+            { title: 'MySQL Tutorial', url: 'https://dev.mysql.com/doc/' },
+            { title: 'SQLZoo', url: 'https://sqlzoo.net/' },
+            { title: 'Codecademy SQL', url: 'https://www.codecademy.com/learn/learn-sql' }
           ]
         },
         {
@@ -155,7 +192,11 @@ const LearningPaths = () => {
           status: 'locked',
           aiFeatures: ['Vulnerability detection', 'Secure defaults'],
           materials: [
-            { title: 'OWASP Top Ten', url: 'https://owasp.org/www-project-top-ten/' }
+            { title: 'OWASP Top Ten', url: 'https://owasp.org/www-project-top-ten/' },
+            { title: 'JWT.io', url: 'https://jwt.io/' },
+            { title: 'Passport.js Docs', url: 'http://www.passportjs.org/docs/' },
+            { title: 'Node.js Security Best Practices', url: 'https://nodejs.org/en/docs/guides/security/' },
+            { title: 'Auth0 Docs', url: 'https://auth0.com/docs/' }
           ]
         }
       ],
@@ -172,7 +213,10 @@ const LearningPaths = () => {
           aiFeatures: ['Data cleaning helpers', 'Visualization suggestions'],
           materials: [
             { title: 'Python Official', url: 'https://docs.python.org/3/tutorial/' },
-            { title: 'Pandas Guide', url: 'https://pandas.pydata.org/docs/' }
+            { title: 'Pandas Guide', url: 'https://pandas.pydata.org/docs/' },
+            { title: 'NumPy Docs', url: 'https://numpy.org/doc/' },
+            { title: 'DataCamp Python', url: 'https://www.datacamp.com/courses/intro-to-python-for-data-science' },
+            { title: 'Codecademy Python', url: 'https://www.codecademy.com/learn/learn-python-3' }
           ]
         },
         {
@@ -184,7 +228,10 @@ const LearningPaths = () => {
           aiFeatures: ['Model explainability', 'Hyperparameter tuning'],
           materials: [
             { title: 'Coursera ML (Andrew Ng)', url: 'https://www.coursera.org/learn/machine-learning' },
-            { title: 'Scikit-learn', url: 'https://scikit-learn.org/stable/' }
+            { title: 'Scikit-learn', url: 'https://scikit-learn.org/stable/' },
+            { title: 'Kaggle Learn ML', url: 'https://www.kaggle.com/learn/intro-to-machine-learning' },
+            { title: 'Fast.ai', url: 'https://www.fast.ai/' },
+            { title: 'Google ML Crash Course', url: 'https://developers.google.com/machine-learning/crash-course' }
           ]
         },
         {
@@ -196,7 +243,10 @@ const LearningPaths = () => {
           aiFeatures: ['Model deployment', 'Serving recommendations'],
           materials: [
             { title: 'TensorFlow Guides', url: 'https://www.tensorflow.org/learn' },
-            { title: 'MLOps Guide', url: 'https://ml-ops.org/' }
+            { title: 'MLOps Guide', url: 'https://ml-ops.org/' },
+            { title: 'PyTorch Tutorials', url: 'https://pytorch.org/tutorials/' },
+            { title: 'Hugging Face', url: 'https://huggingface.co/learn' },
+            { title: 'Kubeflow Docs', url: 'https://www.kubeflow.org/docs/' }
           ]
         }
       ],
@@ -213,7 +263,10 @@ const LearningPaths = () => {
           aiFeatures: ['Layout suggestions', 'Color contrast checks'],
           materials: [
             { title: 'Interaction Design Foundation', url: 'https://www.interaction-design.org/' },
-            { title: 'Principles of Design', url: 'https://www.smashingmagazine.com/' }
+            { title: 'Principles of Design', url: 'https://www.smashingmagazine.com/' },
+            { title: 'Canva Design School', url: 'https://www.canva.com/designschool/' },
+            { title: 'Adobe XD Tutorials', url: 'https://www.adobe.com/products/xd/learn.html' },
+            { title: 'Coursera Graphic Design', url: 'https://www.coursera.org/specializations/google-ux-design' }
           ]
         },
         {
@@ -224,7 +277,11 @@ const LearningPaths = () => {
           status: 'in-progress',
           aiFeatures: ['Auto-layout helpers', 'Accessibility checks'],
           materials: [
-            { title: 'Figma Learn', url: 'https://help.figma.com/hc/en-us' }
+            { title: 'Figma Learn', url: 'https://help.figma.com/hc/en-us' },
+            { title: 'Figma Tutorials', url: 'https://www.figma.com/resources/learn-design/' },
+            { title: 'ProtoPie', url: 'https://www.protopie.io/' },
+            { title: 'InVision', url: 'https://www.invisionapp.com/inside-design/design-resources/' },
+            { title: 'Framer', url: 'https://www.framer.com/learn/' }
           ]
         },
         {
@@ -235,7 +292,11 @@ const LearningPaths = () => {
           status: 'locked',
           aiFeatures: ['Persona generation', 'Test script suggestions'],
           materials: [
-            { title: 'Usability.gov', url: 'https://www.usability.gov/' }
+            { title: 'Usability.gov', url: 'https://www.usability.gov/' },
+            { title: 'NNGroup UX Research', url: 'https://www.nngroup.com/articles/ux-research-cheat-sheet/' },
+            { title: 'UserTesting', url: 'https://www.usertesting.com/' },
+            { title: 'Optimal Workshop', url: 'https://www.optimalworkshop.com/' },
+            { title: 'Maze Design', url: 'https://maze.co/' }
           ]
         }
       ],
@@ -280,17 +341,6 @@ const LearningPaths = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* derive selected path object for rendering */}
-        {/**/}
-        {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
-        {(() => {
-          /* helper IIFE to keep TSX scoped */
-        })()}
-        
-        {/* compute selected path object for easier usage below */}
-        {/**/}
-        
-        {/* NOTE: this will be replaced in JSX below with a const */}
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
