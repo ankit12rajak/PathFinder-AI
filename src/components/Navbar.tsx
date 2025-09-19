@@ -16,10 +16,10 @@ const Navbar = () => {
   ];
 
   const dashboards = [
-    { name: "Class 8-10", href: "/dashboard/early-stage", category: "Awareness" },
-    { name: "Class 11-12", href: "/dashboard/decision-making", category: "Preparation" },
-    { name: "Post-12th", href: "/dashboard/college-admission", category: "Admission" },
-    { name: "College", href: "/dashboard/skill-development", category: "Development" },
+    { name: "Class 8-10", href: "/auth", category: "Awareness" },
+    { name: "Class 11-12", href: "/auth", category: "Preparation" },
+    { name: "Post-12th", href: "/auth", category: "Admission" },
+    { name: "College", href: "/auth", category: "Development" },
   ];
 
   const handleSignIn = () => {
