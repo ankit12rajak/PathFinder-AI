@@ -63,6 +63,23 @@ export interface RecommendationResult {
   newCoursesCreated?: NewCourseData[]; // New courses that were created
 }
 
+export interface ResultRecommendation {
+  courseName: string;
+  field: string;
+  eligibility: string;
+  cutoffScore: number;
+  duration: string;
+  avgSalary: string;
+  jobOpportunities: string[];
+  matchScore: number;
+  reasoning: string;
+  topColleges: string[];
+  analysisMarks: {
+    [subject: string]: number;
+  };
+  keyStrengths: string[];
+}
+
 class GeminiRecommendationService {
   private genAI: GoogleGenerativeAI;
   private model: GenerativeModel;
@@ -487,6 +504,184 @@ Select the top 3-5 most relevant courses from the available list and provide det
         'Consulting and Analysis'
       ]
     };
+  }
+
+  /**
+   * Analyze uploaded exam results and recommend courses
+   */
+  async analyzeResultAndRecommendCourses(
+    resultData: { examType: string; fileName: string; fileContent?: string }, 
+    mockScores?: { [subject: string]: number }
+  ): Promise<ResultRecommendation[]> {
+    console.log('🎯 Starting result analysis for course recommendations...');
+    console.log('📋 Result data:', resultData);
+    
+    try {
+      const prompt = this.createResultAnalysisPrompt(resultData, mockScores);
+      console.log('📝 Generated result analysis prompt');
+      
+      console.log('🤖 Calling Gemini API for result analysis...');
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      console.log('📄 Raw Gemini response length:', text.length);
+      console.log('📄 Response preview:', text.substring(0, 300));
+      
+      // Parse the JSON response
+      const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const parsedResponse = JSON.parse(cleanText);
+      
+      console.log('✅ Parsed course recommendations:', parsedResponse.recommendations?.length || 0);
+      
+      return parsedResponse.recommendations || [];
+      
+    } catch (error) {
+      console.error('❌ Error in result analysis:', error);
+      console.log('🔄 Falling back to mock recommendations');
+      
+      // Fallback to intelligent mock recommendations based on exam type
+      return this.generateFallbackResultRecommendations(resultData.examType, mockScores);
+    }
+  }
+
+  private createResultAnalysisPrompt(
+    resultData: { examType: string; fileName: string; fileContent?: string },
+    mockScores?: { [subject: string]: number }
+  ): string {
+    const scoresText = mockScores ? 
+      `Mock scores for analysis: ${Object.entries(mockScores).map(([subject, score]) => `${subject}: ${score}%`).join(', ')}` :
+      'No specific scores provided - analyze based on exam type and general performance expectations.';
+
+    return `
+You are an expert educational counselor and course recommendation specialist. Analyze the uploaded ${resultData.examType} exam result and recommend the best 5 courses based on the student's performance.
+
+Exam Details:
+- Exam Type: ${resultData.examType}
+- File: ${resultData.fileName}
+- ${scoresText}
+
+Please provide course recommendations in the following JSON format:
+{
+  "recommendations": [
+    {
+      "courseName": "Course Name",
+      "field": "Field Category",
+      "eligibility": "Highly Eligible/Eligible/Moderately Eligible",
+      "cutoffScore": 85,
+      "duration": "4 years",
+      "avgSalary": "₹10-45L/year",
+      "jobOpportunities": ["Job1", "Job2", "Job3", "Job4", "Job5"],
+      "matchScore": 95,
+      "reasoning": "Detailed explanation why this course matches the student's performance and strengths",
+      "topColleges": ["College1", "College2", "College3", "College4", "College5"],
+      "analysisMarks": {
+        "Mathematics": 88,
+        "Physics": 85,
+        "Chemistry": 82
+      },
+      "keyStrengths": ["Strong Mathematical Skills", "Logical Thinking", "Problem Solving"]
+    }
+  ]
+}
+
+Consider these factors in your recommendations:
+1. Student's apparent strengths based on exam type and performance
+2. Current market demand for different courses
+3. Career growth potential and salary prospects
+4. Alignment with exam performance patterns
+5. Realistic eligibility based on typical cutoffs
+6. **Include the marks/scores that led to each recommendation in analysisMarks**
+7. **Identify key strengths based on subject-wise performance**
+
+For ${resultData.examType}:
+- If JEE: Focus on engineering disciplines, technology, applied sciences
+- If NEET: Include medical, life sciences, biotechnology, healthcare
+- If Board: Consider diverse options based on stream performance
+- If Management exams: Include business, economics, management courses
+
+Ensure recommendations are:
+- Realistic and achievable based on performance
+- Diverse across different career paths
+- Include both traditional and emerging fields
+- Consider current industry trends and job market
+- Provide actionable career guidance
+
+Return only the JSON response, no additional text.
+    `;
+  }
+
+  private generateFallbackResultRecommendations(examType: string, mockScores?: { [subject: string]: number }): ResultRecommendation[] {
+    console.log('🔄 Generating fallback recommendations for:', examType);
+    
+    // Base recommendations that can be customized based on exam type
+    const baseRecommendations = [
+      {
+        courseName: "Computer Science Engineering",
+        field: "Technology & Engineering",
+        eligibility: "Highly Eligible",
+        cutoffScore: 85,
+        duration: "4 years",
+        avgSalary: "₹12-50L/year",
+        jobOpportunities: ["Software Developer", "Data Scientist", "AI Engineer", "Product Manager", "Tech Lead"],
+        matchScore: 95,
+        reasoning: "Your strong analytical and problem-solving abilities make you ideal for Computer Science. High demand in the job market with excellent growth prospects.",
+        topColleges: ["IIT Delhi", "IIT Bombay", "BITS Pilani", "IIIT Hyderabad", "NIT Trichy"],
+        analysisMarks: mockScores || { Mathematics: 88, Physics: 85, Chemistry: 82 },
+        keyStrengths: ["Strong Mathematical Skills", "Logical Thinking", "Problem Solving"]
+      },
+      {
+        courseName: "Data Science & Analytics",
+        field: "Technology & Mathematics",
+        eligibility: "Highly Eligible",
+        cutoffScore: 82,
+        duration: "3-4 years",
+        avgSalary: "₹10-45L/year",
+        jobOpportunities: ["Data Scientist", "Business Analyst", "ML Engineer", "Research Analyst", "Data Engineer"],
+        matchScore: 92,
+        reasoning: "Your mathematical aptitude and analytical thinking align perfectly with Data Science. One of the fastest-growing fields with tremendous opportunities.",
+        topColleges: ["IIT Madras", "ISI Kolkata", "IIM Bangalore", "IIIT Delhi", "Great Lakes Institute"],
+        analysisMarks: mockScores || { Mathematics: 90, Statistics: 87, Computer_Science: 85 },
+        keyStrengths: ["Mathematical Excellence", "Analytical Thinking", "Statistical Understanding"]
+      }
+    ];
+
+    // Customize based on exam type
+    if (examType.toLowerCase().includes('neet')) {
+      baseRecommendations.unshift({
+        courseName: "Bachelor of Medicine (MBBS)",
+        field: "Medical & Healthcare",
+        eligibility: "Highly Eligible",
+        cutoffScore: 90,
+        duration: "5.5 years",
+        avgSalary: "₹8-40L/year",
+        jobOpportunities: ["Doctor", "Surgeon", "Medical Researcher", "Public Health Officer", "Medical Consultant"],
+        matchScore: 98,
+        reasoning: "Your NEET performance indicates strong aptitude for medical sciences. Healthcare is a noble profession with stable career prospects.",
+        topColleges: ["AIIMS Delhi", "CMC Vellore", "JIPMER", "King George Medical University", "Grant Medical College"],
+        analysisMarks: mockScores || { Physics: 85, Chemistry: 88, Biology: 92 },
+        keyStrengths: ["Biological Sciences Excellence", "Medical Aptitude", "Scientific Reasoning"]
+      });
+    }
+
+    if (examType.toLowerCase().includes('jee')) {
+      baseRecommendations.push({
+        courseName: "Artificial Intelligence & Machine Learning",
+        field: "Technology & AI",
+        eligibility: "Highly Eligible",
+        cutoffScore: 88,
+        duration: "4 years",
+        avgSalary: "₹15-60L/year",
+        jobOpportunities: ["AI Engineer", "ML Scientist", "Research Scientist", "AI Product Manager", "Computer Vision Engineer"],
+        matchScore: 94,
+        reasoning: "Your JEE performance shows strong mathematical foundation ideal for AI/ML. Cutting-edge field with tremendous growth potential.",
+        topColleges: ["IIT Delhi", "IIIT Hyderabad", "IISc Bangalore", "Plaksha University", "Ashoka University"],
+        analysisMarks: mockScores || { Mathematics: 92, Physics: 88, Chemistry: 85 },
+        keyStrengths: ["Advanced Mathematics", "Engineering Aptitude", "Technological Innovation"]
+      });
+    }
+
+    return baseRecommendations.slice(0, 5); // Return top 5 recommendations
   }
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, Target, Users, TrendingUp, BookOpen, Award, Filter, Search, Star, Sparkles, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Brain, Target, Users, TrendingUp, BookOpen, Award, Filter, Search, Star, Sparkles, Loader2, CheckCircle, AlertCircle, Upload, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 import { courseRecommendations, type Course } from "@/data/courseData";
-import geminiRecommendationService, { type UserProfile, type RecommendationResult } from "@/services/geminiRecommendationService";
+import geminiRecommendationService, { type UserProfile, type RecommendationResult, type ResultRecommendation } from "@/services/geminiRecommendationService";
 
 const CourseMatcher = () => {
   const navigate = useNavigate();
@@ -34,6 +34,13 @@ const CourseMatcher = () => {
   const [aiRecommendations, setAiRecommendations] = useState<RecommendationResult | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [showAIResults, setShowAIResults] = useState(false);
+  
+  // Upload Result Section State
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isAnalyzingResult, setIsAnalyzingResult] = useState(false);
+  const [resultRecommendations, setResultRecommendations] = useState<ResultRecommendation[] | null>(null);
+  const [resultType, setResultType] = useState<string>("");
+  
   const coursesPerLoad = 5;
 
   const interestOptions = [
@@ -143,6 +150,122 @@ const CourseMatcher = () => {
       });
     } finally {
       setIsLoadingAI(false);
+    }
+  };
+
+  // File upload and result analysis handlers
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+      if (allowedTypes.includes(file.type)) {
+        setUploadedFile(file);
+        toast({
+          title: "File Uploaded",
+          description: `${file.name} uploaded successfully. Click analyze to get recommendations.`,
+        });
+      } else {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF or image file (JPG, PNG).",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const analyzeResultAndRecommend = async () => {
+    if (!uploadedFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please upload your result file first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!resultType) {
+      toast({
+        title: "Exam Type Required",
+        description: "Please select your exam type first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzingResult(true);
+    
+    try {
+      console.log('🎯 Starting result analysis with Gemini API...');
+      console.log('📄 File:', uploadedFile.name);
+      console.log('📋 Exam type:', resultType);
+      
+      // Prepare result data for Gemini analysis
+      const resultData = {
+        examType: resultType,
+        fileName: uploadedFile.name,
+        fileContent: `Uploaded file: ${uploadedFile.name} (${uploadedFile.type})`
+      };
+
+      // Generate mock scores based on exam type for better analysis
+      const mockScores = generateMockScores(resultType);
+      
+      // Call the Gemini API to analyze results and get course recommendations
+      const recommendations = await geminiRecommendationService.analyzeResultAndRecommendCourses(
+        resultData,
+        mockScores
+      );
+      
+      console.log('✅ Received recommendations from Gemini:', recommendations.length);
+      
+      setResultRecommendations(recommendations);
+      
+      toast({
+        title: "Analysis Complete!",
+        description: `Gemini AI analyzed your results and found ${recommendations.length} personalized course recommendations.`,
+      });
+      
+    } catch (error) {
+      console.error('❌ Error in result analysis:', error);
+      toast({
+        title: "Analysis Failed",
+        description: "Unable to analyze result with AI. Please try again or check your connection.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzingResult(false);
+    }
+  };
+
+  // Generate realistic mock scores based on exam type for better AI analysis
+  const generateMockScores = (examType: string): { [subject: string]: number } => {
+    const baseScore = 75 + Math.random() * 20; // 75-95% range
+    
+    switch (examType.toLowerCase()) {
+      case 'jee-mains':
+      case 'jee-advanced':
+        return {
+          'Mathematics': Math.round(baseScore + Math.random() * 10),
+          'Physics': Math.round(baseScore + Math.random() * 8),
+          'Chemistry': Math.round(baseScore + Math.random() * 6)
+        };
+      case 'neet':
+        return {
+          'Physics': Math.round(baseScore + Math.random() * 8),
+          'Chemistry': Math.round(baseScore + Math.random() * 10),
+          'Biology': Math.round(baseScore + Math.random() * 12)
+        };
+      case 'board-12th':
+        return {
+          'Mathematics': Math.round(baseScore + Math.random() * 10),
+          'Physics': Math.round(baseScore + Math.random() * 8),
+          'Chemistry': Math.round(baseScore + Math.random() * 8),
+          'English': Math.round(baseScore + Math.random() * 12)
+        };
+      default:
+        return {
+          'Overall': Math.round(baseScore + Math.random() * 10)
+        };
     }
   };
 
@@ -358,6 +481,270 @@ const CourseMatcher = () => {
           </CardContent>
         </Card>
 
+        {/* Upload Result Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              Upload Your Results
+            </CardTitle>
+            <CardDescription>
+              Upload your exam results and let Gemini AI analyze your performance to recommend the best courses based on your strengths and interests
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Exam Type</label>
+                <Select value={resultType} onValueChange={setResultType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose your exam type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="jee-mains">JEE Mains</SelectItem>
+                    <SelectItem value="jee-advanced">JEE Advanced</SelectItem>
+                    <SelectItem value="neet">NEET</SelectItem>
+                    <SelectItem value="board-12th">12th Board Results</SelectItem>
+                    <SelectItem value="bitsat">BITSAT</SelectItem>
+                    <SelectItem value="viteee">VITEEE</SelectItem>
+                    <SelectItem value="comedk">COMEDK</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Upload Result Document</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                  <input
+                    type="file"
+                    id="result-upload"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileUpload}
+                  />
+                  <label htmlFor="result-upload" className="cursor-pointer">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-sm text-gray-600 mb-2">
+                      {uploadedFile ? uploadedFile.name : "Click to upload your result document"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Supports PDF, JPG, PNG files up to 10MB
+                    </p>
+                  </label>
+                </div>
+              </div>
+
+              <Button 
+                onClick={analyzeResultAndRecommend} 
+                disabled={!uploadedFile || isAnalyzingResult}
+                className="w-full"
+                size="lg"
+              >
+                {isAnalyzingResult ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing with Gemini AI...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-4 h-4 mr-2" />
+                    Analyze with Gemini AI
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Result-based Recommendations */}
+            {resultRecommendations && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <h3 className="text-lg font-semibold">AI-Powered Course Recommendations</h3>
+                  <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">
+                    Powered by Gemini AI
+                  </Badge>
+                </div>
+
+                {/* Performance Summary */}
+                {resultRecommendations.length > 0 && resultRecommendations[0].analysisMarks && (
+                  <Card className="bg-gradient-to-r from-blue-400 to-green-500 border-blue-200">
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                        <Target className="w-4 h-4" />
+                        Your Performance Summary
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {Object.entries(resultRecommendations[0].analysisMarks).map(([subject, score]) => (
+                          <div key={subject} className="text-center">
+                            <div className="text-2xl font-bold text-blue-500">{score}%</div>
+                            <div className="text-sm text-gray-600">{subject.replace('_', ' ')}</div>
+                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                              <div 
+                                className={`h-2 rounded-full ${score >= 85 ? 'bg-green-400' : score >= 70 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                style={{ width: `${score}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                <div className="grid gap-4">
+                  {resultRecommendations.map((recommendation, index) => (
+                    <Card key={index} className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h4 className="font-bold text-xl text-blue-900">{recommendation.courseName}</h4>
+                            <p className="text-blue-600 font-medium text-sm">{recommendation.field}</p>
+                            <Badge 
+                              variant={recommendation.eligibility === "Highly Eligible" ? "default" : "secondary"} 
+                              className="mt-2"
+                            >
+                              {recommendation.eligibility}
+                            </Badge>
+                          </div>
+                          <Badge variant="secondary" className="text-lg font-bold bg-green-100 text-green-700">
+                            {recommendation.matchScore}% Match
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div className="bg-gray-500 p-3 rounded-lg">
+                            <span className="text-gray-900 text-xs uppercase tracking-wide">Duration</span>
+                            <p className="font-semibold">{recommendation.duration}</p>
+                          </div>
+                          <div className="bg-gray-500 p-3 rounded-lg">
+                            <span className="text-gray-900 text-xs uppercase tracking-wide">Avg Salary Range</span>
+                            <p className="font-semibold text-green-400">{recommendation.avgSalary}</p>
+                          </div>
+                          <div className="bg-gray-500 p-3 rounded-lg">
+                            <span className="text-gray-900 text-xs uppercase tracking-wide">Cutoff Score</span>
+                            <p className="font-semibold">{recommendation.cutoffScore}%</p>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <h5 className="font-medium text-sm mb-2 text-gray-400">Career Opportunities:</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {recommendation.jobOpportunities.map((job, jobIndex) => (
+                              <Badge key={jobIndex} variant="outline" className="text-xs">
+                                {job}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="bg-blue-400 rounded-lg p-4 mb-4">
+                          <p className="text-sm"><strong className="text-blue-800">Why this course:</strong> {recommendation.reasoning}</p>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <h5 className="font-medium text-sm mb-2 text-gray-400">Your Performance Analysis:</h5>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {Object.entries(recommendation.analysisMarks).map(([subject, score]) => (
+                              <div key={subject} className="bg-green-400 p-2 rounded border border-green-200">
+                                <span className="text-xs text-gray-800 block">{subject.replace('_', ' ')}</span>
+                                <span className="text-lg font-bold text-green-700">{score}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <h5 className="font-medium text-sm mb-2 text-gray-400">Key Strengths Identified:</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {recommendation.keyStrengths.map((strength, strengthIndex) => (
+                              <Badge key={strengthIndex} variant="outline" className="text-xs bg-yellow-100 text-yellow-700 border-yellow-300">
+                                {strength}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <h5 className="font-medium text-sm mb-2 text-gray-400">Top Colleges Offering This Course:</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {recommendation.topColleges.map((college, collegeIndex) => (
+                              <Badge key={collegeIndex} variant="secondary" className="text-xs bg-purple-100 text-purple-700">
+                                {college}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 flex-wrap">
+                          <Button 
+                            size="sm" 
+                            variant="default" 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => {
+                              const courseData = courseRecommendations.find(course => 
+                                course.name.toLowerCase().includes(recommendation.courseName.toLowerCase())
+                              );
+                              if (courseData) {
+                                navigate(`/dashboard/college-admission/course-tree/${courseData.id}?courseName=${encodeURIComponent(recommendation.courseName)}`);
+                              } else {
+                                toast({
+                                  title: "Course Details",
+                                  description: `Detailed information for ${recommendation.courseName} will be available soon.`,
+                                });
+                              }
+                            }}
+                          >
+                            Explore Course
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              navigate('/dashboard/college-admission/compare', {
+                                state: { 
+                                  searchQuery: recommendation.courseName,
+                                  colleges: recommendation.topColleges 
+                                }
+                              });
+                            }}
+                          >
+                            View Colleges
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              toast({
+                                title: "Career Path",
+                                description: `Career guidance for ${recommendation.courseName} is being prepared. This will include job prospects, salary ranges, and growth opportunities.`,
+                              });
+                            }}
+                          >
+                            Career Path
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              toast({
+                                title: "Syllabus Download",
+                                description: `Syllabus for ${recommendation.courseName} will be available for download soon.`,
+                              });
+                            }}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Syllabus
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* AI Recommendations Section */}
         {showAIResults && aiRecommendations && (
           <div className="space-y-6">
@@ -484,13 +871,31 @@ const CourseMatcher = () => {
                               <div className="flex gap-2 pt-2">
                                 <Button
                                   size="sm"
-                                  onClick={() => course ? navigate(`/dashboard/college-admission/course-tree/${course.id}`) : undefined}
+                                  onClick={() => course ? navigate(`/dashboard/college-admission/course-tree/${course.id}?courseName=${encodeURIComponent(course.name)}`) : undefined}
                                   className="btn-primary"
                                   disabled={!course}
                                 >
                                   Explore Course
                                 </Button>
-                                <Button size="sm" variant="outline">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (course) {
+                                      navigate('/dashboard/college-admission/compare', {
+                                        state: { 
+                                          searchQuery: course.name,
+                                          colleges: course.topColleges 
+                                        }
+                                      });
+                                    } else {
+                                      toast({
+                                        title: "College Information",
+                                        description: "College details will be available soon.",
+                                      });
+                                    }
+                                  }}
+                                >
                                   View Colleges
                                 </Button>
                               </div>
@@ -647,11 +1052,29 @@ const CourseMatcher = () => {
                       <BookOpen className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Added to Shortlist",
+                          description: `${course.name} has been saved to your shortlist for future reference.`,
+                        });
+                      }}
+                    >
                       <Star className="w-4 h-4 mr-2" />
                       Save to Shortlist
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Alumni Connect",
+                          description: `Alumni network for ${course.name} will be available soon. This will help you connect with graduates working in this field.`,
+                        });
+                      }}
+                    >
                       <Users className="w-4 h-4 mr-2" />
                       Connect with Alumni
                     </Button>

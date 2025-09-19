@@ -382,7 +382,7 @@ const Deadlines = () => {
                 {criticalDeadlines.map((deadline) => {
                   const statusInfo = getStatusInfo(deadline.date, deadline.time);
                   return (
-                    <div key={deadline.id} className="flex justify-between items-center p-4 bg-white rounded-lg border border-red-200">
+                    <div key={deadline.id} className="flex justify-between items-center p-4 bg-white rounded-lg border border-red-600">
                       <div>
                         <div className="font-medium text-red-800">{deadline.title}</div>
                         <div className="text-sm text-red-600">{deadline.college} - {deadline.course}</div>
@@ -661,7 +661,7 @@ const Deadlines = () => {
                         <div className="text-sm text-muted-foreground mb-2">Requirements</div>
                         <div className="space-y-1">
                           {deadline.requirements.map((req, index) => (
-                            <div key={index} className="text-xs p-2 bg-gray-50 rounded">
+                            <div key={index} className="text-xs p-2 bg-gray-600 rounded">
                               {req}
                             </div>
                           ))}
@@ -758,9 +758,9 @@ const Deadlines = () => {
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-semibold text-lg text-red-800">{deadline.title}</h3>
-                      <p className="text-red-600">{deadline.college} - {deadline.course}</p>
-                      <div className="text-sm text-red-500 mt-2">
+                      <h3 className="font-semibold text-lg text-red-600">{deadline.title}</h3>
+                      <p className="text-red-500">{deadline.college} - {deadline.course}</p>
+                      <div className="text-sm text-red-400 mt-2">
                         {getStatusInfo(deadline.date, deadline.time).urgency === "overdue" ? "OVERDUE!" : `Critical - ${getTimeRemaining(deadline.date, deadline.time)} remaining`}
                       </div>
                     </div>
