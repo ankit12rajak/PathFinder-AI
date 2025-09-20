@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Target, Clock, BookOpen, Brain, Calendar, CheckCircle, Star, Timer, Award, Play, Pause, RotateCcw, X, Upload, Zap, Trophy, TrendingUp, Mic, Volume2, BarChart3, Users, Bell, MapPin, Lightbulb, FileText, Eye, MessageSquare, Repeat, Activity, Settings, Shield, Coffee, Flame, Moon, Sun, Heart, Battery, Smile, Frown, Meh, TreePine, Sparkles, Calculator, Microscope, Download, Share2, Calendar as CalendarIcon, ChevronRight, ChevronLeft, Volume1, Camera, Filter, Layers, BarChart2, PieChart, Calendar as CalendarIconSecond, Clock4, RefreshCw, Cpu, Database, Cloud, Smartphone, Globe, VolumeX, ArrowRight, GitBranch, Network, Map, Megaphone, MessageCircle, ThumbsUp, ThumbsDown, BarChart, Target as TargetIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -4146,7 +4146,7 @@ const PomodoroTimer = ({ session, setSession, onClose }) => {
   };
 
   // Timer effect
-  React.useEffect(() => {
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (session.isActive && session.timeLeft > 0) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Target, BookOpen, Users, Calculator, Award, TrendingUp, Brain, Calendar, Clock, AlertCircle, CheckCircle, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
