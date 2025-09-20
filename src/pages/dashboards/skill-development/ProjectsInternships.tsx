@@ -243,7 +243,7 @@ const ProjectsInternships = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Projects & Internships</h1>
+            <h1 className="text-3xl font-bold text-purple-600">Projects & Internships</h1>
             <p className="text-gray-600 mt-2">Real-world opportunities to build your portfolio and gain industry experience</p>
           </div>
           <div className="flex items-center gap-3">
@@ -608,7 +608,7 @@ const ProjectsInternships = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-4 border rounded-lg bg-blue-50">
+                    <div className="p-4 border rounded-lg bg-blue-400">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">AI Recommendation System</h4>
                         <Badge variant="secondary">Under Review</Badge>
@@ -616,7 +616,7 @@ const ProjectsInternships = () => {
                       <p className="text-sm text-gray-600">TechCorp Solutions • Applied 3 days ago</p>
                     </div>
                     
-                    <div className="p-4 border rounded-lg bg-green-50">
+                    <div className="p-4 border rounded-lg bg-green-400">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">Frontend Developer Internship</h4>
                         <Badge variant="default" className="bg-green-500">Accepted</Badge>

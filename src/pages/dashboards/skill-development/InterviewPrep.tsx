@@ -228,7 +228,7 @@ const InterviewPrep = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Interview Preparation</h1>
+            <h1 className="text-3xl font-bold text-purple-600">Interview Preparation</h1>
             <p className="text-gray-600 mt-2">AI-powered interview practice with real-time feedback and personalized coaching</p>
           </div>
           <div className="flex items-center gap-3">
@@ -303,9 +303,9 @@ const InterviewPrep = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {aiInterviewFeatures.map((feature, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-blue-50">
+                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-600 to-blue-300">
                   <div className="flex items-center gap-2 mb-2">
-                    <feature.icon className="w-5 h-5 text-purple-600" />
+                    <feature.icon className="w-5 h-5 text-purple-300" />
                     <Badge variant={feature.active ? "default" : "secondary"} className="text-xs">
                       {feature.active ? "Active" : "Coming Soon"}
                     </Badge>
@@ -391,10 +391,10 @@ const InterviewPrep = () => {
                             
                             {interview.completed && (
                               <div className="space-y-2">
-                                <div className="bg-gray-50 p-3 rounded-lg">
+                                <div className="bg-gray-700 p-3 rounded-lg">
                                   <p className="text-sm"><strong>Feedback:</strong> {interview.feedback}</p>
                                 </div>
-                                <div className="bg-purple-50 p-3 rounded-lg">
+                                <div className="bg-gray-700 p-3 rounded-lg">
                                   <p className="text-sm flex items-center gap-2">
                                     <Brain className="w-4 h-4 text-purple-600" />
                                     <strong>AI Insights:</strong> {interview.aiInsights}

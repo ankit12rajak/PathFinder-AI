@@ -297,11 +297,11 @@ const SkillTraining = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Skill Training</h1>
+            <h1 className="text-3xl font-bold text-purple-600">Skill Training</h1>
             <p className="text-gray-600 mt-2">AI-powered comprehensive training programs for in-demand skills</p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+            <Badge variant="secondary" className="bg-purple-300 text-purple-700">
               <Brain className="w-4 h-4 mr-1" />
               AI Enhanced
             </Badge>
@@ -324,14 +324,14 @@ const SkillTraining = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {aiPoweredFeatures.map((feature, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-blue-50">
+                <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-purple-300 to-blue-200">
                   <div className="flex items-center gap-2 mb-2">
                     <feature.icon className="w-5 h-5 text-purple-600" />
                     <Badge variant={feature.active ? "default" : "secondary"} className="text-xs">
                       {feature.active ? "Active" : "Coming Soon"}
                     </Badge>
                   </div>
-                  <h3 className="font-semibold text-sm mb-1">{feature.title}</h3>
+                  <h3 className="font-semibold text-sm mb-1v text-gray-800">{feature.title}</h3>
                   <p className="text-xs text-gray-600">{feature.description}</p>
                 </div>
               ))}
@@ -346,7 +346,7 @@ const SkillTraining = () => {
                   onClick={() => setSelectedTrack(track.id)}>
               <CardHeader className="pb-3">
                 <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${track.color} flex items-center justify-center mb-3`}>
-                  <track.icon className="w-6 h-6 text-white" />
+                  <track.icon className="w-6 h-6 text-purple-50" />
                 </div>
                 <CardTitle className="text-lg">{track.title}</CardTitle>
                 <CardDescription className="text-sm">{track.description}</CardDescription>
@@ -421,7 +421,7 @@ const SkillTraining = () => {
                 <TabsContent value="curriculum" className="mt-6">
                   <div className="space-y-4">
                     {detailedCurriculum.frontend.map((module, index) => (
-                      <div key={index} className="p-4 border rounded-lg bg-gradient-to-r from-gray-50 to-blue-50">
+                      <div key={index} className="p-4 border rounded-lg bg-gradient-to-r from-gray-600 to-blue-400">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${getModuleStatusColor(module.status)}`}>
@@ -462,12 +462,12 @@ const SkillTraining = () => {
 
                           <div>
                             <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                              <Brain className="w-4 h-4 text-purple-600" />
+                              <Brain className="w-4 h-4 text-purple-400" />
                               AI Features:
                             </h4>
                             <div className="flex flex-wrap gap-1">
                               {module.aiFeatures.map((feature, featureIndex) => (
-                                <Badge key={featureIndex} variant="outline" className="text-xs bg-purple-50 border-purple-200">
+                                <Badge key={featureIndex} variant="outline" className="text-xs bg-purple-600 border-purple-200">
                                   {feature}
                                 </Badge>
                               ))}
