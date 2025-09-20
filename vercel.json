@@ -1,0 +1,17 @@
+{
+  "framework": "vite",
+  "buildCommand": "npm install @rollup/rollup-linux-x64-gnu --no-save --silent && npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci",
+  "functions": {
+    "app/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
