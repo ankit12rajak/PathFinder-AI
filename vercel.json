@@ -1,17 +1,21 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm install @rollup/rollup-linux-x64-gnu --no-save --silent && npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm ci",
-  "functions": {
-    "app/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "server/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "installCommand": "npm install",
+        "buildCommand": "npm run build",
+        "outputDirectory": "dist"
+      }
     }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server/index.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
