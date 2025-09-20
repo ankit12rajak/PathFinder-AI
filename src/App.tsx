@@ -69,6 +69,7 @@ const App = () => (
           <Route path="/dashboard/early-stage" element={<EarlyStageDashboard />} />
           <Route path="/dashboard/early-stage/aptitude" element={<AptitudeTests />} />
           <Route path="/dashboard/early-stage/careers" element={<CareerExplorer />} />
+          <Route path="/dashboard/early-stage/career-pathways/:fieldId" element={<CareerExplorer />} />
           <Route path="/dashboard/early-stage/games" element={<SkillGames />} />
           <Route path="/dashboard/early-stage/study" element={<StudySmart />} />
           <Route path="/dashboard/early-stage/wellness" element={<StressRelief />} />

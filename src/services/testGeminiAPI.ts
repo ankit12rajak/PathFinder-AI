@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Test API function
 export const testGeminiAPI = async () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY_NABIN;
   console.log('Testing Gemini API with key:', apiKey ? 'Available' : 'Missing');
   
   if (!apiKey) {
