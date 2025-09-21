@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ChatbotIcon from "@/components/ChatbotIcon"; // Add this import
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -119,6 +121,9 @@ const App = () => (
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        
+        {/* Add Chatbot Icon - it will appear on all pages */}
+        <ChatbotIcon />
       </Router>
     </TooltipProvider>
   </QueryClientProvider>
