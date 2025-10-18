@@ -1,4 +1,4 @@
-import { Briefcase, TrendingUp, Target, BookOpen, Code, Brain, Star, Calendar, Trophy, CheckCircle2, Monitor, Zap, Bot, Sparkles, Rocket, Eye } from "lucide-react";
+import { Briefcase, TrendingUp, Target, BookOpen, Code, Brain, Star, Calendar, Trophy, CheckCircle2, Monitor, Zap, Bot, Sparkles, Rocket, Eye, AlertCircle, ArrowRight, TrendingDown, Award, BarChart3, LineChart, Activity, Clock, Flame, Lock, Unlock, ChevronRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -143,6 +143,121 @@ const SkillDevelopmentDashboard = () => {
     { title: "Industry Ready", description: "80% placement score", icon: Star, earned: false }
   ];
 
+  // Gap Analysis Data - Enhanced
+  const skillGaps = [
+    {
+      category: "Technical Skills",
+      icon: Code,
+      currentLevel: 65,
+      targetLevel: 90,
+      gap: 25,
+      priority: "Critical",
+      color: "from-rose-600 via-pink-600 to-fuchsia-600",
+      bgGradient: "from-rose-950/40 via-pink-950/40 to-fuchsia-950/40",
+      skills: [
+        { name: "React.js", current: 75, target: 95, status: "In Progress", timeToClose: "2 months", locked: false },
+        { name: "TypeScript", current: 60, target: 90, status: "Needs Focus", timeToClose: "3 months", locked: false },
+        { name: "System Design", current: 40, target: 85, status: "Critical", timeToClose: "4 months", locked: false },
+        { name: "Node.js", current: 55, target: 85, status: "Learning", timeToClose: "3 months", locked: false }
+      ],
+      recommendations: [
+        "Complete Advanced React course",
+        "Build 2 full-stack projects",
+        "Practice system design problems"
+      ],
+      learningPath: {
+        totalHours: 120,
+        completedHours: 78,
+        coursesCompleted: 3,
+        totalCourses: 5,
+        streak: 12
+      },
+      nextMilestone: "Complete System Design Fundamentals",
+      estimatedCompletion: "3 months"
+    },
+    {
+      category: "Soft Skills",
+      icon: Brain,
+      currentLevel: 70,
+      targetLevel: 85,
+      gap: 15,
+      priority: "Medium",
+      color: "from-cyan-600 via-blue-600 to-indigo-600",
+      bgGradient: "from-cyan-950/40 via-blue-950/40 to-indigo-950/40",
+      skills: [
+        { name: "Communication", current: 75, target: 90, status: "Good", timeToClose: "2 months", locked: false },
+        { name: "Leadership", current: 60, target: 80, status: "Developing", timeToClose: "3 months", locked: false },
+        { name: "Problem Solving", current: 80, target: 90, status: "Strong", timeToClose: "1 month", locked: false },
+        { name: "Teamwork", current: 72, target: 85, status: "Good", timeToClose: "2 months", locked: false }
+      ],
+      recommendations: [
+        "Join public speaking workshops",
+        "Lead a team project",
+        "Participate in hackathons"
+      ],
+      learningPath: {
+        totalHours: 80,
+        completedHours: 56,
+        coursesCompleted: 4,
+        totalCourses: 6,
+        streak: 8
+      },
+      nextMilestone: "Lead a team project presentation",
+      estimatedCompletion: "2 months"
+    },
+    {
+      category: "Industry Knowledge",
+      icon: TrendingUp,
+      currentLevel: 55,
+      targetLevel: 80,
+      gap: 25,
+      priority: "High",
+      color: "from-amber-600 via-orange-600 to-red-600",
+      bgGradient: "from-amber-950/40 via-orange-950/40 to-red-950/40",
+      skills: [
+        { name: "Cloud Computing", current: 50, target: 85, status: "Learning", timeToClose: "3 months", locked: false },
+        { name: "DevOps", current: 45, target: 75, status: "Beginner", timeToClose: "4 months", locked: false },
+        { name: "Agile/Scrum", current: 70, target: 80, status: "Good", timeToClose: "1 month", locked: false },
+        { name: "CI/CD", current: 40, target: 75, status: "Beginner", timeToClose: "4 months", locked: true }
+      ],
+      recommendations: [
+        "Get AWS certification",
+        "Learn Docker & Kubernetes",
+        "Attend Agile workshops"
+      ],
+      learningPath: {
+        totalHours: 100,
+        completedHours: 55,
+        coursesCompleted: 2,
+        totalCourses: 5,
+        streak: 5
+      },
+      nextMilestone: "Get AWS Cloud Practitioner Certification",
+      estimatedCompletion: "3 months"
+    }
+  ];
+
+  const careerReadiness = {
+    overall: 73,
+    categories: [
+      { name: "Technical Proficiency", score: 75, trend: "up", change: "+8%", icon: Code },
+      { name: "Project Experience", score: 68, trend: "up", change: "+12%", icon: Briefcase },
+      { name: "Interview Skills", score: 70, trend: "neutral", change: "0%", icon: Brain },
+      { name: "Industry Awareness", score: 65, trend: "up", change: "+5%", icon: TrendingUp },
+      { name: "Professional Network", score: 60, trend: "down", change: "-3%", icon: Target }
+    ]
+  };
+
+  const weeklyProgress = [
+    { day: "Mon", hours: 3.5, completed: true },
+    { day: "Tue", hours: 2.8, completed: true },
+    { day: "Wed", hours: 4.2, completed: true },
+    { day: "Thu", hours: 3.0, completed: true },
+    { day: "Fri", hours: 2.5, completed: true },
+    { day: "Sat", hours: 1.8, completed: false },
+    { day: "Sun", hours: 0, completed: false }
+  ];
+
   return (
     <DashboardLayout
       title="Skill Development Hub"
@@ -257,6 +372,254 @@ const SkillDevelopmentDashboard = () => {
                 <div className="text-xs text-purple-200">Expected Package</div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Gap Analysis Section */}
+        <div className="mb-8">
+          <div className="text-center mb-8">
+            <Badge className="bg-gradient-to-r from-red-500 to-orange-500 text-white border-0 px-4 py-2 mb-4">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              AI-Powered Gap Analysis
+            </Badge>
+            <h2 className="text-3xl font-bold mb-3">Bridge Your Skill Gaps</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Identify what's holding you back and get personalized recommendations to reach your career goals
+            </p>
+          </div>
+
+          {/* Career Readiness Score */}
+          <Card className="mb-6 relative overflow-hidden border-2 border-indigo-500/30 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl"></div>
+            
+            <CardContent className="p-8 relative z-10">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
+                      <Award className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Career Readiness Score</h3>
+                      <p className="text-indigo-200">Your overall placement preparedness</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {careerReadiness.categories.map((category, index) => (
+                      <div key={index} className="text-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <span className="text-2xl font-bold text-white">{category.score}</span>
+                          {category.trend === "up" && <TrendingUp className="w-4 h-4 text-green-400" />}
+                          {category.trend === "down" && <TrendingDown className="w-4 h-4 text-red-400" />}
+                        </div>
+                        <div className="text-xs text-indigo-200 mb-1">{category.name}</div>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${
+                            category.trend === "up" ? "border-green-500/50 text-green-300 bg-green-500/10" : 
+                            category.trend === "down" ? "border-red-500/50 text-red-300 bg-red-500/10" : 
+                            "border-gray-500/50 text-gray-300 bg-gray-500/10"
+                          }`}
+                        >
+                          {category.change}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="relative w-40 h-40">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="70"
+                        stroke="currentColor"
+                        strokeWidth="12"
+                        fill="none"
+                        className="text-white/20"
+                      />
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="70"
+                        stroke="url(#gradient)"
+                        strokeWidth="12"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 70}`}
+                        strokeDashoffset={`${2 * Math.PI * 70 * (1 - careerReadiness.overall / 100)}`}
+                        className="transition-all duration-1000"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#6366f1" />
+                          <stop offset="100%" stopColor="#a855f7" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-bold text-white">{careerReadiness.overall}%</span>
+                      <span className="text-xs text-indigo-200">Ready</span>
+                    </div>
+                  </div>
+                  <Badge className="mt-4 bg-green-500/20 text-green-300 border-green-500/30 px-4 py-2">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    +7% This Month
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Skill Gap Categories */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {skillGaps.map((category, index) => (
+              <Card 
+                key={index} 
+                className={`relative overflow-hidden border-2 transition-all duration-300 hover:shadow-2xl ${
+                  category.priority === "Critical" 
+                    ? "border-red-500/30 bg-gradient-to-br from-slate-900 via-red-950/40 to-slate-900" 
+                    : category.priority === "High"
+                    ? "border-orange-500/30 bg-gradient-to-br from-slate-900 via-orange-950/40 to-slate-900"
+                    : "border-blue-500/30 bg-gradient-to-br from-slate-900 via-blue-950/40 to-slate-900"
+                }`}
+              >
+                {/* Priority Badge */}
+                <div className="absolute top-4 right-4">
+                  <Badge 
+                    className={`${
+                      category.priority === "Critical" 
+                        ? "bg-red-500/20 text-red-300 border-red-500/30" 
+                        : category.priority === "High"
+                        ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
+                        : "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                    } shadow-lg`}
+                  >
+                    {category.priority === "Critical" && <AlertCircle className="w-3 h-3 mr-1" />}
+                    {category.priority} Priority
+                  </Badge>
+                </div>
+
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-white">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${category.color} flex items-center justify-center shadow-lg`}>
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                    {category.category}
+                  </CardTitle>
+                  <CardDescription className="text-indigo-200">
+                    Close the gap to reach industry standards
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-6">
+                  {/* Overall Progress */}
+                  <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <div className="text-sm text-indigo-200">Current Level</div>
+                        <div className="text-2xl font-bold text-white">{category.currentLevel}%</div>
+                      </div>
+                      <ArrowRight className="w-6 h-6 text-indigo-300" />
+                      <div className="text-right">
+                        <div className="text-sm text-indigo-200">Target Level</div>
+                        <div className="text-2xl font-bold text-green-400">{category.targetLevel}%</div>
+                      </div>
+                    </div>
+                    
+                    <div className="relative h-3 bg-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className={`absolute h-full bg-gradient-to-r ${category.color} rounded-full transition-all duration-1000`}
+                        style={{ width: `${category.currentLevel}%` }}
+                      ></div>
+                      <div 
+                        className="absolute h-full border-r-4 border-green-400"
+                        style={{ left: `${category.targetLevel}%` }}
+                      ></div>
+                    </div>
+                    
+                    <div className="mt-2 text-center">
+                      <Badge variant="outline" className="text-xs border-white/20 text-indigo-200">
+                        {category.gap}% Gap to Close
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Individual Skills */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-semibold flex items-center gap-2 text-white">
+                      <LineChart className="w-4 h-4" />
+                      Skill Breakdown
+                    </div>
+                    {category.skills.map((skill, skillIndex) => (
+                      <div key={skillIndex} className="p-3 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-white">{skill.name}</span>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${
+                              skill.status === "Critical" ? "border-red-500/50 text-red-300 bg-red-500/10" :
+                              skill.status === "Needs Focus" ? "border-orange-500/50 text-orange-300 bg-orange-500/10" :
+                              skill.status === "In Progress" || skill.status === "Learning" ? "border-blue-500/50 text-blue-300 bg-blue-500/10" :
+                              "border-green-500/50 text-green-300 bg-green-500/10"
+                            }`}
+                          >
+                            {skill.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-1000 ${
+                                skill.status === "Critical" ? "bg-gradient-to-r from-red-500 to-red-600" :
+                                skill.status === "Needs Focus" ? "bg-gradient-to-r from-orange-500 to-orange-600" :
+                                skill.status === "In Progress" || skill.status === "Learning" ? "bg-gradient-to-r from-blue-500 to-blue-600" :
+                                "bg-gradient-to-r from-green-500 to-green-600"
+                              }`}
+                              style={{ width: `${(skill.current / skill.target) * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-indigo-200 whitespace-nowrap">
+                            {skill.current}/{skill.target}
+                          </span>
+                        </div>
+                        
+                        <div className="text-xs text-indigo-200 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {skill.timeToClose} to target
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-semibold flex items-center gap-2 text-white">
+                      <Sparkles className="w-4 h-4" />
+                      AI Recommendations
+                    </div>
+                    {category.recommendations.map((rec, recIndex) => (
+                      <div key={recIndex} className="flex items-start gap-2 text-xs p-2 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
+                        <CheckCircle2 className="w-4 h-4 text-indigo-300 mt-0.5 flex-shrink-0" />
+                        <span className="text-indigo-200">{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Action Button */}
+                  <Button 
+                    className={`w-full bg-gradient-to-r ${category.color} hover:opacity-90 text-white border-0 shadow-lg`}
+                  >
+                    <Rocket className="w-4 h-4 mr-2" />
+                    Start Improvement Plan
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
