@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Brain, Clock, Award, TrendingUp, PlayCircle, CheckCircle, Star, Target, Code, Database, Palette, BarChart3 } from "lucide-react";
+import { BookOpen, Brain, Clock, TrendingUp, PlayCircle, Star, Target, Code, Database, Palette, BarChart3, Zap, Users, Trophy, ArrowRight, Lock, Play, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -134,14 +134,14 @@ const LearningPaths = () => {
           lessons: 22,
           projects: 3,
           status: "locked",
-            aiFeatures: ["SEO optimization", "Performance monitoring", "Deployment automation"],
-            materials: [
-              { title: 'Next.js Docs', url: 'https://nextjs.org/docs' },
-              { title: 'Vercel Deployment', url: 'https://vercel.com/docs' },
-              { title: 'Next.js Tutorial', url: 'https://nextjs.org/learn' },
-              { title: 'Netlify Deployment', url: 'https://docs.netlify.com/' },
-              { title: 'Railway Deployment', url: 'https://docs.railway.app/' }
-            ]
+          aiFeatures: ["SEO optimization", "Performance monitoring", "Deployment automation"],
+          materials: [
+            { title: 'Next.js Docs', url: 'https://nextjs.org/docs' },
+            { title: 'Vercel Deployment', url: 'https://vercel.com/docs' },
+            { title: 'Next.js Tutorial', url: 'https://nextjs.org/learn' },
+            { title: 'Netlify Deployment', url: 'https://docs.netlify.com/' },
+            { title: 'Railway Deployment', url: 'https://docs.railway.app/' }
+          ]
         }
       ],
       aiMentor: {
@@ -318,9 +318,9 @@ const LearningPaths = () => {
       active: true
     },
     {
-      title: "Smart Code Review",
-      description: "AI-powered code review with suggestions for improvement",
-      icon: CheckCircle,
+      title: "Smart Progress Tracking",
+      description: "Track your learning journey with intelligent analytics and insights",
+      icon: TrendingUp,
       active: true
     },
     {
@@ -331,288 +331,421 @@ const LearningPaths = () => {
     }
   ];
 
-  const achievements = [
-    { title: "First Steps", description: "Complete your first lesson", progress: 100 },
-    { title: "Code Warrior", description: "Submit 10 projects", progress: 60 },
-    { title: "Mentor", description: "Help 5 other learners", progress: 20 },
-    { title: "Expert", description: "Complete advanced track", progress: 0 }
-  ];
+
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Learning Paths</h1>
-            <p className="text-gray-600 mt-2">AI-powered personalized learning journeys for your career goals</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="bg-green-100 text-green-700">
-              <Brain className="w-4 h-4 mr-1" />
-              AI Powered
-            </Badge>
-            <Button>
-              <PlayCircle className="w-4 h-4 mr-2" />
-              Continue Learning
-            </Button>
+      <div className="space-y-8">
+        {/* Premium Header Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
+          <div className="absolute inset-0 opacity-20"></div>
+          <div className="relative">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
+                    <Brain className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30">
+                    <Zap className="w-3 h-3 mr-1" />
+                    AI-Powered Learning
+                  </Badge>
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-white mb-2">Learning Paths</h1>
+                  <p className="text-slate-300 text-lg max-w-2xl">
+                    Accelerate your career with AI-guided learning journeys tailored to your goals and skill level
+                  </p>
+                </div>
+                <div className="flex items-center gap-6 text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm">45K+ Active Learners</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4" />
+                    <span className="text-sm">98% Success Rate</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+                  <PlayCircle className="w-5 h-5 mr-2" />
+                  Continue Learning
+                </Button>
+                <Button size="lg" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white">
+                  View Progress
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* AI Features Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
-              AI Learning Features
-            </CardTitle>
-            <CardDescription>Powered by advanced AI to accelerate your learning</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {aiFeatures.map((feature, index) => (
-                <div key={index} className="p-4 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 text-white">
-                  <div className="flex items-center gap-2 mb-2">
-                    <feature.icon className="w-5 h-5 text-white" />
-                    <Badge variant={feature.active ? "default" : "secondary"} className="text-xs bg-white/10 border-white/20 text-white">
-                      {feature.active ? "Active" : "Coming Soon"}
-                    </Badge>
-                  </div>
-                  <h3 className="font-semibold text-sm mb-1">{feature.title}</h3>
-                  <p className="text-xs text-white/90">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Learning Paths Grid */}
+        {/* AI Features Grid - Dark Premium Design */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {learningPaths.map((path) => (
-            <Card key={path.id} className={`cursor-pointer transition-all duration-200 hover:scale-105 ${selectedPath === path.id ? 'ring-2 ring-blue-500' : ''}`}
-                  onClick={() => setSelectedPath(path.id)}>
-              <CardHeader className="pb-3">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${path.color} flex items-center justify-center mb-3`}>
-                  <path.icon className="w-6 h-6 text-white" />
+          {aiFeatures.map((feature, index) => (
+            <Card key={index} className="group relative overflow-hidden border-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardContent className="p-6 relative">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                    <feature.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <Badge
+                    variant={feature.active ? "default" : "secondary"}
+                    className={feature.active
+                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                      : "bg-slate-700 text-slate-400 border-slate-600"
+                    }
+                  >
+                    {feature.active ? "Active" : "Coming Soon"}
+                  </Badge>
                 </div>
-                <CardTitle className="text-lg">{path.title}</CardTitle>
-                <CardDescription className="text-sm">{path.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Duration:</span>
-                  <span className="font-medium">{path.duration}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Difficulty:</span>
-                  <Badge variant="secondary" className="text-xs">{path.difficulty}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Learners:</span>
-                  <span className="font-medium">{path.learners}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium">{path.rating}</span>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {path.skills.slice(0, 3).map((skill, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">{skill}</Badge>
-                  ))}
-                  {path.skills.length > 3 && (
-                    <Badge variant="outline" className="text-xs">+{path.skills.length - 3}</Badge>
-                  )}
-                </div>
+                <h3 className="font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Selected Path Details (dynamic for each learning path) */}
+        {/* Premium Learning Paths Grid - Dark Theme */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Choose Your Path</h2>
+              <p className="text-slate-600 mt-1">Select a learning journey that aligns with your career goals</p>
+            </div>
+            <Button variant="outline" className="hidden sm:flex border-slate-300 hover:bg-slate-100">
+              View All Paths
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {learningPaths.map((path) => (
+              <Card
+                key={path.id}
+                className={`group cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-0 overflow-hidden bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 ${selectedPath === path.id
+                  ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-500/20'
+                  : 'hover:shadow-xl'
+                  }`}
+                onClick={() => setSelectedPath(path.id)}
+              >
+                <div className={`h-1 bg-gradient-to-r ${path.color}`}></div>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-4 rounded-2xl bg-gradient-to-r ${path.color} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                      <path.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-semibold text-slate-200">{path.rating}</span>
+                      </div>
+                      <p className="text-xs text-slate-400">{path.learners} learners</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                        {path.title}
+                      </h3>
+                      <p className="text-slate-400 text-sm leading-relaxed">{path.description}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 py-4 border-t border-slate-700">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="w-4 h-4 text-slate-500" />
+                          <span className="text-xs text-slate-500 uppercase tracking-wide">Duration</span>
+                        </div>
+                        <p className="font-semibold text-slate-200">{path.duration}</p>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Target className="w-4 h-4 text-slate-500" />
+                          <span className="text-xs text-slate-500 uppercase tracking-wide">Level</span>
+                        </div>
+                        <Badge variant="secondary" className="bg-slate-700 text-slate-200 hover:bg-slate-600 border-slate-600">
+                          {path.difficulty}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Key Skills</p>
+                      <div className="flex flex-wrap gap-2">
+                        {path.skills.slice(0, 4).map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 bg-slate-800/50"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                        {path.skills.length > 4 && (
+                          <Badge variant="outline" className="text-xs border-slate-600 text-slate-300 bg-slate-800/50">
+                            +{path.skills.length - 4} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-700">
+                      <Button
+                        className={`w-full ${selectedPath === path.id
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/30'
+                          : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500'
+                          } text-white transition-all duration-300`}
+                      >
+                        {selectedPath === path.id ? 'View Details' : 'Select Path'}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Premium Path Details Section - Dark Theme */}
         {(() => {
           const selectedPathObj = learningPaths.find(p => p.id === selectedPath);
           return pathDetails[selectedPath] ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {/* show matching icon if possible */}
-                {selectedPathObj?.icon && (
-                  <selectedPathObj.icon className="w-5 h-5 text-white" />
-                )}
-                <span className="text-white">{selectedPathObj?.title ?? 'Learning Path'} Details</span>
-              </CardTitle>
-              <CardDescription className="text-white/80">Complete curriculum with AI-powered assistance and real-world projects</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="modules" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="modules">Modules</TabsTrigger>
-                  <TabsTrigger value="progress">Progress</TabsTrigger>
-                  <TabsTrigger value="achievements">Achievements</TabsTrigger>
-                </TabsList>
+            <Card className="border-0 shadow-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 overflow-hidden">
+              <div className={`h-1 bg-gradient-to-r ${selectedPathObj?.color}`}></div>
+              <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border-b border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {selectedPathObj?.icon && (
+                      <div className={`p-3 rounded-xl bg-gradient-to-r ${selectedPathObj.color} shadow-lg`}>
+                        <selectedPathObj.icon className="w-6 h-6 text-white" />
+                      </div>
+                    )}
+                    <div>
+                      <CardTitle className="text-2xl text-white">
+                        {selectedPathObj?.title ?? 'Learning Path'} Curriculum
+                      </CardTitle>
+                      <CardDescription className="text-slate-400 mt-1">
+                        Complete curriculum with AI-powered assistance and real-world projects
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                    <Brain className="w-3 h-3 mr-1" />
+                    AI Enhanced
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Tabs defaultValue="modules" className="w-full">
+                  <div className="px-6 pt-6">
+                    <TabsList className="grid w-full grid-cols-2 bg-slate-800 border border-slate-700">
+                      <TabsTrigger value="modules" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-slate-400">
+                        Modules
+                      </TabsTrigger>
+                      <TabsTrigger value="progress" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-slate-400">
+                        Progress
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
 
-                <TabsContent value="modules" className="mt-6">
-                  <div className="space-y-4">
-                    {pathDetails[selectedPath].modules.map((module: any, index: number) => (
-                      <div key={index} className={`p-4 rounded-lg bg-gradient-to-r ${selectedPathObj?.colorDark ?? 'from-gray-700 to-slate-700'} text-white`}>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              module.status === 'completed' ? 'bg-green-500 text-white' :
-                              module.status === 'in-progress' ? 'bg-yellow-500 text-white' :
-                              'bg-white/20 text-white'
-                            }`}>
-                              {module.status === 'completed' ? (
-                                <CheckCircle className="w-4 h-4" />
-                              ) : (
-                                <span className="text-sm font-bold">{index + 1}</span>
-                              )}
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">{module.title}</h3>
-                              <p className="text-sm text-white/80">{module.duration} • {module.lessons} lessons • {module.projects} projects</p>
-                            </div>
-                          </div>
-                          <Badge className="text-xs bg-white/10 border-white/20 text-white">
-                            {module.status === 'completed' ? 'Completed' : module.status === 'in-progress' ? 'In Progress' : 'Locked'}
-                          </Badge>
-                        </div>
-                        
-                        <div className="ml-11">
-                          <div className="mb-3">
-                            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                              <Brain className="w-4 h-4 text-white" />
-                              AI Features in this module:
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {module.aiFeatures.map((feature: string, featureIndex: number) => (
-                                <Badge key={featureIndex} variant="outline" className="text-xs bg-white/10 border-white/20 text-white">
-                                  {feature}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            {module.status !== 'locked' && (
-                              <Button size="sm" variant={module.status === 'completed' ? 'outline' : 'default'}>
-                                {module.status === 'completed' ? 'Review' : 'Continue'}
-                              </Button>
-                            )}
-
-                            {/* materials / external links */}
-                            {module.materials && module.materials.length > 0 && (
-                              <div className="flex gap-2">
-                                {module.materials.map((m: any, mi: number) => (
-                                  <a key={mi} href={m.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-xs px-3 py-1 rounded bg-white/10 border border-white/20 text-white">
-                                    {m.title}
-                                  </a>
-                                ))}
+                  <TabsContent value="modules" className="mt-0 p-6">
+                    <div className="space-y-6">
+                      {pathDetails[selectedPath].modules.map((module: any, index: number) => (
+                        <Card key={index} className="border border-slate-700 shadow-lg overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 bg-gradient-to-br from-slate-800 to-slate-900">
+                          <div className={`h-1 bg-gradient-to-r ${selectedPathObj?.color}`}></div>
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${module.status === 'completed' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white' :
+                                module.status === 'in-progress' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' :
+                                  'bg-slate-700 text-slate-400'
+                                } group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                                {module.status === 'completed' ? (
+                                  <CheckCircle className="w-6 h-6" />
+                                ) : module.status === 'in-progress' ? (
+                                  <Play className="w-5 h-5" />
+                                ) : (
+                                  <Lock className="w-5 h-5" />
+                                )}
                               </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
 
-                <TabsContent value="progress" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Overall Progress</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <div className="flex justify-between text-sm mb-2">
-                              <span>Course Completion</span>
-                              <span>32%</span>
-                            </div>
-                            <Progress value={32} className="h-2" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between text-sm mb-2">
-                              <span>Projects Submitted</span>
-                              <span>3 of 22</span>
-                            </div>
-                            <Progress value={14} className="h-2" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between text-sm mb-2">
-                              <span>AI Assistance Used</span>
-                              <span>45 times</span>
-                            </div>
-                            <Progress value={75} className="h-2" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                              <div className="flex-1 space-y-4">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h3 className="text-xl font-bold text-white mb-2">{module.title}</h3>
+                                    <div className="flex items-center gap-4 text-sm text-slate-400">
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="w-4 h-4" />
+                                        <span>{module.duration}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <BookOpen className="w-4 h-4" />
+                                        <span>{module.lessons} lessons</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Code className="w-4 h-4" />
+                                        <span>{module.projects} projects</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Badge
+                                    className={
+                                      module.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                                        module.status === 'in-progress' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                          'bg-slate-700 text-slate-400 border-slate-600'
+                                    }
+                                  >
+                                    {module.status === 'completed' ? 'Completed' :
+                                      module.status === 'in-progress' ? 'In Progress' : 'Locked'}
+                                  </Badge>
+                                </div>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Learning Analytics</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Time Spent Learning</span>
-                            <span className="font-medium">42 hours</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Average Session</span>
-                            <span className="font-medium">1.5 hours</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Streak</span>
-                            <span className="font-medium">7 days</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">AI Recommendations</span>
-                            <span className="font-medium">12 followed</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
+                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                                  <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                                    <Brain className="w-4 h-4 text-purple-400" />
+                                    AI-Powered Features
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {module.aiFeatures.map((feature: string, featureIndex: number) => (
+                                      <Badge key={featureIndex} variant="outline" className="text-xs bg-purple-500/10 border-purple-500/30 text-purple-300">
+                                        {feature}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
 
-                <TabsContent value="achievements" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {achievements.map((achievement, index) => (
-                      <div key={index} className="p-4 rounded-lg bg-white/5">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Award className={`w-6 h-6 ${achievement.progress === 100 ? 'text-yellow-500' : 'text-gray-400'}`} />
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{achievement.title}</h3>
-                            <p className="text-sm text-gray-400">{achievement.description}</p>
+                                <div className="flex items-center justify-between pt-4 border-t border-slate-700">
+                                  <div className="flex items-center gap-3">
+                                    {module.status !== 'locked' && (
+                                      <Button
+                                        size="sm"
+                                        className={module.status === 'completed'
+                                          ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+                                          : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/30'
+                                        }
+                                      >
+                                        {module.status === 'completed' ? 'Review' : 'Continue'}
+                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                      </Button>
+                                    )}
+                                  </div>
+
+                                  {module.materials && module.materials.length > 0 && (
+                                    <div className="flex gap-2">
+                                      {module.materials.slice(0, 3).map((m: any, mi: number) => (
+                                        <a
+                                          key={mi}
+                                          href={m.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors border border-blue-500/30"
+                                        >
+                                          {m.title}
+                                        </a>
+                                      ))}
+                                      {module.materials.length > 3 && (
+                                        <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
+                                          +{module.materials.length - 3} more
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="progress" className="mt-0 p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Card className="border border-slate-700 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900">
+                        <CardHeader className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700">
+                          <CardTitle className="text-lg flex items-center gap-2 text-white">
+                            <TrendingUp className="w-5 h-5 text-blue-400" />
+                            Overall Progress
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 space-y-6">
+                          <div>
+                            <div className="flex justify-between text-sm mb-3">
+                              <span className="text-slate-400">Course Completion</span>
+                              <span className="font-semibold text-white">32%</span>
+                            </div>
+                            <Progress value={32} className="h-3 bg-slate-700" />
                           </div>
-                        </div>
-                        <div className="ml-9">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Progress</span>
-                            <span>{achievement.progress}%</span>
+                          <div>
+                            <div className="flex justify-between text-sm mb-3">
+                              <span className="text-slate-400">Projects Submitted</span>
+                              <span className="font-semibold text-white">3 of 22</span>
+                            </div>
+                            <Progress value={14} className="h-3 bg-slate-700" />
                           </div>
-                          <Progress value={achievement.progress} className="h-2" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent>
-              <p>No details available for this path yet.</p>
-            </CardContent>
-          </Card>
-        );
+                          <div>
+                            <div className="flex justify-between text-sm mb-3">
+                              <span className="text-slate-400">AI Assistance Used</span>
+                              <span className="font-semibold text-white">45 times</span>
+                            </div>
+                            <Progress value={75} className="h-3 bg-slate-700" />
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="border border-slate-700 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900">
+                        <CardHeader className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-b border-slate-700">
+                          <CardTitle className="text-lg flex items-center gap-2 text-white">
+                            <BarChart3 className="w-5 h-5 text-emerald-400" />
+                            Learning Analytics
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 space-y-4">
+                          <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                            <span className="text-sm text-slate-400">Time Spent Learning</span>
+                            <span className="font-semibold text-white">42 hours</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                            <span className="text-sm text-slate-400">Average Session</span>
+                            <span className="font-semibold text-white">1.5 hours</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 border-b border-slate-700">
+                            <span className="text-sm text-slate-400">Current Streak</span>
+                            <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">7 days</Badge>
+                          </div>
+                          <div className="flex justify-between items-center py-2">
+                            <span className="text-sm text-slate-400">AI Recommendations</span>
+                            <span className="font-semibold text-white">12 followed</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+
+
+                </Tabs>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border border-slate-700 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900">
+              <CardContent className="p-12 text-center">
+                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-8 h-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">No Details Available</h3>
+                <p className="text-slate-400">Select a learning path to view detailed curriculum information.</p>
+              </CardContent>
+            </Card>
+          );
         })()}
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 };
 

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { TrendingUp, BarChart3, Zap, Target, Brain, Star, ArrowUp, ArrowDown, Minus, Eye, Bookmark, Share2, Filter, Search, ExternalLink, Download, RefreshCw } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { TrendingUp, BarChart3, Zap, Target, Brain, Star, ArrowUp, ArrowDown, Minus, Eye, Bookmark, Share2, Filter, Search, ExternalLink, Download, RefreshCw, Play, Pause, Volume2, Maximize, CheckCircle2, Clock, Code2, BookOpen, Award, ChevronRight, X, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/DashboardLayout";
 import geminiService from "@/services/geminiService";
+import youtubeService from "@/services/youtubeService";
+
+interface YouTubeVideo {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  duration: string;
+  position: number;
+}
 
 const IndustryTrends = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -18,6 +28,18 @@ const IndustryTrends = () => {
   const [emergingTechInsights, setEmergingTechInsights] = useState<any>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleString());
+
+  // Learning Path State
+  const [selectedSkill, setSelectedSkill] = useState<any>(null);
+  const [isLearningMode, setIsLearningMode] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [watchedVideos, setWatchedVideos] = useState<Set<number>>(new Set());
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [code, setCode] = useState("// Start coding here...\n");
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [playlistVideos, setPlaylistVideos] = useState<YouTubeVideo[]>([]);
+  const [isLoadingPlaylist, setIsLoadingPlaylist] = useState(false);
+  const videoRef = useRef<HTMLIFrameElement>(null);
 
   // YouTube playlist mappings for popular learning resources
   const youtubePlaylists = {
@@ -94,24 +116,70 @@ const IndustryTrends = () => {
     }
   };
 
-  const handleStartLearning = (skillName: string) => {
-    const playlist = youtubePlaylists[skillName as keyof typeof youtubePlaylists];
+  const handleStartLearning = async (skill: any) => {
+    const playlist = youtubePlaylists[skill.skill as keyof typeof youtubePlaylists];
 
     if (playlist) {
-      // Track the learning journey (could be extended with analytics)
-      console.log(`Starting learning journey for ${skillName} via ${playlist.channel}`);
+      setSelectedSkill({
+        ...skill,
+        playlist: playlist
+      });
+      setIsLearningMode(true);
+      setCurrentVideoIndex(0);
+      setVideoProgress(0);
+      setIsLoadingPlaylist(true);
 
-      // Open YouTube playlist in new tab
-      window.open(playlist.url, '_blank', 'noopener,noreferrer');
-
-      // Optional: Show a brief success message or toast
-      // You could integrate with a toast notification system here
+      try {
+        // Fetch real playlist data from YouTube
+        const playlistData = await youtubeService.fetchPlaylistVideos(playlist.url);
+        setPlaylistVideos(playlistData.videos);
+      } catch (error) {
+        console.error('Error loading playlist:', error);
+        // Keep empty array, will show loading state
+        setPlaylistVideos([]);
+      } finally {
+        setIsLoadingPlaylist(false);
+      }
     } else {
-      // Fallback to a general search if no specific playlist is found
-      console.log(`No specific playlist found for ${skillName}, redirecting to search`);
-      const searchQuery = encodeURIComponent(`${skillName} tutorial playlist`);
+      // Fallback to external link
+      const searchQuery = encodeURIComponent(`${skill.skill} tutorial playlist`);
       window.open(`https://www.youtube.com/results?search_query=${searchQuery}`, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const handleVideoComplete = () => {
+    setWatchedVideos(prev => new Set([...prev, currentVideoIndex]));
+    const totalVideos = playlistVideos.length || 10;
+    const progress = ((watchedVideos.size + 1) / totalVideos) * 100;
+    setVideoProgress(progress);
+  };
+
+  const handleNextVideo = () => {
+    const maxIndex = playlistVideos.length > 0 ? playlistVideos.length - 1 : 9;
+    if (currentVideoIndex < maxIndex) {
+      setCurrentVideoIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePreviousVideo = () => {
+    if (currentVideoIndex > 0) {
+      setCurrentVideoIndex(prev => prev - 1);
+    }
+  };
+
+  const handleVideoSelect = (index: number) => {
+    setCurrentVideoIndex(index);
+  };
+
+  const closeLearningMode = () => {
+    setIsLearningMode(false);
+    setSelectedSkill(null);
+  };
+
+  const extractVideoId = (url: string) => {
+    // Extract video ID from YouTube URL
+    const match = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([\w-]{11})/);
+    return match ? match[1] : '';
   };
 
   const trendingSkills = [
@@ -563,7 +631,7 @@ const IndustryTrends = () => {
   const filteredSkills = trendingSkills.filter(skill => {
     const matchesCategory = selectedCategory === "all" || skill.category.toLowerCase() === selectedCategory.toLowerCase();
     const matchesSearch = skill.skill.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         skill.keyAreas.some(area => area.toLowerCase().includes(searchTerm.toLowerCase()));
+      skill.keyAreas.some(area => area.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -586,6 +654,304 @@ const IndustryTrends = () => {
 
   return (
     <DashboardLayout>
+      {/* Premium Learning Mode */}
+      {isLearningMode && selectedSkill && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-auto">
+          <div className="min-h-screen p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeLearningMode}
+                  className="text-white hover:bg-white/10"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">{selectedSkill.skill}</h1>
+                  <p className="text-purple-200 text-sm">Learning Path by {selectedSkill.playlist.channel}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+                  <div className="flex items-center gap-2 text-white text-sm">
+                    <Clock className="w-4 h-4" />
+                    <span>{selectedSkill.timeToLearn}</span>
+                  </div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+                  <div className="flex items-center gap-2 text-white text-sm">
+                    <Award className="w-4 h-4 text-yellow-400" />
+                    <span>{watchedVideos.size}/{playlistVideos.length || 10} Completed</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-purple-200 text-sm font-medium">Overall Progress</span>
+                <span className="text-white font-semibold">{Math.round(videoProgress)}%</span>
+              </div>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+                  style={{ width: `${videoProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Main Learning Interface */}
+            <div className="grid grid-cols-12 gap-6">
+              {/* Left Sidebar - Playlist */}
+              <div className="col-span-3">
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10 h-full">
+                  <CardHeader className="border-b border-white/10">
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-purple-400" />
+                      Course Content
+                    </CardTitle>
+                    <p className="text-purple-300 text-xs mt-1">
+                      {playlistVideos.length > 0 ? `${playlistVideos.length} videos` : 'Loading...'}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+                      {isLoadingPlaylist ? (
+                        <div className="p-8 text-center">
+                          <RefreshCw className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-2" />
+                          <p className="text-purple-200 text-sm">Loading playlist...</p>
+                        </div>
+                      ) : playlistVideos.length > 0 ? (
+                        playlistVideos.map((video, index) => (
+                          <button
+                            key={video.id}
+                            onClick={() => handleVideoSelect(index)}
+                            className={`w-full p-3 text-left border-b border-white/5 transition-all ${currentVideoIndex === index
+                                ? 'bg-purple-500/20 border-l-4 border-l-purple-500'
+                                : 'hover:bg-white/5'
+                              }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="relative flex-shrink-0">
+                                <img
+                                  src={video.thumbnail}
+                                  alt={video.title}
+                                  className="w-20 h-12 object-cover rounded"
+                                />
+                                <div className="absolute bottom-0 right-0 bg-black/80 text-white text-[10px] px-1 rounded">
+                                  {video.duration}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start gap-2">
+                                  <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${watchedVideos.has(index)
+                                      ? 'bg-green-500'
+                                      : currentVideoIndex === index
+                                        ? 'bg-purple-500'
+                                        : 'bg-white/10'
+                                    }`}>
+                                    {watchedVideos.has(index) ? (
+                                      <CheckCircle2 className="w-3 h-3 text-white" />
+                                    ) : (
+                                      <span className="text-white font-semibold">{index + 1}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-xs font-medium line-clamp-2 ${currentVideoIndex === index ? 'text-white' : 'text-purple-200'
+                                      }`}>
+                                      {video.title}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-8 text-center">
+                          <p className="text-purple-200 text-sm">No videos available</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Center - Video Player */}
+              <div className="col-span-6 space-y-4">
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                  <CardContent className="p-0">
+                    <div className="aspect-video bg-black rounded-t-lg overflow-hidden">
+                      {playlistVideos.length > 0 && playlistVideos[currentVideoIndex] ? (
+                        <iframe
+                          ref={videoRef}
+                          key={playlistVideos[currentVideoIndex].id}
+                          className="w-full h-full"
+                          src={youtubeService.getEmbedUrl(playlistVideos[currentVideoIndex].id)}
+                          title={playlistVideos[currentVideoIndex].title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <RefreshCw className="w-12 h-12 text-purple-400 animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4 space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-2">
+                          {playlistVideos[currentVideoIndex]?.title || 'Loading...'}
+                        </h3>
+                        <p className="text-purple-200 text-sm line-clamp-2">
+                          {playlistVideos[currentVideoIndex]?.description || 'Master the fundamentals and advanced concepts of this topic'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          onClick={handlePreviousVideo}
+                          disabled={currentVideoIndex === 0}
+                          variant="outline"
+                          size="sm"
+                          className="bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          onClick={handleVideoComplete}
+                          variant="default"
+                          size="sm"
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Mark Complete
+                        </Button>
+                        <Button
+                          onClick={handleNextVideo}
+                          disabled={currentVideoIndex >= (playlistVideos.length > 0 ? playlistVideos.length - 1 : 9)}
+                          variant="outline"
+                          size="sm"
+                          className="bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Code Editor */}
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                  <CardHeader className="border-b border-white/10">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Code2 className="w-5 h-5 text-green-400" />
+                        Practice Code Editor
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+                        >
+                          Reset
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Run Code
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="w-full h-64 bg-slate-900 text-green-400 font-mono text-sm p-4 focus:outline-none resize-none"
+                      placeholder="// Write your code here..."
+                      spellCheck={false}
+                    />
+                    <div className="bg-slate-950 border-t border-white/10 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Terminal className="w-4 h-4 text-purple-400" />
+                        <span className="text-purple-200 text-sm font-medium">Output</span>
+                      </div>
+                      <div className="bg-black/50 rounded p-3 font-mono text-sm text-green-400 min-h-[60px]">
+                        <span className="text-gray-500">// Run your code to see output...</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Sidebar - Resources & Notes */}
+              <div className="col-span-3 space-y-4">
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                  <CardHeader className="border-b border-white/10">
+                    <CardTitle className="text-white text-sm">Key Concepts</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-3">
+                    {selectedSkill.keyAreas.slice(0, 5).map((area: string, index: number) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <ChevronRight className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-purple-200 text-sm">{area}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                  <CardHeader className="border-b border-white/10">
+                    <CardTitle className="text-white text-sm">Learning Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-purple-200">Videos Watched</span>
+                        <span className="text-white font-semibold">{watchedVideos.size}/{playlistVideos.length || 10}</span>
+                      </div>
+                      <Progress value={((watchedVideos.size / (playlistVideos.length || 10)) * 100)} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-purple-200">Time Invested</span>
+                        <span className="text-white font-semibold">{watchedVideos.size * 15}m</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-purple-200">Completion Rate</span>
+                        <span className="text-white font-semibold">{Math.round(videoProgress)}%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border-purple-500/30">
+                  <CardContent className="pt-6">
+                    <div className="text-center space-y-3">
+                      <Award className="w-12 h-12 text-yellow-400 mx-auto" />
+                      <h3 className="text-white font-semibold">Earn Certificate</h3>
+                      <p className="text-purple-200 text-xs">
+                        Complete all modules to earn your certificate
+                      </p>
+                      <Progress value={videoProgress} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -750,15 +1116,14 @@ const IndustryTrends = () => {
                       <div className="flex-1">
                         <Button
                           size="sm"
-                          className="w-full bg-red-600 hover:bg-red-700 text-white transition-all duration-200 transform hover:scale-105"
-                          onClick={() => handleStartLearning(skill.skill)}
+                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-all duration-200 transform hover:scale-105 shadow-lg"
+                          onClick={() => handleStartLearning(skill)}
                           title={youtubePlaylists[skill.skill as keyof typeof youtubePlaylists]
-                            ? `Learn ${skill.skill} from ${youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel} on YouTube`
-                            : `Search for ${skill.skill} tutorials on YouTube`}
+                            ? `Learn ${skill.skill} from ${youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}`
+                            : `Search for ${skill.skill} tutorials`}
                         >
-                          <Target className="w-4 h-4 mr-1" />
+                          <Play className="w-4 h-4 mr-1" />
                           Start Learning
-                          <ExternalLink className="w-3 h-3 ml-1" />
                         </Button>
                         {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists] && (
                           <p className="text-xs text-gray-500 mt-1 text-center">
@@ -771,9 +1136,6 @@ const IndustryTrends = () => {
                       </Button>
                       <Button size="sm" variant="outline">
                         <Share2 className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
                       </Button>
                     </div>
                   </CardContent>
@@ -1010,13 +1372,13 @@ const IndustryTrends = () => {
                         {aiInsights?.predictions?.slice(0, 4).map((prediction: string, index: number) => (
                           <li key={index}>• {prediction}</li>
                         )) || (
-                          <>
-                            <li>• AI/ML roles expected to grow by 85% in next 12 months</li>
-                            <li>• Cloud security positions increasing by 55%</li>
-                            <li>• Web3 developer demand stabilizing at premium levels</li>
-                            <li>• Data science roles shifting towards AI integration</li>
-                          </>
-                        )}
+                            <>
+                              <li>• AI/ML roles expected to grow by 85% in next 12 months</li>
+                              <li>• Cloud security positions increasing by 55%</li>
+                              <li>• Web3 developer demand stabilizing at premium levels</li>
+                              <li>• Data science roles shifting towards AI integration</li>
+                            </>
+                          )}
                       </ul>
                     </div>
 
@@ -1026,13 +1388,13 @@ const IndustryTrends = () => {
                         {aiInsights?.salaryAnalysis?.slice(0, 4).map((analysis: string, index: number) => (
                           <li key={index}>• {analysis}</li>
                         )) || (
-                          <>
-                            <li>• AI specialists: +40% average increase expected</li>
-                            <li>• Cloud architects: +32% growth projected</li>
-                            <li>• Full-stack developers: +18% steady rise</li>
-                            <li>• DevOps engineers: +28% demand premium</li>
-                          </>
-                        )}
+                            <>
+                              <li>• AI specialists: +40% average increase expected</li>
+                              <li>• Cloud architects: +32% growth projected</li>
+                              <li>• Full-stack developers: +18% steady rise</li>
+                              <li>• DevOps engineers: +28% demand premium</li>
+                            </>
+                          )}
                       </ul>
                     </div>
                   </CardContent>
