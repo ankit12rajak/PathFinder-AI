@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Briefcase, MapPin, Clock, DollarSign, Users, Star, Filter, Search, BookOpen, Code, Award, Target, Calendar, Building, ExternalLink, Heart, Share2, Bookmark } from "lucide-react";
+import { Code, Search, Filter, Download, ExternalLink, CheckCircle2, ArrowRight, Rocket, Star, Clock, Users, Building, Sparkles, Brain, Target, Award, FileText, BookOpen, Layers, Activity, Calendar, MapPin, DollarSign, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,661 +10,933 @@ import { Progress } from "@/components/ui/progress";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const ProjectsInternships = () => {
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<string>("opportunities");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
+  const [selectedTheme, setSelectedTheme] = useState<string>("all");
+  const [selectedDomain, setSelectedDomain] = useState<string>("all");
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
 
-  const opportunities = [
+  const projects = [
     {
       id: 1,
-      title: "AI-Powered E-commerce Recommendation System",
-      company: "TechCorp Solutions",
-      type: "Project",
-      level: "Intermediate",
+      title: "SportifyHub - Sports Event Management Backend",
+      difficulty: "Medium",
+      description: "Develop a Spring Boot API for managing sports events, teams, and registrations. Implement role-based access, event scheduling, and notification features. Use PostgreSQL for persistence, Docker for deployment, and Maven for project management.",
+      technologies: ["Java", "Springboot", "PostgreSQL", "Docker", "Maven"],
+      domains: ["Sports"],
+      themes: ["Entrepreneurship", "Education"],
       duration: "3-4 months",
-      stipend: "₹25,000",
-      location: "Remote",
-      description: "Build a machine learning recommendation engine for an e-commerce platform using collaborative filtering and deep learning techniques.",
-      skills: ["Python", "TensorFlow", "Pandas", "SQL", "Machine Learning"],
-      requirements: ["Python experience", "Basic ML knowledge", "Portfolio of projects"],
-      mentorship: true,
+      stipend: "₹15,000 - ₹25,000",
+      applicants: 147,
       rating: 4.8,
-      applicants: 45,
-      deadline: "5 days",
-      logo: "🚀",
+      logo: "⚽",
       featured: true,
-      category: "AI/ML",
-      aiMatch: 95
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Complete product requirements and specifications for the sports event management system"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "System architecture and high-level component design"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Detailed technical implementation and database schemas"
+        }
+      }
     },
     {
       id: 2,
-      title: "Full-Stack Developer Internship",
-      company: "StartupXYZ",
-      type: "Internship",
-      level: "Beginner",
-      duration: "6 months",
-      stipend: "₹18,000/month",
-      location: "Bangalore",
-      description: "Join our development team to build modern web applications using React, Node.js, and cloud technologies.",
-      skills: ["React", "Node.js", "JavaScript", "MongoDB", "AWS"],
-      requirements: ["HTML/CSS/JS proficiency", "React basics", "Git knowledge"],
-      mentorship: true,
-      rating: 4.6,
-      applicants: 120,
-      deadline: "2 weeks",
-      logo: "💻",
-      featured: false,
-      category: "Web Development",
-      aiMatch: 87
+      title: "PropEase - Real Estate Listings & Booking API",
+      difficulty: "Medium",
+      description: "Build a Spring Boot backend for managing real estate property listings, bookings, and user profiles. Implement search functionality, booking system, and payment integration.",
+      technologies: ["Java", "Springboot", "MySQL", "Docker", "Maven"],
+      domains: ["Real-Estate"],
+      themes: ["Startup", "Open-Source"],
+      duration: "3-4 months",
+      stipend: "₹18,000 - ₹28,000",
+      applicants: 203,
+      rating: 4.7,
+      logo: "🏠",
+      featured: true,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Product requirements for real estate platform"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Architecture design for property management system"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Implementation details and API specifications"
+        }
+      }
     },
     {
       id: 3,
-      title: "Mobile App Development Project",
-      company: "InnovateLabs",
-      type: "Project",
-      level: "Advanced",
+      title: "Enerlytics - Energy Consumption Analytics Service",
+      difficulty: "Medium",
+      description: "Create a Spring Boot microservice for collecting and analyzing energy consumption data from smart meters. Build interactive dashboards and generate insights.",
+      technologies: ["Java", "Springboot", "PostgreSQL", "Docker", "Maven"],
+      domains: ["Energy"],
+      themes: ["Research", "Futuristic"],
       duration: "4-5 months",
-      stipend: "₹40,000",
-      location: "Remote",
-      description: "Develop a cross-platform mobile application for healthcare management with real-time data synchronization.",
-      skills: ["React Native", "Firebase", "TypeScript", "REST APIs", "Redux"],
-      requirements: ["Mobile development experience", "React Native proficiency", "API integration skills"],
-      mentorship: true,
+      stipend: "₹20,000 - ₹30,000",
+      applicants: 89,
       rating: 4.9,
-      applicants: 28,
-      deadline: "1 week",
-      logo: "📱",
+      logo: "⚡",
       featured: true,
-      category: "Mobile Development",
-      aiMatch: 78
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Requirements for energy analytics platform"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Microservices architecture for data processing"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Data models and analytics algorithms"
+        }
+      }
     },
     {
       id: 4,
-      title: "Data Analytics Internship",
-      company: "DataDriven Inc",
-      type: "Internship",
-      level: "Intermediate",
-      duration: "3 months",
-      stipend: "₹20,000/month",
-      location: "Mumbai",
-      description: "Analyze large datasets to extract business insights and create interactive dashboards for decision-making.",
-      skills: ["Python", "Tableau", "SQL", "Statistics", "Excel"],
-      requirements: ["Data analysis experience", "Python/R knowledge", "SQL proficiency"],
-      mentorship: true,
-      rating: 4.7,
-      applicants: 67,
-      deadline: "3 days",
-      logo: "📊",
+      title: "CloudScale - Multi-Cloud Infrastructure Manager",
+      difficulty: "Hard",
+      description: "Build a comprehensive cloud infrastructure management platform supporting AWS, Azure, and GCP. Implement resource provisioning, monitoring, and cost optimization.",
+      technologies: ["Python", "FastAPI", "Terraform", "Kubernetes", "PostgreSQL"],
+      domains: ["Cloud", "Agriculture"],
+      themes: ["Startup", "Education"],
+      duration: "5-6 months",
+      stipend: "₹25,000 - ₹40,000",
+      applicants: 156,
+      rating: 4.8,
+      logo: "☁️",
       featured: false,
-      category: "Data Science",
-      aiMatch: 92
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Multi-cloud platform requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Cloud-native architecture design"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Infrastructure as code implementation"
+        }
+      }
     },
     {
       id: 5,
-      title: "Cybersecurity Research Project",
-      company: "SecureNet Labs",
-      type: "Project",
-      level: "Advanced",
-      duration: "6 months",
-      stipend: "₹35,000",
-      location: "Remote",
-      description: "Research and develop security solutions for IoT devices, focusing on vulnerability assessment and penetration testing.",
-      skills: ["Ethical Hacking", "Network Security", "Python", "Linux", "Vulnerability Assessment"],
-      requirements: ["Security certifications preferred", "Penetration testing experience", "Python scripting"],
-      mentorship: true,
-      rating: 4.8,
-      applicants: 23,
-      deadline: "1 week",
-      logo: "🔒",
-      featured: true,
-      category: "Cybersecurity",
-      aiMatch: 85
+      title: "MediConnect - Healthcare Appointment System",
+      difficulty: "Easy",
+      description: "Develop a patient-doctor appointment booking system with real-time availability, notifications, and medical records management.",
+      technologies: ["Node.js", "Express", "MongoDB", "React", "Socket.io"],
+      domains: ["Healthcare"],
+      themes: ["Open-Source", "Education"],
+      duration: "2-3 months",
+      stipend: "₹12,000 - ₹20,000",
+      applicants: 312,
+      rating: 4.6,
+      logo: "🏥",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Healthcare appointment system requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "System design for appointment management"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Database schema and API endpoints"
+        }
+      }
     },
     {
       id: 6,
-      title: "UI/UX Design Challenge",
-      company: "DesignCo",
-      type: "Challenge",
-      level: "Beginner",
-      duration: "1 month",
-      stipend: "Portfolio + Certificate",
-      location: "Remote",
-      description: "Design a complete user experience for a fintech application, from user research to high-fidelity prototypes.",
-      skills: ["Figma", "User Research", "Prototyping", "Design Systems", "Usability Testing"],
-      requirements: ["Design portfolio", "Figma proficiency", "Basic UX knowledge"],
-      mentorship: true,
-      rating: 4.5,
-      applicants: 89,
-      deadline: "4 days",
-      logo: "🎨",
-      featured: false,
-      category: "Design",
-      aiMatch: 73
-    }
-  ];
-
-  const mentorshipPrograms = [
-    {
-      id: 1,
-      title: "AI/ML Mentorship Program",
-      mentor: "Dr. Priya Sharma",
-      expertise: "Senior AI Engineer at Google",
-      duration: "3 months",
-      sessions: "Weekly 1-hour sessions",
-      focus: ["Machine Learning", "Deep Learning", "Career Guidance"],
-      rating: 4.9,
-      mentees: 12,
-      price: "₹15,000",
-      description: "Comprehensive mentorship covering AI fundamentals to advanced topics with hands-on projects"
-    },
-    {
-      id: 2,
-      title: "Full-Stack Development Mentorship",
-      mentor: "Rahul Kumar",
-      expertise: "Tech Lead at Microsoft",
-      duration: "4 months",
-      sessions: "Bi-weekly 1.5-hour sessions",
-      focus: ["React", "Node.js", "System Design", "Career Growth"],
-      rating: 4.8,
-      mentees: 8,
-      price: "₹12,000",
-      description: "End-to-end web development mentorship with real-world project experience"
-    },
-    {
-      id: 3,
-      title: "Product Management Mentorship",
-      mentor: "Anita Desai",
-      expertise: "Senior PM at Amazon",
-      duration: "2 months",
-      sessions: "Weekly 45-minute sessions",
-      focus: ["Product Strategy", "User Research", "Analytics"],
+      title: "EduLearn - Online Learning Platform",
+      difficulty: "Medium",
+      description: "Create an interactive online learning platform with course management, video streaming, quizzes, and progress tracking.",
+      technologies: ["React", "Node.js", "MongoDB", "AWS", "Redis"],
+      domains: ["Education"],
+      themes: ["Education", "Startup"],
+      duration: "4-5 months",
+      stipend: "₹18,000 - ₹28,000",
+      applicants: 245,
       rating: 4.7,
-      mentees: 6,
-      price: "₹18,000",
-      description: "Strategic product thinking and execution with industry best practices"
+      logo: "📚",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "E-learning platform specifications"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Platform architecture and components"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Implementation details and integrations"
+        }
+      }
+    },
+    {
+      id: 7,
+      title: "FarmTech - Agricultural IoT Platform",
+      difficulty: "Hard",
+      description: "Build an IoT platform for smart farming with sensor data collection, weather integration, crop monitoring, and automated irrigation control.",
+      technologies: ["Python", "Django", "PostgreSQL", "MQTT", "React"],
+      domains: ["Agriculture"],
+      themes: ["Research", "Futuristic"],
+      duration: "5-6 months",
+      stipend: "₹22,000 - ₹35,000",
+      applicants: 98,
+      rating: 4.9,
+      logo: "🌾",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Smart farming platform requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "IoT architecture and data pipeline"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Sensor integration and automation logic"
+        }
+      }
+    },
+    {
+      id: 8,
+      title: "LegalEase - Legal Document Automation",
+      difficulty: "Medium",
+      description: "Develop a platform for automating legal document generation, contract management, and compliance tracking with AI-powered suggestions.",
+      technologies: ["Python", "FastAPI", "PostgreSQL", "React", "OpenAI"],
+      domains: ["Legal"],
+      themes: ["Entrepreneurship", "Startup"],
+      duration: "3-4 months",
+      stipend: "₹20,000 - ₹30,000",
+      applicants: 134,
+      rating: 4.8,
+      logo: "⚖️",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Legal automation platform requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Document processing architecture"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "AI integration and template engine"
+        }
+      }
+    },
+    {
+      id: 9,
+      title: "TransitTrack - Transportation Management System",
+      difficulty: "Easy",
+      description: "Build a fleet management system for tracking vehicles, optimizing routes, and managing deliveries with real-time GPS integration.",
+      technologies: ["Node.js", "Express", "MongoDB", "React", "Google Maps API"],
+      domains: ["Transportation"],
+      themes: ["Startup", "Open-Source"],
+      duration: "2-3 months",
+      stipend: "₹15,000 - ₹22,000",
+      applicants: 187,
+      rating: 4.5,
+      logo: "🚚",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Fleet management system requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Real-time tracking architecture"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Route optimization algorithms"
+        }
+      }
+    },
+    {
+      id: 10,
+      title: "GovConnect - Government Services Portal",
+      difficulty: "Medium",
+      description: "Create a citizen services portal for government applications, document verification, and service request tracking with secure authentication.",
+      technologies: ["Java", "Spring Boot", "PostgreSQL", "React", "OAuth2"],
+      domains: ["Government"],
+      themes: ["Open-Source", "Research"],
+      duration: "4-5 months",
+      stipend: "₹18,000 - ₹28,000",
+      applicants: 165,
+      rating: 4.7,
+      logo: "🏛️",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Government portal requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Secure portal architecture"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Authentication and workflow implementation"
+        }
+      }
+    },
+    {
+      id: 11,
+      title: "CharityChain - Non-Profit Donation Platform",
+      difficulty: "Easy",
+      description: "Build a transparent donation platform for non-profits with campaign management, donor tracking, and impact reporting.",
+      technologies: ["React", "Node.js", "MongoDB", "Stripe", "AWS"],
+      domains: ["Non-Profit"],
+      themes: ["Open-Source", "Education"],
+      duration: "2-3 months",
+      stipend: "₹12,000 - ₹18,000",
+      applicants: 221,
+      rating: 4.6,
+      logo: "❤️",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "Donation platform requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "Payment processing architecture"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Campaign and donor management"
+        }
+      }
+    },
+    {
+      id: 12,
+      title: "HRPro - Human Resources Management System",
+      difficulty: "Medium",
+      description: "Develop a comprehensive HR management system with employee onboarding, attendance tracking, payroll, and performance reviews.",
+      technologies: ["Python", "Django", "PostgreSQL", "React", "Celery"],
+      domains: ["Human-Resources"],
+      themes: ["Startup", "Business"],
+      duration: "4-5 months",
+      stipend: "₹20,000 - ₹30,000",
+      applicants: 178,
+      rating: 4.8,
+      logo: "👥",
+      featured: false,
+      documents: {
+        prd: {
+          title: "PRD Document",
+          subtitle: "Product Requirements",
+          description: "HR management system requirements"
+        },
+        hld: {
+          title: "HLD Document",
+          subtitle: "High Level Design",
+          description: "HRMS architecture and modules"
+        },
+        lld: {
+          title: "LLD Document",
+          subtitle: "Low Level Design",
+          description: "Payroll calculation and workflows"
+        }
+      }
     }
   ];
 
-  const skillBasedProjects = [
-    {
-      skill: "React Development",
-      projects: ["E-commerce Dashboard", "Social Media App", "Task Management Tool"],
-      difficulty: "Beginner to Advanced",
-      timeCommitment: "2-6 weeks per project",
-      outcomes: ["Portfolio projects", "Real-world experience", "Industry connections"]
-    },
-    {
-      skill: "Data Science",
-      projects: ["Customer Segmentation", "Predictive Analytics", "NLP Sentiment Analysis"],
-      difficulty: "Intermediate to Advanced",
-      timeCommitment: "3-8 weeks per project",
-      outcomes: ["Data science portfolio", "Industry datasets", "Research publications"]
-    },
-    {
-      skill: "Mobile Development",
-      projects: ["Fitness Tracker App", "Food Delivery App", "AR Shopping App"],
-      difficulty: "Intermediate to Advanced",
-      timeCommitment: "4-10 weeks per project",
-      outcomes: ["Published apps", "App store presence", "User feedback"]
-    }
-  ];
+  const difficultyLevels = ["Easy", "Medium", "Hard"];
+  const themes = ["Open-Source", "Research", "Startup", "Futuristic", "Business", "Education", "Entrepreneurship"];
+  const domains = ["Agriculture", "Media", "Government", "Healthcare", "Legal", "Transportation", "Non-Profit", "Human-Resources", "Sports", "Real-Estate", "Energy", "Cloud", "Education"];
 
-  const filteredOpportunities = opportunities.filter(opp => {
-    const matchesType = selectedType === "all" || opp.type.toLowerCase() === selectedType.toLowerCase();
-    const matchesLevel = selectedLevel === "all" || opp.level.toLowerCase() === selectedLevel.toLowerCase();
-    const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         opp.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         opp.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesType && matchesLevel && matchesSearch;
+  const filteredProjects = projects.filter(project => {
+    const matchesDifficulty = selectedDifficulty === "all" || project.difficulty.toLowerCase() === selectedDifficulty.toLowerCase();
+    const matchesTheme = selectedTheme === "all" || project.themes.some(t => t.toLowerCase() === selectedTheme.toLowerCase());
+    const matchesDomain = selectedDomain === "all" || project.domains.some(d => d.toLowerCase() === selectedDomain.toLowerCase());
+    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.technologies.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesDifficulty && matchesTheme && matchesDomain && matchesSearch;
   });
 
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "Beginner": return "bg-green-100 text-green-700";
-      case "Intermediate": return "bg-yellow-100 text-yellow-700";
-      case "Advanced": return "bg-red-100 text-red-700";
-      default: return "bg-gray-100 text-gray-700";
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case "easy": return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      case "medium": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+      case "hard": return "bg-rose-500/20 text-rose-400 border-rose-500/30";
+      default: return "bg-slate-500/20 text-slate-400 border-slate-500/30";
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "Internship": return <Briefcase className="w-4 h-4" />;
-      case "Project": return <Code className="w-4 h-4" />;
-      case "Challenge": return <Award className="w-4 h-4" />;
-      default: return <Target className="w-4 h-4" />;
-    }
+  const clearAllFilters = () => {
+    setSelectedDifficulty("all");
+    setSelectedTheme("all");
+    setSelectedDomain("all");
+    setSearchTerm("");
+    setActiveFilters([]);
+  };
+
+  const handleViewDetails = (project: any) => {
+    setSelectedProject(project);
+    setShowProjectDetails(true);
+  };
+
+  const handleCloseDetails = () => {
+    setShowProjectDetails(false);
+    setSelectedProject(null);
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-purple-600">Projects & Internships</h1>
-            <p className="text-gray-600 mt-2">Real-world opportunities to build your portfolio and gain industry experience</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-              <Target className="w-4 h-4 mr-1" />
-              AI Matched
-            </Badge>
-            <Button>
-              <BookOpen className="w-4 h-4 mr-2" />
-              My Applications
+      {/* Project Details Modal */}
+      {showProjectDetails && selectedProject && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 overflow-y-auto">
+          <div className="relative w-full max-w-5xl bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 rounded-2xl border border-purple-500/30 shadow-2xl max-h-[90vh] overflow-y-auto">
+            {/* Close Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCloseDetails}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-white/10 z-10"
+            >
+              <X className="w-5 h-5" />
             </Button>
+
+            {/* Header */}
+            <div className="p-8 border-b border-slate-700/50">
+              <div className="flex items-start gap-4">
+                <div className="text-5xl">{selectedProject.logo}</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-3xl font-bold text-white">{selectedProject.title}</h2>
+                    <Badge className={`${getDifficultyColor(selectedProject.difficulty)} border px-3 py-1`}>
+                      {selectedProject.difficulty} Difficulty
+                    </Badge>
+                  </div>
+                  <p className="text-slate-300 text-lg leading-relaxed mb-4">{selectedProject.description}</p>
+                  
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                      <Clock className="w-4 h-4 text-cyan-400" />
+                      <span className="text-slate-200 text-sm">{selectedProject.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-900/30 to-teal-900/30 px-3 py-1.5 rounded-lg border border-emerald-500/30">
+                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                      <span className="text-emerald-400 text-sm font-semibold">{selectedProject.stipend}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                      <Users className="w-4 h-4 text-purple-400" />
+                      <span className="text-slate-200 text-sm">{selectedProject.applicants} applied</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <span className="text-slate-200 text-sm font-semibold">{selectedProject.rating}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Project Details */}
+            <div className="p-8 space-y-6">
+              {/* Technologies */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <Code className="w-5 h-5 text-cyan-400" />
+                  Technologies
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedProject.technologies.map((tech: string, index: number) => (
+                    <Badge key={index} className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 px-3 py-1">
+                      {tech}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Domains & Themes */}
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Building className="w-5 h-5 text-blue-400" />
+                    Domains
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.domains.map((domain: string, index: number) => (
+                      <Badge key={index} className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                        {domain}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    Themes
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProject.themes.map((theme: string, index: number) => (
+                      <Badge key={index} className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                        {theme}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Documentation */}
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <FileText className="w-6 h-6 text-emerald-400" />
+                  Documentation
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* PRD Document */}
+                  <Card className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border-blue-500/30 hover:border-blue-400/50 transition-all">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                          <FileText className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white">{selectedProject.documents.prd.title}</h4>
+                          <p className="text-xs text-blue-300">{selectedProject.documents.prd.subtitle}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-400 mb-4">{selectedProject.documents.prd.description}</p>
+                      <Button size="sm" variant="outline" className="w-full bg-blue-500/10 border-blue-500/30 text-blue-300 hover:bg-blue-500/20">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* HLD Document */}
+                  <Card className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border-purple-500/30 hover:border-purple-400/50 transition-all">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-purple-500/20 rounded-lg">
+                          <Layers className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white">{selectedProject.documents.hld.title}</h4>
+                          <p className="text-xs text-purple-300">{selectedProject.documents.hld.subtitle}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-400 mb-4">{selectedProject.documents.hld.description}</p>
+                      <Button size="sm" variant="outline" className="w-full bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* LLD Document */}
+                  <Card className="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border-emerald-500/30 hover:border-emerald-400/50 transition-all">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-emerald-500/20 rounded-lg">
+                          <Code className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-white">{selectedProject.documents.lld.title}</h4>
+                          <p className="text-xs text-emerald-300">{selectedProject.documents.lld.subtitle}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-400 mb-4">{selectedProject.documents.lld.description}</p>
+                      <Button size="sm" variant="outline" className="w-full bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Start Your Learning Journey */}
+              <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-600 p-6 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
+                    <p className="text-purple-100">Apply now and receive your official offer letter to begin this internship</p>
+                  </div>
+                  <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-100 font-semibold">
+                    <Rocket className="w-5 h-5 mr-2" />
+                    Enroll Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        {/* Premium Dark Header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 p-8 shadow-2xl border border-purple-500/20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent"></div>
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl"></div>
+          <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-cyan-500/20 blur-3xl"></div>
+
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl shadow-lg">
+                    <Rocket className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className="bg-purple-500/20 backdrop-blur-sm border border-purple-400/30 text-purple-300 hover:bg-purple-500/30">
+                    <Brain className="w-3 h-3 mr-1" />
+                    Launch Your Tech Career With Internships
+                  </Badge>
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent mb-2">
+                  Projects & Internships
+                </h1>
+                <p className="text-slate-300 text-lg">Build real-world projects, Get Experience Letter, and Launch your tech career.</p>
+
+                <div className="flex flex-wrap items-center gap-4 mt-6">
+                  <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
+                    <Target className="w-4 h-4 text-cyan-400" />
+                    <span className="text-slate-200 text-sm font-medium">Found: {filteredProjects.length} projects</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
+                    <Award className="w-4 h-4 text-yellow-400" />
+                    <span className="text-slate-200 text-sm font-medium">Official Offer Letters</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
+                    <FileText className="w-4 h-4 text-amber-400" />
+                    <span className="text-slate-200 text-sm font-medium">Complete Documentation</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <Card>
+        {/* Search Bar */}
+        <Card className="border border-slate-700/50 shadow-xl bg-slate-900/50 backdrop-blur-sm">
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search opportunities, companies, or skills..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="internship">Internships</SelectItem>
-                    <SelectItem value="project">Projects</SelectItem>
-                    <SelectItem value="challenge">Challenges</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Levels</SelectItem>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="advanced">Advanced</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="icon">
-                  <Filter className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <Input
+                placeholder="Search for your next adventure..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-14 text-base bg-slate-800/50 border-slate-700 text-slate-200 placeholder:text-slate-500 focus:border-purple-500 focus:ring-purple-500/20"
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-            <TabsTrigger value="mentorship">Mentorship</TabsTrigger>
-            <TabsTrigger value="skill-projects">Skill Projects</TabsTrigger>
-            <TabsTrigger value="my-activity">My Activity</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="opportunities" className="mt-6">
-            <div className="space-y-6">
-              {/* Featured Opportunities */}
+        {/* Filters Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Side - Filter Options */}
+          <Card className="border border-slate-700/50 shadow-xl bg-slate-900/50 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-b border-slate-700/50">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-slate-100 flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-purple-400" />
+                  Filters
+                </CardTitle>
+                {(selectedDifficulty !== "all" || selectedTheme !== "all" || selectedDomain !== "all") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="text-slate-400 hover:text-white hover:bg-white/10"
+                  >
+                    Clear All
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              {/* Difficulty Levels */}
               <div>
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-500" />
-                  Featured Opportunities
-                </h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {filteredOpportunities.filter(opp => opp.featured).map((opportunity) => (
-                    <Card key={opportunity.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="text-2xl">{opportunity.logo}</div>
-                            <div>
-                              <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                              <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                                <Building className="w-3 h-3" />
-                                {opportunity.company}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="default" className="bg-blue-100 text-blue-700">
-                              {opportunity.aiMatch}% Match
-                            </Badge>
-                            <Button variant="ghost" size="sm">
-                              <Heart className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <CardDescription className="text-sm">{opportunity.description}</CardDescription>
-
-                        {/* Key Details */}
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            {getTypeIcon(opportunity.type)}
-                            <span>{opportunity.type}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            <span>{opportunity.duration}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4" />
-                            <span>{opportunity.stipend}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            <span>{opportunity.location}</span>
-                          </div>
-                        </div>
-
-                        {/* Level and Rating */}
-                        <div className="flex items-center justify-between">
-                          <Badge className={getLevelColor(opportunity.level)}>
-                            {opportunity.level}
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">{opportunity.rating}</span>
-                            <span className="text-sm text-gray-500">({opportunity.applicants} applied)</span>
-                          </div>
-                        </div>
-
-                        {/* Skills */}
-                        <div>
-                          <p className="text-sm font-medium mb-2">Required Skills:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {opportunity.skills.slice(0, 4).map((skill, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">{skill}</Badge>
-                            ))}
-                            {opportunity.skills.length > 4 && (
-                              <Badge variant="outline" className="text-xs">+{opportunity.skills.length - 4}</Badge>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Deadline and Actions */}
-                        <div className="flex items-center justify-between pt-2 border-t">
-                          <div className="flex items-center gap-2 text-sm text-orange-600">
-                            <Calendar className="w-4 h-4" />
-                            <span>Deadline: {opportunity.deadline}</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
-                              <ExternalLink className="w-4 h-4 mr-1" />
-                              Details
-                            </Button>
-                            <Button size="sm">Apply Now</Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-amber-400" />
+                  Difficulty Levels
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={selectedDifficulty === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedDifficulty("all")}
+                    className={selectedDifficulty === "all" 
+                      ? "bg-purple-600 hover:bg-purple-700" 
+                      : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"}
+                  >
+                    All
+                  </Button>
+                  {difficultyLevels.map((level) => (
+                    <Button
+                      key={level}
+                      variant={selectedDifficulty === level.toLowerCase() ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedDifficulty(level.toLowerCase())}
+                      className={selectedDifficulty === level.toLowerCase()
+                        ? "bg-purple-600 hover:bg-purple-700"
+                        : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"}
+                    >
+                      {level}
+                    </Button>
                   ))}
                 </div>
               </div>
 
-              {/* All Opportunities */}
+              {/* Themes */}
               <div>
-                <h2 className="text-xl font-semibold mb-4">All Opportunities</h2>
-                <div className="space-y-4">
-                  {filteredOpportunities.filter(opp => !opp.featured).map((opportunity) => (
-                    <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="text-xl">{opportunity.logo}</div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold">{opportunity.title}</h3>
-                                <Badge variant="outline" className="text-xs">{opportunity.category}</Badge>
-                              </div>
-                              <p className="text-sm text-gray-600 mb-2">{opportunity.company}</p>
-                              <p className="text-sm text-gray-700 mb-3">{opportunity.description}</p>
-                              
-                              <div className="flex items-center gap-6 text-sm">
-                                <span className="flex items-center gap-1">
-                                  {getTypeIcon(opportunity.type)}
-                                  {opportunity.type}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4" />
-                                  {opportunity.duration}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <DollarSign className="w-4 h-4" />
-                                  {opportunity.stipend}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="w-4 h-4" />
-                                  {opportunity.location}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col items-end gap-3">
-                            <Badge variant="default" className="bg-purple-100 text-purple-700">
-                              {opportunity.aiMatch}% Match
-                            </Badge>
-                            <Badge className={getLevelColor(opportunity.level)}>
-                              {opportunity.level}
-                            </Badge>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="sm">
-                                <Bookmark className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Share2 className="w-4 h-4" />
-                              </Button>
-                              <Button size="sm">Apply</Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  Themes
+                </h3>
+                <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-200">
+                    <SelectValue placeholder="Select theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Themes</SelectItem>
+                    {themes.map((theme) => (
+                      <SelectItem key={theme} value={theme.toLowerCase()}>{theme}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Domains */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Building className="w-4 h-4 text-blue-400" />
+                  Domains
+                </h3>
+                <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-200">
+                    <SelectValue placeholder="Select domain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Domains</SelectItem>
+                    {domains.map((domain) => (
+                      <SelectItem key={domain} value={domain.toLowerCase()}>{domain}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Right Side - Active Filters Display */}
+          <Card className="border border-slate-700/50 shadow-xl bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-sm border-purple-500/30">
+            <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-b border-purple-500/30">
+              <CardTitle className="text-slate-100">Active Filters</CardTitle>
+              <CardDescription className="text-slate-400">
+                {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all"
+                  ? "No filters applied"
+                  : "Currently filtering by:"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all" ? (
+                <div className="text-center py-8">
+                  <Filter className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-400">Select filters to narrow down your search</p>
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="mentorship" className="mt-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {mentorshipPrograms.map((program) => (
-                  <Card key={program.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <CardTitle className="text-lg">{program.title}</CardTitle>
-                      <CardDescription>with {program.mentor}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900">{program.expertise}</p>
-                      </div>
-
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Duration:</span>
-                          <span className="font-medium">{program.duration}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Sessions:</span>
-                          <span className="font-medium">{program.sessions}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Mentees:</span>
-                          <span className="font-medium">{program.mentees} current</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-sm font-medium mb-2">Focus Areas:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {program.focus.map((area, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">{area}</Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-gray-600">{program.description}</p>
-
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{program.rating}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-green-600">{program.price}</span>
-                          <Button size="sm">Enroll</Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="skill-projects" className="mt-6">
-            <div className="space-y-6">
-              {skillBasedProjects.map((skillProject, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{skillProject.skill}</CardTitle>
-                    <CardDescription>Hands-on projects to master {skillProject.skill.toLowerCase()}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3">Available Projects:</h4>
-                        <ul className="space-y-2">
-                          {skillProject.projects.map((project, projectIndex) => (
-                            <li key={projectIndex} className="flex items-center gap-2">
-                              <Code className="w-4 h-4 text-blue-500" />
-                              <span className="text-sm">{project}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-3">Project Details:</h4>
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="text-gray-600">Difficulty:</span>
-                            <p className="font-medium">{skillProject.difficulty}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Time Commitment:</span>
-                            <p className="font-medium">{skillProject.timeCommitment}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-semibold mb-3">Expected Outcomes:</h4>
-                        <ul className="space-y-1">
-                          {skillProject.outcomes.map((outcome, outcomeIndex) => (
-                            <li key={outcomeIndex} className="flex items-center gap-2">
-                              <Award className="w-3 h-3 text-green-500" />
-                              <span className="text-sm">{outcome}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                      <Button>
-                        <Target className="w-4 h-4 mr-2" />
-                        Start Projects
+              ) : (
+                <div className="space-y-3">
+                  {selectedDifficulty !== "all" && (
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <span className="text-sm text-slate-300">Difficulty: <span className="font-semibold text-white capitalize">{selectedDifficulty}</span></span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedDifficulty("all")}
+                        className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                      >
+                        <X className="w-4 h-4" />
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                  )}
+                  {selectedTheme !== "all" && (
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <span className="text-sm text-slate-300">Theme: <span className="font-semibold text-white capitalize">{selectedTheme}</span></span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTheme("all")}
+                        className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  {selectedDomain !== "all" && (
+                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <span className="text-sm text-slate-300">Domain: <span className="font-semibold text-white capitalize">{selectedDomain}</span></span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedDomain("all")}
+                        className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-          <TabsContent value="my-activity" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Briefcase className="w-5 h-5" />
-                    My Applications
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-lg bg-blue-400">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">AI Recommendation System</h4>
-                        <Badge variant="secondary">Under Review</Badge>
-                      </div>
-                      <p className="text-sm text-gray-600">TechCorp Solutions • Applied 3 days ago</p>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg bg-green-400">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">Frontend Developer Internship</h4>
-                        <Badge variant="default" className="bg-green-500">Accepted</Badge>
-                      </div>
-                      <p className="text-sm text-gray-600">StartupXYZ • Starts next month</p>
-                    </div>
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredProjects.map((project) => (
+            <Card
+              key={project.id}
+              className="group hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 border border-slate-700/50 hover:border-purple-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm"
+            >
+              <CardHeader className="pb-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="text-3xl">{project.logo}</div>
+                  <Badge className={`${getDifficultyColor(project.difficulty)} border px-2 py-1 text-xs`}>
+                    {project.difficulty}
+                  </Badge>
+                </div>
+                <CardTitle className="text-lg text-slate-100 group-hover:text-purple-400 transition-colors leading-tight">
+                  {project.title}
+                </CardTitle>
+                <CardDescription className="text-sm text-slate-400 leading-relaxed mt-2">
+                  {project.description.substring(0, 120)}...
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Technologies */}
+                <div>
+                  <p className="text-xs font-medium mb-2 text-slate-400">Technologies:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {project.technologies.slice(0, 3).map((tech, index) => (
+                      <Badge key={index} variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
+                        {tech}
+                      </Badge>
+                    ))}
+                    {project.technologies.length > 3 && (
+                      <Badge variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
+                        +{project.technologies.length - 3}
+                      </Badge>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Progress Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Applications Sent</span>
-                        <span>12</span>
-                      </div>
-                      <Progress value={75} className="h-2" />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Projects Completed</span>
-                        <span>3 of 5</span>
-                      </div>
-                      <Progress value={60} className="h-2" />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Skill Improvement</span>
-                        <span>+45%</span>
-                      </div>
-                      <Progress value={85} className="h-2" />
-                    </div>
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 text-center">
+                    <div className="text-xs text-slate-400 mb-1">Duration</div>
+                    <div className="text-sm font-semibold text-slate-200">{project.duration}</div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                  <div className="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 p-2 rounded-lg border border-emerald-500/30 text-center">
+                    <div className="text-xs text-emerald-400 mb-1">Stipend</div>
+                    <div className="text-sm font-semibold text-emerald-400">{project.stipend.split(' - ')[0]}</div>
+                  </div>
+                </div>
+
+                {/* Rating and Applicants */}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-slate-200 font-medium">{project.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-slate-400">
+                    <Users className="w-4 h-4" />
+                    <span>{project.applicants} applied</span>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <Button
+                  onClick={() => handleViewDetails(project)}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  View Details
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* No Results */}
+        {filteredProjects.length === 0 && (
+          <Card className="border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+            <CardContent className="py-16 text-center">
+              <Search className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-300 mb-2">No projects found</h3>
+              <p className="text-slate-400 mb-6">Try adjusting your filters or search terms</p>
+              <Button onClick={clearAllFilters} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                Clear All Filters
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

@@ -122,9 +122,8 @@ const AppSidebar = () => {
         { title: "Overview", url: "/dashboard/skill-development", icon: Home },
         { title: "Skill Gap Analysis", url: "/dashboard/skill-development/gap-analysis", icon: BarChart3 },
         { title: "Learning Paths", url: "/dashboard/skill-development/learning-paths", icon: Target },
-        { title: "Industry Trends", url: "/dashboard/skill-development/industry-trends", icon: TrendingUp },
+        { title: "Industry Ready skills", url: "/dashboard/skill-development/industry-trends", icon: TrendingUp },
         { title: "Projects & Internships", url: "/dashboard/skill-development/projects-internships", icon: Briefcase },
-        { title: "Skill Training", url: "/dashboard/skill-development/skill-training", icon: Code },
         { title: "Interview Prep", url: "/dashboard/skill-development/interview-prep", icon: Users },
         { title: "Placement Kit", url: "/dashboard/skill-development/placement-kit", icon: Award },
       ];

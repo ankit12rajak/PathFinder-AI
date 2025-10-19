@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { TrendingUp, BarChart3, Zap, Target, Brain, Star, ArrowUp, ArrowDown, Minus, Eye, Bookmark, Share2, Filter, Search, ExternalLink, Download, RefreshCw, Play, Pause, Volume2, Maximize, CheckCircle2, Clock, Code2, BookOpen, Award, ChevronRight, X, Terminal } from "lucide-react";
+import { TrendingUp, BarChart3, Zap, Target, Brain, Star, ArrowUp, ArrowDown, Minus, Eye, Bookmark, Share2, Filter, Search, ExternalLink, Download, RefreshCw, Play, Pause, Volume2, Maximize, CheckCircle2, Clock, Code2, BookOpen, Award, ChevronRight, X, Terminal, Briefcase, Sparkles, Activity, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -645,10 +645,10 @@ const IndustryTrends = () => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Beginner": return "bg-green-100 text-green-700";
-      case "Intermediate": return "bg-yellow-100 text-yellow-700";
-      case "Advanced": return "bg-red-100 text-red-700";
-      default: return "bg-gray-100 text-gray-700";
+      case "Beginner": return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      case "Intermediate": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
+      case "Advanced": return "bg-rose-500/20 text-rose-400 border-rose-500/30";
+      default: return "bg-slate-500/20 text-slate-400 border-slate-500/30";
     }
   };
 
@@ -731,8 +731,8 @@ const IndustryTrends = () => {
                             key={video.id}
                             onClick={() => handleVideoSelect(index)}
                             className={`w-full p-3 text-left border-b border-white/5 transition-all ${currentVideoIndex === index
-                                ? 'bg-purple-500/20 border-l-4 border-l-purple-500'
-                                : 'hover:bg-white/5'
+                              ? 'bg-purple-500/20 border-l-4 border-l-purple-500'
+                              : 'hover:bg-white/5'
                               }`}
                           >
                             <div className="flex items-start gap-3">
@@ -749,10 +749,10 @@ const IndustryTrends = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start gap-2">
                                   <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${watchedVideos.has(index)
-                                      ? 'bg-green-500'
-                                      : currentVideoIndex === index
-                                        ? 'bg-purple-500'
-                                        : 'bg-white/10'
+                                    ? 'bg-green-500'
+                                    : currentVideoIndex === index
+                                      ? 'bg-purple-500'
+                                      : 'bg-white/10'
                                     }`}>
                                     {watchedVideos.has(index) ? (
                                       <CheckCircle2 className="w-3 h-3 text-white" />
@@ -953,42 +953,84 @@ const IndustryTrends = () => {
       )}
 
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Industry Trends</h1>
-            <p className="text-gray-600 mt-2">AI-powered insights into emerging skills and market demands</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-              <Brain className="w-4 h-4 mr-1" />
-              AI Analytics
-            </Badge>
-            <Button>
-              <Eye className="w-4 h-4 mr-2" />
-              View Report
-            </Button>
+        {/* Premium Dark Header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 p-8 shadow-2xl border border-purple-500/20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent"></div>
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl"></div>
+          <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-cyan-500/20 blur-3xl"></div>
+
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl shadow-lg">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className="bg-purple-500/20 backdrop-blur-sm border border-purple-400/30 text-purple-300 hover:bg-purple-500/30">
+                    <Brain className="w-3 h-3 mr-1" />
+                    AI-Powered Analytics
+                  </Badge>
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent mb-2">Industry Trends</h1>
+                <p className="text-slate-300 text-lg">AI-powered insights into emerging skills and market demands</p>
+
+                <div className="flex flex-wrap items-center gap-4 mt-6">
+                  <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
+                    <BarChart3 className="w-4 h-4 text-cyan-400" />
+                    <span className="text-slate-200 text-sm font-medium">Live Market Data</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
+                    <Zap className="w-4 h-4 text-yellow-400" />
+                    <span className="text-slate-200 text-sm font-medium">Real-time Updates</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
+                    <Star className="w-4 h-4 text-amber-400" />
+                    <span className="text-slate-200 text-sm font-medium">Premium Insights</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white shadow-xl shadow-purple-500/25"
+                  onClick={fetchAIInsights}
+                  disabled={isLoadingAI}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingAI ? 'animate-spin' : ''}`} />
+                  Refresh Insights
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-slate-800/50 backdrop-blur-sm border-slate-700 text-slate-200 hover:bg-slate-700/50 hover:text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Report
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <Card>
+        {/* Premium Dark Search and Filters */}
+        <Card className="border border-slate-700/50 shadow-xl bg-slate-900/50 backdrop-blur-sm">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                   <Input
                     placeholder="Search skills, technologies, or companies..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-12 h-12 text-base bg-slate-800/50 border-slate-700 text-slate-200 placeholder:text-slate-500 focus:border-purple-500 focus:ring-purple-500/20"
                   />
                 </div>
               </div>
               <div className="flex gap-3">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[200px] h-12 bg-slate-800/50 border-slate-700 text-slate-200">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1003,7 +1045,7 @@ const IndustryTrends = () => {
                   </SelectContent>
                 </Select>
                 <Select value={timeframe} onValueChange={setTimeframe}>
-                  <SelectTrigger className="w-[120px]">
+                  <SelectTrigger className="w-[140px] h-12 bg-slate-800/50 border-slate-700 text-slate-200">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1017,125 +1059,167 @@ const IndustryTrends = () => {
           </CardContent>
         </Card>
 
-        {/* Main Content Tabs */}
+        {/* Premium Dark Tabs */}
         <Tabs defaultValue="trending" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="trending">Trending Skills</TabsTrigger>
-            <TabsTrigger value="reports">Industry Reports</TabsTrigger>
-            <TabsTrigger value="emerging">Emerging Tech</TabsTrigger>
-            <TabsTrigger value="insights">AI Insights</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 h-14 bg-slate-900/50 border border-slate-700/50 p-1 rounded-xl">
+            <TabsTrigger
+              value="trending"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Trending Skills
+            </TabsTrigger>
+            <TabsTrigger
+              value="reports"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Industry Reports
+            </TabsTrigger>
+            <TabsTrigger
+              value="emerging"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Emerging Tech
+            </TabsTrigger>
+            <TabsTrigger
+              value="insights"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              AI Insights
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="trending" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredSkills.map((skill) => (
-                <Card key={skill.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
+                <Card key={skill.id} className="group hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 border border-slate-700/50 hover:border-purple-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm">
+                  <CardHeader className="pb-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-lg mb-2">{skill.skill}</CardTitle>
-                        <Badge variant="outline" className="mb-2">{skill.category}</Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getTrendIcon(skill.trend)}
-                        <span className="text-sm font-semibold text-green-600">{skill.growth}</span>
+                        <CardTitle className="text-xl mb-3 text-slate-100 group-hover:text-purple-400 transition-colors">{skill.skill}</CardTitle>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="outline" className="border border-slate-600 text-slate-300 bg-slate-800/50">{skill.category}</Badge>
+                          <div className="flex items-center gap-1 bg-emerald-500/20 px-2 py-1 rounded-full border border-emerald-500/30">
+                            {getTrendIcon(skill.trend)}
+                            <span className="text-sm font-bold text-emerald-400">{skill.growth}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <CardDescription className="text-sm">{skill.description}</CardDescription>
+                    <CardDescription className="text-sm leading-relaxed text-slate-400">{skill.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Demand Meter */}
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-600">Market Demand</span>
-                        <span className="font-semibold">{skill.demand}%</span>
+                    {/* Premium Dark Demand Meter */}
+                    <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 p-4 rounded-xl border border-purple-500/30">
+                      <div className="flex justify-between text-sm mb-3">
+                        <span className="font-semibold text-slate-200 flex items-center gap-2">
+                          <Target className="w-4 h-4 text-purple-400" />
+                          Market Demand
+                        </span>
+                        <span className="font-bold text-purple-400 text-lg">{skill.demand}%</span>
                       </div>
-                      <Progress value={skill.demand} className="h-2" />
+                      <Progress value={skill.demand} className="h-3 bg-slate-800" />
                     </div>
 
-                    {/* Key Stats */}
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-gray-600">Salary Range</span>
-                        <p className="font-semibold text-green-600">{skill.salaryRange}</p>
+                    {/* Premium Dark Key Stats */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 p-3 rounded-xl border border-emerald-500/30">
+                        <span className="text-xs text-slate-400 font-medium">Salary Range</span>
+                        <p className="font-bold text-emerald-400 text-lg mt-1">{skill.salaryRange}</p>
                       </div>
-                      <div>
-                        <span className="text-gray-600">Job Openings</span>
-                        <p className="font-semibold">{skill.jobOpenings}</p>
-                      </div>
-                    </div>
-
-                    {/* Additional Stats */}
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="text-center p-2 bg-blue-50 rounded">
-                        <div className="font-semibold text-blue-700">{skill.certificationDemand}</div>
-                        <div className="text-blue-600">Cert Demand</div>
-                      </div>
-                      <div className="text-center p-2 bg-green-50 rounded">
-                        <div className="font-semibold text-green-700">{skill.remoteWorkFriendly ? 'Yes' : 'No'}</div>
-                        <div className="text-green-600">Remote Work</div>
-                      </div>
-                      <div className="text-center p-2 bg-purple-50 rounded">
-                        <div className="font-semibold text-purple-700">{skill.industryAdoption}%</div>
-                        <div className="text-purple-600">Adoption</div>
+                      <div className="bg-gradient-to-br from-cyan-900/30 to-blue-900/30 p-3 rounded-xl border border-cyan-500/30">
+                        <span className="text-xs text-slate-400 font-medium">Job Openings</span>
+                        <p className="font-bold text-cyan-400 text-lg mt-1">{skill.jobOpenings}</p>
                       </div>
                     </div>
 
-                    {/* Difficulty and Time */}
-                    <div className="flex items-center justify-between">
-                      <Badge className={getDifficultyColor(skill.difficulty)}>
+                    {/* Premium Dark Additional Stats */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center p-3 bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-xl border border-blue-500/30">
+                        <div className="font-bold text-blue-400 text-sm">{skill.certificationDemand}</div>
+                        <div className="text-blue-300 text-xs mt-1">Cert Demand</div>
+                      </div>
+                      <div className="text-center p-3 bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl border border-emerald-500/30">
+                        <div className="font-bold text-emerald-400 text-sm">{skill.remoteWorkFriendly ? 'Yes' : 'No'}</div>
+                        <div className="text-emerald-300 text-xs mt-1">Remote Work</div>
+                      </div>
+                      <div className="text-center p-3 bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-xl border border-purple-500/30">
+                        <div className="font-bold text-purple-400 text-sm">{skill.industryAdoption}%</div>
+                        <div className="text-purple-300 text-xs mt-1">Adoption</div>
+                      </div>
+                    </div>
+
+                    {/* Premium Dark Difficulty and Time */}
+                    <div className="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                      <Badge className={`${getDifficultyColor(skill.difficulty)} text-sm px-3 py-1 border`}>
                         {skill.difficulty}
                       </Badge>
-                      <span className="text-sm text-gray-600">{skill.timeToLearn}</span>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm font-semibold text-slate-300">{skill.timeToLearn}</span>
+                      </div>
                     </div>
 
                     {/* Key Areas */}
                     <div>
-                      <p className="text-sm font-medium mb-2">Key Areas:</p>
+                      <p className="text-sm font-medium mb-2 text-slate-300">Key Areas:</p>
                       <div className="flex flex-wrap gap-1">
                         {skill.keyAreas.slice(0, 3).map((area, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">{area}</Badge>
+                          <Badge key={index} variant="secondary" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">{area}</Badge>
                         ))}
                         {skill.keyAreas.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">+{skill.keyAreas.length - 3}</Badge>
+                          <Badge variant="secondary" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">+{skill.keyAreas.length - 3}</Badge>
                         )}
                       </div>
                     </div>
 
-                    {/* AI Insight */}
-                    <div className="bg-purple-100 p-3 rounded-lg border border-purple-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Brain className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm font-medium text-purple-900">AI Insight</span>
+                    {/* Premium Dark AI Insight */}
+                    <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-500 to-pink-600 p-4 rounded-xl shadow-lg shadow-purple-500/20">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-lg">
+                            <Brain className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="text-sm font-bold text-white">AI Insight</span>
+                          <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white text-xs ml-auto">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            Premium
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-white/95 leading-relaxed">{skill.aiInsights}</p>
                       </div>
-                      <p className="text-xs text-purple-800">{skill.aiInsights}</p>
                     </div>
 
-                    {/* Actions */}
+                    {/* Premium Dark Actions */}
                     <div className="flex gap-2">
                       <div className="flex-1">
                         <Button
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-all duration-200 transform hover:scale-105 shadow-lg"
+                          size="lg"
+                          className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 text-white transition-all duration-300 transform hover:scale-105 shadow-xl shadow-purple-500/25 font-semibold"
                           onClick={() => handleStartLearning(skill)}
                           title={youtubePlaylists[skill.skill as keyof typeof youtubePlaylists]
                             ? `Learn ${skill.skill} from ${youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}`
                             : `Search for ${skill.skill} tutorials`}
                         >
-                          <Play className="w-4 h-4 mr-1" />
+                          <Play className="w-5 h-5 mr-2" />
                           Start Learning
                         </Button>
                         {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists] && (
-                          <p className="text-xs text-gray-500 mt-1 text-center">
+                          <p className="text-xs text-slate-500 mt-2 text-center font-medium">
                             via {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}
                           </p>
                         )}
                       </div>
-                      <Button size="sm" variant="outline">
-                        <Bookmark className="w-4 h-4" />
+                      <Button size="lg" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50">
+                        <Bookmark className="w-5 h-5" />
                       </Button>
-                      <Button size="sm" variant="outline">
-                        <Share2 className="w-4 h-4" />
+                      <Button size="lg" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50">
+                        <Share2 className="w-5 h-5" />
                       </Button>
                     </div>
                   </CardContent>
@@ -1147,53 +1231,66 @@ const IndustryTrends = () => {
           <TabsContent value="reports" className="mt-6">
             <div className="space-y-6">
               {industryReports.map((report, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
+                <Card key={index} className="group hover:shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 border border-slate-700/50 hover:border-cyan-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm">
+                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-xl mb-2">{report.title}</CardTitle>
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
-                          <span>Source: {report.source}</span>
-                          <span>{report.date}</span>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/20">
+                            <BarChart3 className="w-5 h-5 text-white" />
+                          </div>
+                          <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-0">
+                            Industry Report
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-2xl mb-3 text-slate-100 group-hover:text-cyan-400 transition-colors">{report.title}</CardTitle>
+                        <div className="flex items-center gap-4 text-sm mb-2">
+                          <Badge variant="outline" className="border border-cyan-500/30 text-cyan-400 bg-cyan-500/10 font-semibold">
+                            {report.source}
+                          </Badge>
+                          <div className="flex items-center gap-1 text-slate-400">
+                            <Calendar className="w-4 h-4" />
+                            <span className="font-medium">{report.date}</span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Download className="w-4 h-4 mr-1" />
+                        <Button size="lg" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-cyan-500/50">
+                          <Download className="w-4 h-4 mr-2" />
                           Download
                         </Button>
-                        <Button size="sm">
-                          <Eye className="w-4 h-4 mr-1" />
+                        <Button size="lg" className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg shadow-cyan-500/25">
+                          <Eye className="w-4 h-4 mr-2" />
                           View Report
                         </Button>
                       </div>
                     </div>
-                    <CardDescription className="text-base">{report.summary}</CardDescription>
+                    <CardDescription className="text-base leading-relaxed text-slate-400">{report.summary}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <BarChart3 className="w-4 h-4 text-blue-600" />
+                        <h4 className="font-semibold mb-3 flex items-center gap-2 text-slate-200">
+                          <BarChart3 className="w-4 h-4 text-cyan-400" />
                           Key Findings:
                         </h4>
                         <ul className="space-y-2">
                           {report.keyFindings.map((finding, findingIndex) => (
                             <li key={findingIndex} className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <span className="text-sm">{finding}</span>
+                              <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <span className="text-sm text-slate-300">{finding}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <Target className="w-4 h-4 text-green-600" />
+                        <h4 className="font-semibold mb-3 flex items-center gap-2 text-slate-200">
+                          <Target className="w-4 h-4 text-emerald-400" />
                           Relevant Skills:
                         </h4>
                         <div className="flex flex-wrap gap-2 mb-4">
                           {report.relevantSkills.map((skill, skillIndex) => (
-                            <Badge key={skillIndex} variant="outline" className="hover:bg-green-50 cursor-pointer">
+                            <Badge key={skillIndex} variant="outline" className="bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-500/50 cursor-pointer">
                               {skill}
                             </Badge>
                           ))}
@@ -1233,98 +1330,135 @@ const IndustryTrends = () => {
 
           <TabsContent value="emerging" className="mt-6">
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Emerging Technologies Landscape</h3>
-                  <p className="text-sm text-gray-600">AI-powered insights on cutting-edge technologies</p>
-                </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                  <Zap className="w-4 h-4 mr-1" />
-                  Live AI Analysis
-                </Badge>
-              </div>
+              {/* Premium Dark Section Header */}
+              <Card className="border border-slate-700/50 bg-gradient-to-br from-slate-900/50 via-orange-900/20 to-slate-900/50 backdrop-blur-sm">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gradient-to-br from-orange-600 to-red-600 rounded-2xl shadow-xl shadow-orange-500/20">
+                        <Zap className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-100">Emerging Technologies Landscape</h3>
+                        <p className="text-slate-400 mt-1">AI-powered insights on cutting-edge technologies</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-gradient-to-r from-orange-600 to-red-600 text-white border-0 px-4 py-2 text-sm">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Live AI Analysis
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {emergingTechnologies.map((tech, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
+                  <Card key={index} className="group hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 border border-slate-700/50 hover:border-orange-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm">
+                    <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg mb-2">{tech.technology}</CardTitle>
+                          <CardTitle className="text-xl mb-3 text-slate-100 group-hover:text-orange-400 transition-colors">{tech.technology}</CardTitle>
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge variant={tech.potentialImpact === "Revolutionary" ? "default" : "secondary"}>
+                            <Badge className={tech.potentialImpact === "Revolutionary"
+                              ? "bg-gradient-to-r from-orange-600 to-red-600 text-white border-0"
+                              : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-0"}>
                               {tech.potentialImpact} Impact
                             </Badge>
-                            <Badge variant="outline">{tech.learningDemand} Demand</Badge>
+                            <Badge variant="outline" className="border border-orange-500/30 text-orange-400 bg-orange-500/10 font-semibold">
+                              {tech.learningDemand} Demand
+                            </Badge>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-green-600">{tech.investment}</div>
-                          <div className="text-xs text-gray-500">Investment</div>
+                        <div className="text-right bg-gradient-to-br from-emerald-900/30 to-teal-900/30 p-3 rounded-xl border border-emerald-500/30">
+                          <div className="text-base font-bold text-emerald-400">{tech.investment}</div>
+                          <div className="text-xs text-emerald-300 font-medium">Investment</div>
                         </div>
                       </div>
-                      <CardDescription className="text-sm">{tech.description}</CardDescription>
+                      <CardDescription className="text-sm leading-relaxed text-slate-400">{tech.description}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-gray-600">Market Maturity</span>
-                          <span className="font-semibold">{tech.maturityLevel}%</span>
+                      {/* Premium Dark Market Maturity */}
+                      <div className="bg-gradient-to-r from-orange-900/30 to-red-900/30 p-4 rounded-xl border border-orange-500/30">
+                        <div className="flex justify-between text-sm mb-3">
+                          <span className="font-semibold text-slate-200 flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-orange-400" />
+                            Market Maturity
+                          </span>
+                          <span className="font-bold text-orange-400 text-lg">{tech.maturityLevel}%</span>
                         </div>
-                        <Progress value={tech.maturityLevel} className="h-2" />
+                        <Progress value={tech.maturityLevel} className="h-3 bg-slate-800" />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Time to Mainstream</span>
-                          <p className="font-semibold">{tech.timeToMainstream}</p>
+                      {/* Premium Dark Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 p-3 rounded-xl border border-purple-500/30">
+                          <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Time to Mainstream
+                          </span>
+                          <p className="font-bold text-purple-400 text-base mt-1">{tech.timeToMainstream}</p>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Job Openings</span>
-                          <p className="font-semibold text-blue-600">{tech.jobOpenings}</p>
+                        <div className="bg-gradient-to-br from-cyan-900/30 to-blue-900/30 p-3 rounded-xl border border-cyan-500/30">
+                          <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                            <Briefcase className="w-3 h-3" />
+                            Job Openings
+                          </span>
+                          <p className="font-bold text-cyan-400 text-base mt-1">{tech.jobOpenings}</p>
                         </div>
                       </div>
 
-                      {/* Key Companies */}
-                      <div>
-                        <p className="text-sm font-medium mb-2">Key Players:</p>
-                        <div className="flex flex-wrap gap-1">
+                      {/* Premium Dark Key Companies */}
+                      <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                        <p className="text-sm font-semibold mb-2 flex items-center gap-2 text-slate-200">
+                          <Star className="w-4 h-4 text-amber-400" />
+                          Key Players
+                        </p>
+                        <div className="flex flex-wrap gap-2">
                           {tech.keyCompanies?.slice(0, 3).map((company, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">{company}</Badge>
+                            <Badge key={idx} variant="outline" className="border border-slate-600 bg-slate-800/50 text-slate-300 font-semibold">{company}</Badge>
                           ))}
                         </div>
                       </div>
 
-                      {/* AI Insights */}
-                      <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Brain className="w-4 h-4 text-indigo-600" />
-                          <span className="text-sm font-medium text-indigo-900">AI Insight</span>
+                      {/* Premium Dark AI Insights */}
+                      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4 rounded-xl shadow-lg shadow-purple-500/20">
+                        <div className="absolute inset-0 bg-black/20"></div>
+                        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-lg">
+                              <Brain className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="text-sm font-bold text-white">AI Insight</span>
+                          </div>
+                          <p className="text-sm text-white/95 leading-relaxed">{tech.aiInsights}</p>
                         </div>
-                        <p className="text-xs text-indigo-700">{tech.aiInsights}</p>
                       </div>
 
-                      {/* Learning Resources */}
-                      <div>
-                        <p className="text-sm font-medium mb-2">Learning Resources:</p>
-                        <div className="space-y-1">
+                      {/* Premium Dark Learning Resources */}
+                      <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                        <p className="text-sm font-semibold mb-2 flex items-center gap-2 text-slate-200">
+                          <BookOpen className="w-4 h-4 text-cyan-400" />
+                          Learning Resources
+                        </p>
+                        <div className="space-y-2">
                           {tech.learningResources?.slice(0, 2).map((resource, idx) => (
                             <a
                               key={idx}
                               href={resource.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                              className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 hover:underline font-medium p-2 bg-slate-900/50 rounded-lg hover:bg-slate-700/50 transition-colors"
                             >
-                              <ExternalLink className="w-3 h-3" />
+                              <ExternalLink className="w-4 h-4" />
                               {resource.title}
                             </a>
                           ))}
                         </div>
                       </div>
 
-                      <Button size="sm" variant="outline" className="w-full">
-                        <Zap className="w-4 h-4 mr-2" />
+                      <Button size="lg" className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg shadow-orange-500/25 font-semibold">
+                        <Zap className="w-5 h-5 mr-2" />
                         Track Progress
                       </Button>
                     </CardContent>
@@ -1336,108 +1470,181 @@ const IndustryTrends = () => {
 
           <TabsContent value="insights" className="mt-6">
             <div className="space-y-6">
-              {/* AI Insights Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">AI-Powered Market Intelligence</h3>
-                  <p className="text-sm text-gray-600">Real-time analysis powered by Gemini AI</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500">Last updated: {lastUpdated}</span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={fetchAIInsights}
-                    disabled={isLoadingAI}
-                  >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingAI ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
-                </div>
-              </div>
+              {/* Premium Dark AI Insights Header */}
+              <Card className="border border-slate-700/50 bg-gradient-to-br from-slate-900/50 via-emerald-900/20 to-slate-900/50 backdrop-blur-sm">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/20">
+                        <Brain className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-100">AI-Powered Market Intelligence</h3>
+                        <p className="text-slate-400 mt-1">Real-time analysis powered by Gemini AI</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg px-3 py-2 border border-slate-700/50">
+                        <span className="text-xs text-slate-400 font-medium">Last updated: {lastUpdated}</span>
+                      </div>
+                      <Button
+                        size="lg"
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25"
+                        onClick={fetchAIInsights}
+                        disabled={isLoadingAI}
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingAI ? 'animate-spin' : ''}`} />
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Brain className="w-5 h-5 text-purple-600" />
-                      AI Market Predictions
-                    </CardTitle>
-                    <CardDescription>Gemini AI analysis of job market trends</CardDescription>
+                <Card className="border border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 bg-slate-900/50 backdrop-blur-sm">
+                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl shadow-lg shadow-purple-500/20">
+                        <Brain className="w-5 h-5 text-white" />
+                      </div>
+                      <CardTitle className="text-xl text-slate-100">AI Market Predictions</CardTitle>
+                    </div>
+                    <CardDescription className="text-base text-slate-400">Gemini AI analysis of job market trends</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-4 rounded-lg border border-purple-200">
-                      <h4 className="font-semibold mb-2 text-purple-900">Next 6 Months Forecast</h4>
-                      <ul className="space-y-2 text-sm text-purple-800">
-                        {aiInsights?.predictions?.slice(0, 4).map((prediction: string, index: number) => (
-                          <li key={index}>• {prediction}</li>
-                        )) || (
-                            <>
-                              <li>• AI/ML roles expected to grow by 85% in next 12 months</li>
-                              <li>• Cloud security positions increasing by 55%</li>
-                              <li>• Web3 developer demand stabilizing at premium levels</li>
-                              <li>• Data science roles shifting towards AI integration</li>
-                            </>
-                          )}
-                      </ul>
+                  <CardContent className="space-y-4 pt-6">
+                    <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-500 to-blue-600 p-5 rounded-xl shadow-xl shadow-purple-500/20">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <TrendingUp className="w-5 h-5 text-white" />
+                          <h4 className="font-bold text-white text-lg">Next 6 Months Forecast</h4>
+                        </div>
+                        <ul className="space-y-2.5 text-sm text-white/95">
+                          {aiInsights?.predictions?.slice(0, 4).map((prediction: string, index: number) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                              <span>{prediction}</span>
+                            </li>
+                          )) || (
+                              <>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>AI/ML roles expected to grow by 85% in next 12 months</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>Cloud security positions increasing by 55%</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>Web3 developer demand stabilizing at premium levels</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>Data science roles shifting towards AI integration</span>
+                                </li>
+                              </>
+                            )}
+                        </ul>
+                      </div>
                     </div>
 
-                    <div className="bg-gradient-to-r from-green-100 to-emerald-100 p-4 rounded-lg border border-green-200">
-                      <h4 className="font-semibold mb-2 text-green-900">Salary Trend Analysis</h4>
-                      <ul className="space-y-2 text-sm text-green-800">
-                        {aiInsights?.salaryAnalysis?.slice(0, 4).map((analysis: string, index: number) => (
-                          <li key={index}>• {analysis}</li>
-                        )) || (
-                            <>
-                              <li>• AI specialists: +40% average increase expected</li>
-                              <li>• Cloud architects: +32% growth projected</li>
-                              <li>• Full-stack developers: +18% steady rise</li>
-                              <li>• DevOps engineers: +28% demand premium</li>
-                            </>
-                          )}
-                      </ul>
+                    <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 p-5 rounded-xl shadow-xl shadow-emerald-500/20">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Award className="w-5 h-5 text-white" />
+                          <h4 className="font-bold text-white text-lg">Salary Trend Analysis</h4>
+                        </div>
+                        <ul className="space-y-2.5 text-sm text-white/95">
+                          {aiInsights?.salaryAnalysis?.slice(0, 4).map((analysis: string, index: number) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                              <span>{analysis}</span>
+                            </li>
+                          )) || (
+                              <>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>AI specialists: +40% average increase expected</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>Cloud architects: +32% growth projected</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>Full-stack developers: +18% steady rise</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                  <span>DevOps engineers: +28% demand premium</span>
+                                </li>
+                              </>
+                            )}
+                        </ul>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-blue-600" />
-                      Skill Correlation Analysis
-                    </CardTitle>
-                    <CardDescription>AI-identified skill combinations for career success</CardDescription>
+                <Card className="border border-slate-700/50 hover:shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 bg-slate-900/50 backdrop-blur-sm">
+                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/20">
+                        <BarChart3 className="w-5 h-5 text-white" />
+                      </div>
+                      <CardTitle className="text-xl text-slate-100">Skill Correlation Analysis</CardTitle>
+                    </div>
+                    <CardDescription className="text-base text-slate-400">AI-identified skill combinations for career success</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="p-3 border rounded-lg border-green-200 bg-green-50">
-                        <h4 className="font-medium mb-2 text-green-900">High-Impact Combinations</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-green-800">AI + Cloud Computing</span>
-                            <Badge variant="default" className="bg-green-600">98% Success Rate</Badge>
+                  <CardContent className="space-y-4 pt-6">
+                    <div className="space-y-4">
+                      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-600 p-5 rounded-xl shadow-xl shadow-emerald-500/20">
+                        <div className="absolute inset-0 bg-black/20"></div>
+                        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-4">
+                            <CheckCircle2 className="w-5 h-5 text-white" />
+                            <h4 className="font-bold text-white text-lg">High-Impact Combinations</h4>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-green-800">Data Science + Domain Expertise</span>
-                            <Badge variant="default" className="bg-green-600">95% Success Rate</Badge>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-green-800">Full-Stack + DevOps</span>
-                            <Badge variant="secondary" className="border-green-300 text-green-700">92% Success Rate</Badge>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
+                              <span className="text-white font-medium">AI + Cloud Computing</span>
+                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">98% Success</Badge>
+                            </div>
+                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
+                              <span className="text-white font-medium">Data Science + Domain Expertise</span>
+                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">95% Success</Badge>
+                            </div>
+                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
+                              <span className="text-white font-medium">Full-Stack + DevOps</span>
+                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">92% Success</Badge>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="p-3 border rounded-lg bg-yellow-100 border-yellow-200">
-                        <h4 className="font-medium mb-2 text-yellow-900">Emerging Combinations</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-yellow-800">Cybersecurity + AI</span>
-                            <Badge variant="outline" className="border-yellow-300 text-yellow-700">Growing 89%</Badge>
+                      <div className="relative overflow-hidden bg-gradient-to-br from-amber-600 via-orange-600 to-red-600 p-5 rounded-xl shadow-xl shadow-orange-500/20">
+                        <div className="absolute inset-0 bg-black/20"></div>
+                        <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-4">
+                            <Zap className="w-5 h-5 text-white" />
+                            <h4 className="font-bold text-white text-lg">Emerging Combinations</h4>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-yellow-800">Design + No-Code Development</span>
-                            <Badge variant="outline" className="border-yellow-300 text-yellow-700">Growing 76%</Badge>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
+                              <span className="text-white font-medium">Cybersecurity + AI</span>
+                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">Growing 89%</Badge>
+                            </div>
+                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
+                              <span className="text-white font-medium">Design + No-Code Development</span>
+                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">Growing 76%</Badge>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1446,38 +1653,45 @@ const IndustryTrends = () => {
                 </Card>
               </div>
 
-              {/* Market Trends from Gemini */}
+              {/* Premium Dark Market Trends from Gemini */}
               {aiInsights?.marketTrends && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-indigo-600" />
-                      Live Market Trends
-                    </CardTitle>
-                    <CardDescription>Real-time market intelligence from Gemini AI</CardDescription>
+                <Card className="border border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 bg-slate-900/50 backdrop-blur-sm">
+                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl shadow-lg shadow-purple-500/20">
+                        <TrendingUp className="w-5 h-5 text-white" />
+                      </div>
+                      <CardTitle className="text-xl text-slate-100">Live Market Trends</CardTitle>
+                    </div>
+                    <CardDescription className="text-base text-slate-400">Real-time market intelligence from Gemini AI</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {aiInsights.marketTrends.slice(0, 6).map((trend: any, index: number) => (
-                        <div key={index} className="p-4 border rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50">
-                          <h4 className="font-semibold text-indigo-900 mb-2">{trend.skill}</h4>
-                          <div className="space-y-1 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-indigo-700">Demand:</span>
-                              <Badge variant={trend.demand === 'very-high' ? 'default' : 'secondary'}>
-                                {trend.demand}
-                              </Badge>
+                        <div key={index} className="group relative overflow-hidden p-5 border border-slate-700/50 rounded-xl bg-gradient-to-br from-slate-800/50 via-purple-900/20 to-slate-800/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/50">
+                          <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 blur-2xl"></div>
+                          <div className="relative z-10">
+                            <h4 className="font-bold text-slate-100 mb-3 text-lg group-hover:text-purple-400 transition-colors">{trend.skill}</h4>
+                            <div className="space-y-2.5">
+                              <div className="flex justify-between items-center bg-slate-900/50 backdrop-blur-sm p-2 rounded-lg border border-slate-700/50">
+                                <span className="text-slate-400 font-medium text-sm">Demand:</span>
+                                <Badge className={trend.demand === 'very-high'
+                                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0'
+                                  : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-0'}>
+                                  {trend.demand}
+                                </Badge>
+                              </div>
+                              <div className="flex justify-between items-center bg-slate-900/50 backdrop-blur-sm p-2 rounded-lg border border-slate-700/50">
+                                <span className="text-slate-400 font-medium text-sm">Growth:</span>
+                                <span className="font-bold text-emerald-400">{trend.growth}</span>
+                              </div>
+                              <div className="flex justify-between items-center bg-slate-900/50 backdrop-blur-sm p-2 rounded-lg border border-slate-700/50">
+                                <span className="text-slate-400 font-medium text-sm">Salary:</span>
+                                <span className="font-bold text-purple-400">{trend.salaryRange}</span>
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-indigo-700">Growth:</span>
-                              <span className="font-semibold text-green-600">{trend.growth}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-indigo-700">Salary:</span>
-                              <span className="font-semibold">{trend.salaryRange}</span>
-                            </div>
+                            <p className="text-xs text-slate-400 mt-3 leading-relaxed bg-slate-900/50 p-2 rounded-lg border border-slate-700/50">{trend.futureOutlook}</p>
                           </div>
-                          <p className="text-xs text-indigo-600 mt-2">{trend.futureOutlook}</p>
                         </div>
                       ))}
                     </div>
