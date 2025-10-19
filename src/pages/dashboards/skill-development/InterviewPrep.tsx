@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Brain, Video, Mic, Clock, Target, Award, Users, Star, Play, Pause, RotateCcw, CheckCircle, AlertCircle, TrendingUp, FileText, Download, Share2, Sparkles, Code, MessageSquare, Layers, Zap } from "lucide-react";
+import { Brain, Clock, Target, Award, Star, Play, RotateCcw, CheckCircle, AlertCircle, TrendingUp, Download, Share2, Sparkles, Code, MessageSquare, Layers, Zap, Mic, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,48 +10,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 
 const InterviewPrep = () => {
   const [selectedRole, setSelectedRole] = useState<string>("frontend-developer");
-  const [activeInterview, setActiveInterview] = useState<boolean>(false);
-  const [interviewTimer, setInterviewTimer] = useState<number>(0);
   const [selectedRounds, setSelectedRounds] = useState<string[]>([]);
-
-  const interviewTypes = [
-    {
-      id: "technical",
-      title: "Technical Interview",
-      description: "Coding challenges, data structures, and algorithm problems",
-      duration: "45-60 minutes",
-      difficulty: "Medium to Hard",
-      icon: Brain,
-      color: "from-blue-500 to-purple-500"
-    },
-    {
-      id: "behavioral",
-      title: "Behavioral Interview",
-      description: "Soft skills, teamwork, and situational questions",
-      duration: "30-45 minutes",
-      difficulty: "Medium",
-      icon: Users,
-      color: "from-green-500 to-teal-500"
-    },
-    {
-      id: "system-design",
-      title: "System Design",
-      description: "Architecture and scalability discussions",
-      duration: "60-90 minutes",
-      difficulty: "Hard",
-      icon: Target,
-      color: "from-orange-500 to-red-500"
-    },
-    {
-      id: "case-study",
-      title: "Case Study",
-      description: "Problem-solving and analytical thinking",
-      duration: "45-60 minutes",
-      difficulty: "Medium",
-      icon: FileText,
-      color: "from-purple-500 to-pink-500"
-    }
-  ];
 
   const mockInterviews = [
     {
@@ -134,45 +93,6 @@ const InterviewPrep = () => {
     }
   ];
 
-  const aiInterviewFeatures = [
-    {
-      title: "Real-time Feedback",
-      description: "AI analyzes your responses and provides instant feedback on technical accuracy and communication",
-      icon: Brain,
-      active: true
-    },
-    {
-      title: "Voice Analysis",
-      description: "AI evaluates your speaking pace, confidence level, and clarity of communication",
-      icon: Mic,
-      active: true
-    },
-    {
-      title: "Code Review",
-      description: "AI reviews your coding solutions for efficiency, correctness, and best practices",
-      icon: CheckCircle,
-      active: true
-    },
-    {
-      title: "Personalized Recommendations",
-      description: "AI identifies your weak areas and suggests targeted practice materials",
-      icon: Target,
-      active: true
-    },
-    {
-      title: "Industry Insights",
-      description: "AI provides insights on current interview trends and company-specific preparation",
-      icon: TrendingUp,
-      active: false
-    },
-    {
-      title: "Performance Tracking",
-      description: "AI tracks your improvement over time and predicts interview success probability",
-      icon: Award,
-      active: false
-    }
-  ];
-
   const interviewAnalytics = {
     totalInterviews: 12,
     averageScore: 78,
@@ -182,25 +102,6 @@ const InterviewPrep = () => {
     successProbability: 85,
     recommendedPractice: ["Dynamic Programming", "System Design Fundamentals", "Behavioral Questions"]
   };
-
-  const upcomingInterviews = [
-    {
-      company: "Netflix",
-      role: "Senior Frontend Developer",
-      date: "Tomorrow, 2:00 PM",
-      type: "Technical + System Design",
-      preparation: 85,
-      aiTips: ["Review React performance optimization", "Practice video streaming architecture", "Prepare examples of large-scale projects"]
-    },
-    {
-      company: "Stripe",
-      role: "Full Stack Engineer",
-      date: "Friday, 10:00 AM",
-      type: "Technical + Behavioral",
-      preparation: 60,
-      aiTips: ["Practice payment system questions", "Review API design principles", "Prepare leadership examples"]
-    }
-  ];
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -215,12 +116,6 @@ const InterviewPrep = () => {
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
     return "text-red-600";
-  };
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const interviewRounds = [
@@ -333,24 +228,24 @@ const InterviewPrep = () => {
                     key={round.id}
                     onClick={() => toggleRound(round.id)}
                     className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border ${selectedRounds.includes(round.id)
-                        ? 'bg-gradient-to-r ' + round.color + ' border-transparent shadow-lg scale-[1.02]'
-                        : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50'
+                      ? 'bg-gradient-to-r ' + round.color + ' border-transparent shadow-lg scale-[1.02]'
+                      : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50'
                       }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg ${selectedRounds.includes(round.id)
-                          ? 'bg-white/20'
-                          : 'bg-slate-700/50'
+                        ? 'bg-white/20'
+                        : 'bg-slate-700/50'
                         }`}>
                         <round.icon className={`w-5 h-5 ${selectedRounds.includes(round.id)
-                            ? 'text-white'
-                            : 'text-slate-400'
+                          ? 'text-white'
+                          : 'text-slate-400'
                           }`} />
                       </div>
                       <div className="flex-1">
                         <p className={`font-semibold text-sm ${selectedRounds.includes(round.id)
-                            ? 'text-white'
-                            : 'text-slate-300'
+                          ? 'text-white'
+                          : 'text-slate-300'
                           }`}>
                           {index + 1}. {round.name}
                         </p>
@@ -567,54 +462,108 @@ const InterviewPrep = () => {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="mock-interviews" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border border-slate-700/50">
-            <TabsTrigger value="mock-interviews" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Mock Interviews</TabsTrigger>
-            <TabsTrigger value="practice" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Practice Questions</TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Analytics</TabsTrigger>
-            <TabsTrigger value="upcoming" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Upcoming</TabsTrigger>
-            <TabsTrigger value="ai-coach" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">AI Coach</TabsTrigger>
+        <Tabs defaultValue="analytics" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700/50">
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Analytics & Performance</TabsTrigger>
+            <TabsTrigger value="company-practice" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Company Practice</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="mock-interviews" className="mt-6">
+          <TabsContent value="analytics" className="mt-6">
             <div className="space-y-6">
-              {/* Interview Types */}
-              <div>
-                <h2 className="text-xl font-semibold mb-4 text-white">Choose Interview Type</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {interviewTypes.map((type) => (
-                    <Card key={type.id} className="cursor-pointer hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 hover:border-purple-500/50">
-                      <CardHeader className="pb-3">
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${type.color} flex items-center justify-center mb-3 shadow-lg`}>
-                          <type.icon className="w-6 h-6 text-white" />
-                        </div>
-                        <CardTitle className="text-lg text-white">{type.title}</CardTitle>
-                        <CardDescription className="text-sm text-slate-400">{type.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="text-sm space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-slate-400">Duration:</span>
-                            <span className="font-medium text-white">{type.duration}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-400">Difficulty:</span>
-                            <Badge variant="outline" className="text-xs border-slate-600 text-slate-300">{type.difficulty}</Badge>
-                          </div>
-                        </div>
-                        <Button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0">
-                          <Play className="w-4 h-4 mr-2" />
-                          Start Interview
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+              {/* Performance Overview & AI Recommendations */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <TrendingUp className="w-5 h-5 text-blue-400" />
+                      Performance Overview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2 text-slate-300">
+                        <span>Overall Performance</span>
+                        <span className="text-white font-semibold">{interviewAnalytics.averageScore}%</span>
+                      </div>
+                      <Progress value={interviewAnalytics.averageScore} className="h-2 bg-slate-700" />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-sm mb-2 text-slate-300">
+                        <span>Success Probability</span>
+                        <span className="text-white font-semibold">{interviewAnalytics.successProbability}%</span>
+                      </div>
+                      <Progress value={interviewAnalytics.successProbability} className="h-2 bg-slate-700" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-white">Strong Areas:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {interviewAnalytics.strongAreas.map((area, index) => (
+                          <Badge key={index} variant="default" className="bg-green-500/20 text-green-300 border-green-500/30">
+                            {area}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-white">Areas for Improvement:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {interviewAnalytics.weakAreas.map((area, index) => (
+                          <Badge key={index} variant="outline" className="border-red-500/30 text-red-300">
+                            {area}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Brain className="w-5 h-5 text-purple-400" />
+                      AI Recommendations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/30">
+                      <h4 className="font-medium mb-2 text-white">Recommended Practice Areas:</h4>
+                      <ul className="space-y-2">
+                        {interviewAnalytics.recommendedPractice.map((practice, index) => (
+                          <li key={index} className="flex items-center gap-2 text-slate-300">
+                            <Target className="w-4 h-4 text-purple-400" />
+                            <span className="text-sm">{practice}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 rounded-lg border border-blue-500/30">
+                      <h4 className="font-medium mb-2 text-white">Next Steps:</h4>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center gap-2 text-slate-300">
+                          <CheckCircle className="w-4 h-4 text-blue-400" />
+                          Complete 3 more system design interviews
+                        </li>
+                        <li className="flex items-center gap-2 text-slate-300">
+                          <CheckCircle className="w-4 h-4 text-blue-400" />
+                          Practice dynamic programming problems
+                        </li>
+                        <li className="flex items-center gap-2 text-slate-300">
+                          <CheckCircle className="w-4 h-4 text-blue-400" />
+                          Review behavioral question templates
+                        </li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Recent Mock Interviews */}
               <div>
-                <h2 className="text-xl font-semibold mb-4 text-white">Recent Mock Interviews</h2>
+                <h2 className="text-xl font-semibold mb-4 text-white">Recent Interview Performance</h2>
                 <div className="space-y-4">
                   {mockInterviews.map((interview) => (
                     <Card key={interview.id} className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl hover:shadow-2xl transition-shadow">
@@ -693,11 +642,24 @@ const InterviewPrep = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="practice" className="mt-6">
+          <TabsContent value="company-practice" className="mt-6">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">Practice Questions</h2>
+                <h2 className="text-xl font-semibold text-white">Company-Specific Practice Questions</h2>
                 <div className="flex gap-3">
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-600/50 text-white">
+                      <SelectValue placeholder="Company" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectItem value="all" className="text-white hover:bg-slate-700">All Companies</SelectItem>
+                      <SelectItem value="google" className="text-white hover:bg-slate-700">Google</SelectItem>
+                      <SelectItem value="microsoft" className="text-white hover:bg-slate-700">Microsoft</SelectItem>
+                      <SelectItem value="amazon" className="text-white hover:bg-slate-700">Amazon</SelectItem>
+                      <SelectItem value="facebook" className="text-white hover:bg-slate-700">Meta</SelectItem>
+                      <SelectItem value="apple" className="text-white hover:bg-slate-700">Apple</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Select defaultValue="all">
                     <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-600/50 text-white">
                       <SelectValue placeholder="Category" />
@@ -784,217 +746,6 @@ const InterviewPrep = () => {
                   </Card>
                 ))}
               </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <TrendingUp className="w-5 h-5 text-blue-400" />
-                    Performance Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2 text-slate-300">
-                      <span>Overall Performance</span>
-                      <span className="text-white font-semibold">{interviewAnalytics.averageScore}%</span>
-                    </div>
-                    <Progress value={interviewAnalytics.averageScore} className="h-2 bg-slate-700" />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-2 text-slate-300">
-                      <span>Success Probability</span>
-                      <span className="text-white font-semibold">{interviewAnalytics.successProbability}%</span>
-                    </div>
-                    <Progress value={interviewAnalytics.successProbability} className="h-2 bg-slate-700" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-white">Strong Areas:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {interviewAnalytics.strongAreas.map((area, index) => (
-                        <Badge key={index} variant="default" className="bg-green-500/20 text-green-300 border-green-500/30">
-                          {area}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-white">Areas for Improvement:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {interviewAnalytics.weakAreas.map((area, index) => (
-                        <Badge key={index} variant="outline" className="border-red-500/30 text-red-300">
-                          {area}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Brain className="w-5 h-5 text-purple-400" />
-                    AI Recommendations
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-4 rounded-lg border border-purple-500/30">
-                    <h4 className="font-medium mb-2 text-white">Recommended Practice Areas:</h4>
-                    <ul className="space-y-2">
-                      {interviewAnalytics.recommendedPractice.map((practice, index) => (
-                        <li key={index} className="flex items-center gap-2 text-slate-300">
-                          <Target className="w-4 h-4 text-purple-400" />
-                          <span className="text-sm">{practice}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 rounded-lg border border-blue-500/30">
-                    <h4 className="font-medium mb-2 text-white">Next Steps:</h4>
-                    <ul className="space-y-2 text-sm">
-                      <li className="flex items-center gap-2 text-slate-300">
-                        <CheckCircle className="w-4 h-4 text-blue-400" />
-                        Complete 3 more system design interviews
-                      </li>
-                      <li className="flex items-center gap-2 text-slate-300">
-                        <CheckCircle className="w-4 h-4 text-blue-400" />
-                        Practice dynamic programming problems
-                      </li>
-                      <li className="flex items-center gap-2 text-slate-300">
-                        <CheckCircle className="w-4 h-4 text-blue-400" />
-                        Review behavioral question templates
-                      </li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="upcoming" className="mt-6">
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-white">Upcoming Interviews</h2>
-              <div className="space-y-4">
-                {upcomingInterviews.map((interview, index) => (
-                  <Card key={index} className="border-l-4 border-l-blue-500 bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-lg text-white">{interview.company}</h3>
-                            <Badge variant="outline" className="border-slate-600 text-slate-300">{interview.type}</Badge>
-                          </div>
-                          <p className="text-slate-400 mb-2">{interview.role}</p>
-                          <p className="text-sm text-blue-400 font-medium mb-3">{interview.date}</p>
-
-                          <div className="mb-3">
-                            <div className="flex justify-between text-sm mb-2 text-slate-300">
-                              <span>Preparation Progress</span>
-                              <span className="text-white font-semibold">{interview.preparation}%</span>
-                            </div>
-                            <Progress value={interview.preparation} className="h-2 bg-slate-700" />
-                          </div>
-
-                          <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-3 rounded-lg border border-green-500/30">
-                            <h4 className="font-medium mb-2 flex items-center gap-2 text-white">
-                              <Brain className="w-4 h-4 text-green-400" />
-                              AI Preparation Tips:
-                            </h4>
-                            <ul className="space-y-1">
-                              {interview.aiTips.map((tip, tipIndex) => (
-                                <li key={tipIndex} className="text-sm flex items-center gap-2 text-slate-300">
-                                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                                  {tip}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2 ml-4">
-                          <Button size="sm" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 border-0">
-                            <Play className="w-4 h-4 mr-1" />
-                            Practice
-                          </Button>
-                          <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700/50">
-                            <FileText className="w-4 h-4 mr-1" />
-                            Notes
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="ai-coach" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Brain className="w-5 h-5 text-purple-400" />
-                    AI Interview Coach
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">Start a personalized coaching session</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 p-4 rounded-lg border border-purple-500/30">
-                    <h4 className="font-medium mb-2 text-white">Current Focus Areas:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline" className="border-slate-600 text-slate-300">System Design</Badge>
-                      <Badge variant="outline" className="border-slate-600 text-slate-300">Algorithms</Badge>
-                      <Badge variant="outline" className="border-slate-600 text-slate-300">Behavioral Questions</Badge>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0">
-                      <Video className="w-4 h-4 mr-2" />
-                      Start Video Session
-                    </Button>
-                    <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50">
-                      <Mic className="w-4 h-4 mr-2" />
-                      Voice-Only Session
-                    </Button>
-                    <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Text-Based Practice
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="text-white">Quick Tips</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/30">
-                      <h4 className="font-medium text-sm mb-1 text-white">Technical Interviews</h4>
-                      <p className="text-xs text-slate-400">Think out loud, explain your approach, and don't be afraid to ask clarifying questions.</p>
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/30">
-                      <h4 className="font-medium text-sm mb-1 text-white">Behavioral Interviews</h4>
-                      <p className="text-xs text-slate-400">Use the STAR method and prepare specific examples from your experience.</p>
-                    </div>
-                    <div className="p-3 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-lg border border-orange-500/30">
-                      <h4 className="font-medium text-sm mb-1 text-white">System Design</h4>
-                      <p className="text-xs text-slate-400">Start with high-level architecture and then dive into specific components.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
         </Tabs>
