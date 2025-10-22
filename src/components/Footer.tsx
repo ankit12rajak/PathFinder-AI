@@ -1,40 +1,42 @@
 import { Brain, Sparkles, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Footer = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     product: [
-      { name: "Features", href: "#features" },
-      { name: "Categories", href: "#categories" },
-      { name: "Pricing", href: "#" },
-      { name: "Roadmap", href: "#" },
+      { name: t('footer.sections.product.links.features'), href: "#features" },
+      { name: t('footer.sections.product.links.categories'), href: "#categories" },
+      { name: t('footer.sections.product.links.pricing'), href: "#" },
+      { name: t('footer.sections.product.links.roadmap'), href: "#" },
     ],
     dashboards: [
-      { name: "Class 8-10", href: "/dashboard/early-stage" },
-      { name: "Class 11-12", href: "/dashboard/decision-making" },
-      { name: "Post-12th", href: "/dashboard/college-admission" },
-      { name: "College Students", href: "/dashboard/skill-development" },
+      { name: t('footer.sections.dashboards.links.class8to10'), href: "/dashboard/early-stage" },
+      { name: t('footer.sections.dashboards.links.class11to12'), href: "/dashboard/decision-making" },
+      { name: t('footer.sections.dashboards.links.post12th'), href: "/dashboard/college-admission" },
+      { name: t('footer.sections.dashboards.links.collegeStudents'), href: "/dashboard/skill-development" },
     ],
     support: [
-      { name: "Help Center", href: "#" },
-      { name: "Contact Us", href: "#" },
-      { name: "FAQ", href: "#" },
-      { name: "Privacy Policy", href: "#" },
+      { name: t('footer.sections.support.links.helpCenter'), href: "#" },
+      { name: t('footer.sections.support.links.contactUs'), href: "#" },
+      { name: t('footer.sections.support.links.faq'), href: "#" },
+      { name: t('footer.sections.support.links.privacyPolicy'), href: "#" },
     ],
     company: [
-      { name: "About Us", href: "#" },
-      { name: "Careers", href: "#" },
-      { name: "Blog", href: "#" },
-      { name: "Press", href: "#" },
+      { name: t('footer.sections.company.links.aboutUs'), href: "#" },
+      { name: t('footer.sections.company.links.careers'), href: "#" },
+      { name: t('footer.sections.company.links.blog'), href: "#" },
+      { name: t('footer.sections.company.links.press'), href: "#" },
     ],
   };
 
   const socialLinks = [
-    { name: "Twitter", icon: Twitter, href: "#" },
-    { name: "LinkedIn", icon: Linkedin, href: "#" },
-    { name: "Instagram", icon: Instagram, href: "#" },
+    { name: t('footer.social.twitter'), icon: Twitter, href: "#" },
+    { name: t('footer.social.linkedin'), icon: Linkedin, href: "#" },
+    { name: t('footer.social.instagram'), icon: Instagram, href: "#" },
   ];
 
   return (
@@ -48,35 +50,33 @@ const Footer = () => {
                 <Brain className="w-8 h-8 text-primary group-hover:text-primary-glow transition-colors" />
                 <Sparkles className="w-4 h-4 text-secondary absolute -top-1 -right-1 animate-pulse" />
               </div>
-              <span className="text-xl font-bold text-glow">PathfinderAI</span>
+              <span className="text-xl font-bold text-glow">{t('footer.brand.name')}</span>
             </Link>
             
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              Empowering Indian students with AI-driven career guidance, 
-              personalized learning paths, and comprehensive skill development 
-              for the evolving job market.
+              {t('footer.brand.description')}
             </p>
 
             {/* Contact Info */}
             <div className="space-y-3">
               <div className="flex items-center space-x-3 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>support@pathfinderai.com</span>
+                <span>{t('footer.brand.contact.email')}</span>
               </div>
               <div className="flex items-center space-x-3 text-sm text-muted-foreground">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>+91 80XX-XX-XXXX</span>
+                <span>{t('footer.brand.contact.phone')}</span>
               </div>
               <div className="flex items-center space-x-3 text-sm text-muted-foreground">
                 <MapPin className="w-4 h-4 text-primary" />
-                <span>Bangalore, India</span>
+                <span>{t('footer.brand.contact.location')}</span>
               </div>
             </div>
           </div>
 
           {/* Product Links */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Product</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t('footer.sections.product.title')}</h4>
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
@@ -93,7 +93,7 @@ const Footer = () => {
 
           {/* Dashboards Links */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Dashboards</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t('footer.sections.dashboards.title')}</h4>
             <ul className="space-y-2">
               {footerLinks.dashboards.map((link) => (
                 <li key={link.name}>
@@ -110,7 +110,7 @@ const Footer = () => {
 
           {/* Support Links */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Support</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t('footer.sections.support.title')}</h4>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
@@ -127,7 +127,7 @@ const Footer = () => {
 
           {/* Company Links */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Company</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t('footer.sections.company.title')}</h4>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
@@ -146,7 +146,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="border-t border-border/50 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="text-sm text-muted-foreground mb-4 md:mb-0">
-            © {currentYear} PathfinderAI. All rights reserved.
+            {t('footer.copyright', { year: currentYear })}
           </div>
           
           {/* Social Links */}

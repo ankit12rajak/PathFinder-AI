@@ -15,7 +15,7 @@ export const getChatbotResponse = async (message: string): Promise<string> => {
     return getIntelligentResponse(message);
   }
 
-  const modelsToTry = ['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+  const modelsToTry = ['gemini-2.5-flash'];
   
   for (const modelName of modelsToTry) {
     try {
@@ -88,7 +88,7 @@ export const testGeminiConnection = async (): Promise<boolean> => {
   }
   
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent("Test message. Please respond with just 'Connection successful'");
     const response = await result.response;
     const text = response.text();

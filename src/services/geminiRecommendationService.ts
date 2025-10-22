@@ -95,7 +95,7 @@ class GeminiRecommendationService {
     
     try {
       this.genAI = new GoogleGenerativeAI(apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       console.log('✅ Gemini service initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Gemini service:', error);

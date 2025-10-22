@@ -12,77 +12,95 @@ import {
   Award
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const CategoriesSection = () => {
   const [activeCategory, setActiveCategory] = useState(0);
+  const { t } = useTranslation();
 
   const categories = [
     {
       id: "early-stage",
-      title: "Class 8-10",
-      subtitle: "Early Stage / Awareness Phase",
+      title: t('categoriesSection.items.earlyStage.title'),
+      subtitle: t('categoriesSection.items.earlyStage.subtitle'),
       icon: BookOpen,
       color: "from-blue-500/20 to-purple-500/20",
       borderColor: "border-blue-500/30",
-      description: "Focus on exposure, self-discovery, and reducing academic stress while exploring various career fields.",
+      description: t('categoriesSection.items.earlyStage.description'),
       keyPoints: [
-        "Discover your natural strengths and interests",
-        "Learn about different career fields in engaging ways", 
-        "Build foundational skills through interactive activities",
-        "Develop healthy study habits and stress management"
+        t('categoriesSection.items.earlyStage.keyPoints.point1'),
+        t('categoriesSection.items.earlyStage.keyPoints.point2'),
+        t('categoriesSection.items.earlyStage.keyPoints.point3'),
+        t('categoriesSection.items.earlyStage.keyPoints.point4')
       ],
-      stats: { students: "2.5M+", satisfaction: "94%", timeSpent: "30 min/day" },
+      stats: { 
+        students: t('categoriesSection.items.earlyStage.stats.students'), 
+        satisfaction: t('categoriesSection.items.earlyStage.stats.satisfaction'), 
+        timeSpent: t('categoriesSection.items.earlyStage.stats.timeSpent') 
+      },
       dashboardLink: "/auth"
     },
     {
       id: "decision-making",
-      title: "Class 11-12", 
-      subtitle: "Decision-Making / Competitive Exams",
+      title: t('categoriesSection.items.decisionMaking.title'),
+      subtitle: t('categoriesSection.items.decisionMaking.subtitle'),
       icon: Target,
       color: "from-green-500/20 to-teal-500/20",
       borderColor: "border-green-500/30",
-      description: "Navigate career decisions, prepare for competitive exams, and explore multiple pathways to success.",
+      description: t('categoriesSection.items.decisionMaking.description'),
       keyPoints: [
-        "Get clear guidance on career pathways and requirements",
-        "Smart strategies for competitive exam preparation",
-        "Explore alternative career options beyond traditional paths",
-        "Connect with mentors and successful seniors"
+        t('categoriesSection.items.decisionMaking.keyPoints.point1'),
+        t('categoriesSection.items.decisionMaking.keyPoints.point2'),
+        t('categoriesSection.items.decisionMaking.keyPoints.point3'),
+        t('categoriesSection.items.decisionMaking.keyPoints.point4')
       ],
-      stats: { students: "1.8M+", satisfaction: "96%", timeSpent: "45 min/day" },
+      stats: { 
+        students: t('categoriesSection.items.decisionMaking.stats.students'), 
+        satisfaction: t('categoriesSection.items.decisionMaking.stats.satisfaction'), 
+        timeSpent: t('categoriesSection.items.decisionMaking.stats.timeSpent') 
+      },
       dashboardLink: "/auth"
     },
     {
       id: "college-admission",
-      title: "Post-12th Students",
-      subtitle: "College Admission Stage", 
+      title: t('categoriesSection.items.collegeAdmission.title'),
+      subtitle: t('categoriesSection.items.collegeAdmission.subtitle'),
       icon: GraduationCap,
       color: "from-orange-500/20 to-red-500/20",
       borderColor: "border-orange-500/30",
-      description: "Make informed decisions about college selection, course choices, and evaluate return on investment.",
+      description: t('categoriesSection.items.collegeAdmission.description'),
       keyPoints: [
-        "Compare colleges based on placements, fees, and opportunities",
-        "Match your interests with the right courses and specializations",
-        "Calculate ROI for different education paths",
-        "Access scholarship and funding opportunities"
+        t('categoriesSection.items.collegeAdmission.keyPoints.point1'),
+        t('categoriesSection.items.collegeAdmission.keyPoints.point2'),
+        t('categoriesSection.items.collegeAdmission.keyPoints.point3'),
+        t('categoriesSection.items.collegeAdmission.keyPoints.point4')
       ],
-      stats: { students: "950K+", satisfaction: "97%", timeSpent: "60 min/day" },
+      stats: { 
+        students: t('categoriesSection.items.collegeAdmission.stats.students'), 
+        satisfaction: t('categoriesSection.items.collegeAdmission.stats.satisfaction'), 
+        timeSpent: t('categoriesSection.items.collegeAdmission.stats.timeSpent') 
+      },
       dashboardLink: "/auth"
     },
     {
       id: "skill-development",
-      title: "College Students",
-      subtitle: "Skill Development / Employability Stage",
+      title: t('categoriesSection.items.skillDevelopment.title'),
+      subtitle: t('categoriesSection.items.skillDevelopment.subtitle'),
       icon: Briefcase,
       color: "from-purple-500/20 to-pink-500/20", 
       borderColor: "border-purple-500/30",
-      description: "Bridge the gap between academic learning and industry requirements with targeted skill development.",
+      description: t('categoriesSection.items.skillDevelopment.description'),
       keyPoints: [
-        "Identify and fill critical skill gaps for your career goals",
-        "Follow AI-curated learning paths for in-demand skills",
-        "Stay updated with latest industry trends and requirements",
-        "Get placement-ready with resume building and interview prep"
+        t('categoriesSection.items.skillDevelopment.keyPoints.point1'),
+        t('categoriesSection.items.skillDevelopment.keyPoints.point2'),
+        t('categoriesSection.items.skillDevelopment.keyPoints.point3'),
+        t('categoriesSection.items.skillDevelopment.keyPoints.point4')
       ],
-      stats: { students: "1.2M+", satisfaction: "95%", timeSpent: "90 min/day" },
+      stats: { 
+        students: t('categoriesSection.items.skillDevelopment.stats.students'), 
+        satisfaction: t('categoriesSection.items.skillDevelopment.stats.satisfaction'), 
+        timeSpent: t('categoriesSection.items.skillDevelopment.stats.timeSpent') 
+      },
       dashboardLink: "/auth"
     }
   ];
@@ -93,15 +111,14 @@ const CategoriesSection = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 bg-accent/10 border border-accent/20 rounded-full px-4 py-2 mb-6">
             <Users className="w-4 h-4 text-accent" />
-            <span className="text-sm font-medium text-accent">Student Categories</span>
+            <span className="text-sm font-medium text-accent">{t('categoriesSection.badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-            Designed for Every
-            <span className="text-glow block">Stage of Your Journey</span>
+            {t('categoriesSection.heading.line1')}
+            <span className="text-glow block">{t('categoriesSection.heading.line2')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Each student category has unique needs and challenges. Our platform provides 
-            specialized features and guidance tailored to your current academic stage.
+            {t('categoriesSection.description')}
           </p>
         </div>
 
@@ -155,7 +172,7 @@ const CategoriesSection = () => {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Key Features:</h4>
+                <h4 className="text-lg font-semibold">{t('categoriesSection.keyFeatures')}</h4>
                 <ul className="space-y-3">
                   {categories[activeCategory].keyPoints.map((point, index) => (
                     <li key={index} className="flex items-start space-x-3">
@@ -168,7 +185,7 @@ const CategoriesSection = () => {
 
               <Link to="/auth">
                 <button className="btn-hero flex items-center space-x-2">
-                  <span>Get Started</span>
+                  <span>{t('categoriesSection.getStarted')}</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </Link>
@@ -180,17 +197,17 @@ const CategoriesSection = () => {
                 <div className="text-center p-4 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10">
                   <Users className="w-8 h-8 text-primary mx-auto mb-2" />
                   <div className="text-2xl font-bold">{categories[activeCategory].stats.students}</div>
-                  <div className="text-sm text-muted-foreground">Students</div>
+                  <div className="text-sm text-muted-foreground">{t('categoriesSection.stats.students')}</div>
                 </div>
                 <div className="text-center p-4 rounded-xl bg-gradient-to-br from-secondary/10 to-primary/10">
                   <TrendingUp className="w-8 h-8 text-secondary mx-auto mb-2" />
                   <div className="text-2xl font-bold">{categories[activeCategory].stats.satisfaction}</div>
-                  <div className="text-sm text-muted-foreground">Satisfaction</div>
+                  <div className="text-sm text-muted-foreground">{t('categoriesSection.stats.satisfaction')}</div>
                 </div>
                 <div className="text-center p-4 rounded-xl bg-gradient-to-br from-accent/10 to-secondary/10">
                   <Clock className="w-8 h-8 text-accent mx-auto mb-2" />
                   <div className="text-2xl font-bold">{categories[activeCategory].stats.timeSpent}</div>
-                  <div className="text-sm text-muted-foreground">Daily Use</div>
+                  <div className="text-sm text-muted-foreground">{t('categoriesSection.stats.dailyUse')}</div>
                 </div>
               </div>
 
@@ -202,9 +219,9 @@ const CategoriesSection = () => {
                     const IconComponent = categories[activeCategory].icon;
                     return <IconComponent className="w-16 h-16 text-primary mx-auto mb-4" />;
                   })()}
-                  <h4 className="text-xl font-bold mb-2">Ready to Start?</h4>
+                  <h4 className="text-xl font-bold mb-2">{t('categoriesSection.readyToStart.title')}</h4>
                   <p className="text-muted-foreground">
-                    Join thousands of students who have successfully navigated their career journey with our platform.
+                    {t('categoriesSection.readyToStart.description')}
                   </p>
                 </div>
               </div>
