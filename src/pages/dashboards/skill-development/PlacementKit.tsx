@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FileText, Download, Upload, Bot, Target, Briefcase, Sparkles, Award, TrendingUp, BarChart3, Edit, Code, MessageSquare, Rocket, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const PlacementKit = () => {
+  const navigate = useNavigate();
   const [atsScore] = useState<number>(78);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
@@ -236,6 +238,13 @@ const PlacementKit = () => {
 
                   {/* Action Button */}
                   <Button
+                    onClick={() => {
+                      if (tool.id === 'ats-scanner') navigate('/dashboard/skill-development/placement-kit/atsscanner');
+                      if (tool.id === 'resume-builder') navigate('/dashboard/skill-development/placement-kit/resumebuilder');
+                      if (tool.id === 'cover-letter') navigate('/dashboard/skill-development/placement-kit/coverletter');
+                      if (tool.id === 'portfolio') navigate('/dashboard/skill-development/placement-kit/portfolio');
+                      if (tool.id === 'interview-prep') navigate('/dashboard/skill-development/placement-kit/interviewquestion');
+                    }}
                     className={`w-full bg-gradient-to-r ${tool.iconBg.replace('/30', '').replace('/20', '')} hover:shadow-lg hover:shadow-${tool.iconColor.split('-')[1]}-500/20 text-white border-0 transition-all duration-300`}
                   >
                     {tool.id === 'ats-scanner' && (
