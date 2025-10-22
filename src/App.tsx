@@ -48,6 +48,13 @@ import ProjectsInternships from "./pages/dashboards/skill-development/ProjectsIn
 import SkillTraining from "./pages/dashboards/skill-development/SkillTraining";
 import InterviewPrep from "./pages/dashboards/skill-development/InterviewPrep";
 import PlacementKit from "./pages/dashboards/skill-development/PlacementKit";
+
+// Placement Kit Sub-sections
+import ATSScanner from "./pages/dashboards/skill-development/ATSScanner";
+import ResumeBuilder from "./pages/dashboards/skill-development/ResumeBuilder";
+import CoverLetter from "./pages/dashboards/skill-development/CoverLetter";
+import Portfolio from "./pages/dashboards/skill-development/Portfolio";
+import InterviewQuestions from "./pages/dashboards/skill-development/InterviewQuestions";
 import MockTestPage from "./Test/jeemain"; // Import jeemain.tsx
 import NEETTestPage from './Test/neet';
 import JEEAdvancedTestPage from './Test/jeeadvanced';
@@ -107,6 +114,13 @@ const App = () => (
           <Route path="/dashboard/skill-development/skill-training" element={<SkillTraining />} />
           <Route path="/dashboard/skill-development/interview-prep" element={<InterviewPrep />} />
           <Route path="/dashboard/skill-development/placement-kit" element={<PlacementKit />} />
+          
+          {/* Placement Kit Sub-routes */}
+          <Route path="/dashboard/skill-development/placement-kit/atsscanner" element={<ATSScanner />} />
+          <Route path="/dashboard/skill-development/placement-kit/resumebuilder" element={<ResumeBuilder />} />
+          <Route path="/dashboard/skill-development/placement-kit/coverletter" element={<CoverLetter />} />
+          <Route path="/dashboard/skill-development/placement-kit/portfolio" element={<Portfolio />} />
+          <Route path="/dashboard/skill-development/placement-kit/interviewquestion" element={<InterviewQuestions />} />
           
           {/* Mock Test Routes */}
           <Route path="/jeemain" element={<MockTestPage />} />
