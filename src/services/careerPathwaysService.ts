@@ -48,7 +48,7 @@ class CareerPathwaysService {
     
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-2.0-flash-exp",
       generationConfig: {
         temperature: 0.7,
         topK: 40,

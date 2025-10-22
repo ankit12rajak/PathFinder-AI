@@ -67,7 +67,7 @@ interface GapAnalysisResult {
 
 class GeminiService {
   private apiKey: string;
-  private apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  private apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
   constructor() {
     this.apiKey = import.meta.env.VITE_GEMINI_API_KEY;

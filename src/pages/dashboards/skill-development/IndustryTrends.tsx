@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { TrendingUp, BarChart3, Zap, Target, Brain, Star, ArrowUp, ArrowDown, Minus, Eye, Bookmark, Share2, Filter, Search, ExternalLink, Download, RefreshCw, Play, Pause, Volume2, Maximize, CheckCircle2, Clock, Code2, BookOpen, Award, ChevronRight, X, Terminal, Briefcase, Sparkles, Activity, Calendar } from "lucide-react";
+import { TrendingUp, BarChart3, Zap, Target, Brain, Star, ArrowUp, ArrowDown, Minus, Eye, Bookmark, Share2, Filter, Search, ExternalLink, Download, RefreshCw, Play, Pause, Volume2, Maximize, CheckCircle2, Clock, Code2, BookOpen, Award, ChevronRight, X, Terminal, Briefcase, Sparkles, Activity, Calendar, Newspaper, Bell, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DashboardLayout from "@/components/DashboardLayout";
 import geminiService from "@/services/geminiService";
 import youtubeService from "@/services/youtubeService";
+import industryReportsService from "@/services/industryReportsService";
+import techUpdatesService from "@/services/techUpdatesService";
+import CodeEditorNotebook from "@/components/CodeEditorNotebook";
 
 interface YouTubeVideo {
   id: string;
@@ -28,6 +31,17 @@ const IndustryTrends = () => {
   const [emergingTechInsights, setEmergingTechInsights] = useState<any>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleString());
+  
+  // Industry Reports State
+  const [industryReports, setIndustryReports] = useState<any[]>([]);
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
+  const [reportsLastUpdated, setReportsLastUpdated] = useState<string | null>(null);
+
+  // Tech Updates State
+  const [techUpdates, setTechUpdates] = useState<any[]>([]);
+  const [isLoadingTechUpdates, setIsLoadingTechUpdates] = useState(false);
+  const [techUpdatesLastUpdated, setTechUpdatesLastUpdated] = useState<string | null>(null);
+  const [techUpdatesNextUpdate, setTechUpdatesNextUpdate] = useState<string | null>(null);
 
   // Learning Path State
   const [selectedSkill, setSelectedSkill] = useState<any>(null);
@@ -35,7 +49,6 @@ const IndustryTrends = () => {
   const [videoProgress, setVideoProgress] = useState(0);
   const [watchedVideos, setWatchedVideos] = useState<Set<number>>(new Set());
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [code, setCode] = useState("// Start coding here...\n");
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [playlistVideos, setPlaylistVideos] = useState<YouTubeVideo[]>([]);
   const [isLoadingPlaylist, setIsLoadingPlaylist] = useState(false);
@@ -345,112 +358,79 @@ const IndustryTrends = () => {
     }
   ];
 
-  const industryReports = [
-    {
-      title: "State of AI in India 2025",
-      source: "NASSCOM",
-      date: "September 2025",
-      summary: "AI adoption in Indian enterprises surged by 180% with demand for AI professionals reaching unprecedented levels",
-      keyFindings: [
-        "85% companies implementing AI initiatives",
-        "52% skill gap in AI/ML talent",
-        "₹750B AI market value by 2026",
-        "2.5M AI jobs expected by 2027"
-      ],
-      relevantSkills: ["Machine Learning", "Python", "Deep Learning", "MLOps"],
-      reportUrl: "https://www.nasscom.in/knowledge-center/publications/state-ai-india-2025",
-      articleLinks: [
-        {
-          title: "AI Revolution in Indian Tech: NASSCOM's Latest Report",
-          url: "https://economictimes.indiatimes.com/tech/technology/ai-revolution-in-indian-tech-nasscom-report/articleshow/123456789.cms",
-          source: "Economic Times"
-        },
-        {
-          title: "India's AI Workforce Gap: What Companies Need to Know",
-          url: "https://www.livemint.com/technology/tech-news/indias-ai-workforce-gap-companies-need-to-know-116789012345678.html",
-          source: "LiveMint"
-        }
-      ]
-    },
-    {
-      title: "Cloud Computing Trends Report 2025",
-      source: "Gartner",
-      date: "August 2025",
-      summary: "Multi-cloud and hybrid strategies dominate with 92% of enterprises adopting cloud-first approach",
-      keyFindings: [
-        "95% use multi-cloud architectures",
-        "75% increase in DevOps/SRE roles",
-        "₹350B cloud market in India",
-        "Edge computing adoption up 300%"
-      ],
-      relevantSkills: ["AWS", "Azure", "Kubernetes", "DevOps", "Terraform"],
-      reportUrl: "https://www.gartner.com/en/documents/1234567/cloud-computing-trends-2025",
-      articleLinks: [
-        {
-          title: "Cloud Computing Market in India to Reach ₹1.2 Trillion by 2027",
-          url: "https://www.business-standard.com/article/technology/cloud-computing-market-india-2027-1250897654321.html",
-          source: "Business Standard"
-        },
-        {
-          title: "Multi-Cloud Strategies: Why Indian Companies Are Leading",
-          url: "https://www.forbesindia.com/article/explainers/multi-cloud-strategies-indian-companies-leading/98765",
-          source: "Forbes India"
-        }
-      ]
-    },
-    {
-      title: "Cybersecurity Workforce Study 2025",
-      source: "ISC2",
-      date: "July 2025",
-      summary: "Global cybersecurity workforce gap reaches 5.2 million professionals with India facing acute shortage",
-      keyFindings: [
-        "5.2M global cybersecurity shortage",
-        "₹35L average salary for experts",
-        "300% growth in demand expected",
-        "Zero Trust adoption at 78%"
-      ],
-      relevantSkills: ["Ethical Hacking", "Cloud Security", "Zero Trust", "SIEM"],
-      reportUrl: "https://www.isc2.org/Research/Workforce-Study",
-      articleLinks: [
-        {
-          title: "Cybersecurity Jobs in India: Salaries Hit ₹50L Mark",
-          url: "https://www.thehindu.com/business/Industry/cybersecurity-jobs-india-salaries-50l/1234567890123.htm",
-          source: "The Hindu"
-        },
-        {
-          title: "India's Cybersecurity Crisis: 5.2 Million Jobs Shortage",
-          url: "https://indianexpress.com/article/technology/tech-news-technology/indias-cybersecurity-crisis-5-2-million-jobs-shortage-987654321",
-          source: "Indian Express"
-        }
-      ]
-    },
-    {
-      title: "Future of Work Report 2025",
-      source: "World Economic Forum",
-      date: "June 2025",
-      summary: "AI and automation reshaping 44% of core skills with emphasis on human-AI collaboration",
-      keyFindings: [
-        "44% of core skills changing by 2027",
-        "85% jobs requiring digital skills",
-        "AI-human collaboration essential",
-        "Continuous learning becomes mandatory"
-      ],
-      relevantSkills: ["Digital Literacy", "AI Ethics", "Adaptability", "Critical Thinking"],
-      reportUrl: "https://www.weforum.org/reports/the-future-of-jobs-report-2025",
-      articleLinks: [
-        {
-          title: "Future of Work: 44% Skills to Change by 2027 - WEF",
-          url: "https://www.weforum.org/agenda/2025/06/future-of-work-44-skills-change-2027/",
-          source: "World Economic Forum"
-        },
-        {
-          title: "How AI is Reshaping India's Job Market",
-          url: "https://www.financialexpress.com/industry/how-ai-reshaping-indias-job-market/3456789012345/",
-          source: "Financial Express"
-        }
-      ]
+  // Fetch industry reports on component mount
+  useEffect(() => {
+    const loadIndustryReports = async () => {
+      setIsLoadingReports(true);
+      try {
+        const reports = await industryReportsService.getIndustryReports();
+        setIndustryReports(reports);
+        
+        const cacheInfo = industryReportsService.getCacheInfo();
+        setReportsLastUpdated(cacheInfo.lastUpdated);
+      } catch (error) {
+        console.error('Error loading industry reports:', error);
+      } finally {
+        setIsLoadingReports(false);
+      }
+    };
+
+    loadIndustryReports();
+  }, []);
+
+  // Function to refresh industry reports
+  const handleRefreshReports = async () => {
+    setIsLoadingReports(true);
+    try {
+      const reports = await industryReportsService.getIndustryReports(true);
+      setIndustryReports(reports);
+      
+      const cacheInfo = industryReportsService.getCacheInfo();
+      setReportsLastUpdated(cacheInfo.lastUpdated);
+    } catch (error) {
+      console.error('Error refreshing industry reports:', error);
+    } finally {
+      setIsLoadingReports(false);
     }
-  ];
+  };
+
+  // Fetch tech updates on component mount
+  useEffect(() => {
+    const loadTechUpdates = async () => {
+      setIsLoadingTechUpdates(true);
+      try {
+        const updates = await techUpdatesService.getTechUpdates();
+        setTechUpdates(updates);
+        
+        const cacheInfo = techUpdatesService.getCacheInfo();
+        setTechUpdatesLastUpdated(cacheInfo.lastUpdated);
+        setTechUpdatesNextUpdate(cacheInfo.nextUpdate);
+      } catch (error) {
+        console.error('Error loading tech updates:', error);
+      } finally {
+        setIsLoadingTechUpdates(false);
+      }
+    };
+
+    loadTechUpdates();
+  }, []);
+
+  // Function to refresh tech updates
+  const handleRefreshTechUpdates = async () => {
+    setIsLoadingTechUpdates(true);
+    try {
+      const updates = await techUpdatesService.getTechUpdates(true);
+      setTechUpdates(updates);
+      
+      const cacheInfo = techUpdatesService.getCacheInfo();
+      setTechUpdatesLastUpdated(cacheInfo.lastUpdated);
+      setTechUpdatesNextUpdate(cacheInfo.nextUpdate);
+    } catch (error) {
+      console.error('Error refreshing tech updates:', error);
+    } finally {
+      setIsLoadingTechUpdates(false);
+    }
+  };
 
   const emergingTechnologies = [
     {
@@ -652,6 +632,24 @@ const IndustryTrends = () => {
     }
   };
 
+  const getImpactColor = (impact: string) => {
+    switch (impact) {
+      case "high": return "bg-rose-500/20 text-rose-400 border-rose-500/50";
+      case "medium": return "bg-amber-500/20 text-amber-400 border-amber-500/50";
+      case "low": return "bg-emerald-500/20 text-emerald-400 border-emerald-500/50";
+      default: return "bg-slate-500/20 text-slate-400 border-slate-500/50";
+    }
+  };
+
+  const getImpactIcon = (impact: string) => {
+    switch (impact) {
+      case "high": return <TrendingUp className="w-3 h-3" />;
+      case "medium": return <Minus className="w-3 h-3" />;
+      case "low": return <TrendingDown className="w-3 h-3" />;
+      default: return <Activity className="w-3 h-3" />;
+    }
+  };
+
   return (
     <DashboardLayout>
       {/* Premium Learning Mode */}
@@ -704,11 +702,11 @@ const IndustryTrends = () => {
               </div>
             </div>
 
-            {/* Main Learning Interface */}
+            {/* Main Learning Interface - Improved Layout */}
             <div className="grid grid-cols-12 gap-6">
               {/* Left Sidebar - Playlist */}
               <div className="col-span-3">
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10 h-full">
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10 sticky top-6">
                   <CardHeader className="border-b border-white/10">
                     <CardTitle className="text-white flex items-center gap-2">
                       <BookOpen className="w-5 h-5 text-purple-400" />
@@ -719,7 +717,7 @@ const IndustryTrends = () => {
                     </p>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+                    <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
                       {isLoadingPlaylist ? (
                         <div className="p-8 text-center">
                           <RefreshCw className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-2" />
@@ -781,8 +779,9 @@ const IndustryTrends = () => {
                 </Card>
               </div>
 
-              {/* Center - Video Player */}
-              <div className="col-span-6 space-y-4">
+              {/* Right Side - Video & Code Editor Side by Side */}
+              <div className="col-span-9 space-y-6">
+                {/* Video Player */}
                 <Card className="bg-white/5 backdrop-blur-sm border-white/10">
                   <CardContent className="p-0">
                     <div className="aspect-video bg-black rounded-t-lg overflow-hidden">
@@ -844,108 +843,49 @@ const IndustryTrends = () => {
                   </CardContent>
                 </Card>
 
-                {/* Code Editor */}
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                  <CardHeader className="border-b border-white/10">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <Code2 className="w-5 h-5 text-green-400" />
-                        Practice Code Editor
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-white/5 border-white/10 text-white hover:bg-white/10"
-                        >
-                          Reset
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                        >
-                          <Play className="w-4 h-4 mr-2" />
-                          Run Code
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <textarea
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="w-full h-64 bg-slate-900 text-green-400 font-mono text-sm p-4 focus:outline-none resize-none"
-                      placeholder="// Write your code here..."
-                      spellCheck={false}
-                    />
-                    <div className="bg-slate-950 border-t border-white/10 p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Terminal className="w-4 h-4 text-purple-400" />
-                        <span className="text-purple-200 text-sm font-medium">Output</span>
-                      </div>
-                      <div className="bg-black/50 rounded p-3 font-mono text-sm text-green-400 min-h-[60px]">
-                        <span className="text-gray-500">// Run your code to see output...</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                {/* Code Editor & Notebook - Now directly below video */}
+                <CodeEditorNotebook 
+                  defaultLanguage={selectedSkill.skill.includes('AI') || selectedSkill.skill.includes('Data Science') ? 'python' : 'javascript'}
+                  skillName={selectedSkill.skill}
+                />
 
-              {/* Right Sidebar - Resources & Notes */}
-              <div className="col-span-3 space-y-4">
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                  <CardHeader className="border-b border-white/10">
-                    <CardTitle className="text-white text-sm">Key Concepts</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4 space-y-3">
-                    {selectedSkill.keyAreas.slice(0, 5).map((area: string, index: number) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <ChevronRight className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                        <span className="text-purple-200 text-sm">{area}</span>
+                {/* Learning Stats Card - Below Editor */}
+                <div className="grid grid-cols-3 gap-4">
+                  <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-purple-200">Videos Watched</span>
+                          <span className="text-white font-semibold">{watchedVideos.size}/{playlistVideos.length || 10}</span>
+                        </div>
+                        <Progress value={((watchedVideos.size / (playlistVideos.length || 10)) * 100)} className="h-2" />
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
-                  <CardHeader className="border-b border-white/10">
-                    <CardTitle className="text-white text-sm">Learning Stats</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4 space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-purple-200">Videos Watched</span>
-                        <span className="text-white font-semibold">{watchedVideos.size}/{playlistVideos.length || 10}</span>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-purple-200">Time Invested</span>
+                          <span className="text-white font-semibold">{watchedVideos.size * 15}m</span>
+                        </div>
                       </div>
-                      <Progress value={((watchedVideos.size / (playlistVideos.length || 10)) * 100)} className="h-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-purple-200">Time Invested</span>
-                        <span className="text-white font-semibold">{watchedVideos.size * 15}m</span>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border-purple-500/30">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-purple-200 text-xs">Progress</p>
+                          <p className="text-white font-semibold">{Math.round(videoProgress)}%</p>
+                        </div>
+                        <Award className="w-8 h-8 text-yellow-400" />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-purple-200">Completion Rate</span>
-                        <span className="text-white font-semibold">{Math.round(videoProgress)}%</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border-purple-500/30">
-                  <CardContent className="pt-6">
-                    <div className="text-center space-y-3">
-                      <Award className="w-12 h-12 text-yellow-400 mx-auto" />
-                      <h3 className="text-white font-semibold">Earn Certificate</h3>
-                      <p className="text-purple-200 text-xs">
-                        Complete all modules to earn your certificate
-                      </p>
-                      <Progress value={videoProgress} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           </div>
@@ -1061,13 +1001,20 @@ const IndustryTrends = () => {
 
         {/* Premium Dark Tabs */}
         <Tabs defaultValue="trending" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-14 bg-slate-900/50 border border-slate-700/50 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-5 h-14 bg-slate-900/50 border border-slate-700/50 p-1 rounded-xl">
             <TabsTrigger
               value="trending"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
             >
               <TrendingUp className="w-4 h-4 mr-2" />
               Trending Skills
+            </TabsTrigger>
+            <TabsTrigger
+              value="updates"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-teal-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
+            >
+              <Newspaper className="w-4 h-4 mr-2" />
+              Today's Updates
             </TabsTrigger>
             <TabsTrigger
               value="reports"
@@ -1228,9 +1175,150 @@ const IndustryTrends = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="updates" className="mt-6">
+            <div className="mb-6 flex items-center justify-between bg-gradient-to-r from-green-900/30 to-teal-900/30 p-4 rounded-xl border border-green-500/30">
+              <div>
+                <h3 className="text-lg font-bold text-slate-100 mb-1 flex items-center gap-2">
+                  <Newspaper className="w-5 h-5 text-green-400" />
+                  Today's Tech Updates
+                  {techUpdatesService.shouldShowRefreshNotification() && (
+                    <Badge className="bg-green-500 text-white animate-pulse">
+                      <Bell className="w-3 h-3 mr-1" />
+                      New Updates Available
+                    </Badge>
+                  )}
+                </h3>
+                <p className="text-sm text-slate-400">
+                  {techUpdatesLastUpdated ? (
+                    <>
+                      Last updated: {techUpdatesLastUpdated} • Next update: {techUpdatesNextUpdate}
+                    </>
+                  ) : (
+                    <>Loading latest tech updates...</>
+                  )}
+                </p>
+              </div>
+              <Button
+                onClick={handleRefreshTechUpdates}
+                disabled={isLoadingTechUpdates}
+                className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg shadow-green-500/25"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingTechUpdates ? 'animate-spin' : ''}`} />
+                {isLoadingTechUpdates ? 'Updating...' : 'Refresh Updates'}
+              </Button>
+            </div>
+
+            {isLoadingTechUpdates && techUpdates.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <RefreshCw className="w-16 h-16 text-green-500 animate-spin mb-4" />
+                <h3 className="text-xl font-bold text-slate-200 mb-2">Fetching Latest Tech Updates</h3>
+                <p className="text-slate-400">Getting today's technology news and announcements...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {techUpdates.map((update) => (
+                  <Card key={update.id} className="group hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-300 border border-slate-700/50 hover:border-green-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline" className="bg-gradient-to-r from-green-500/20 to-teal-500/20 border-green-500/50 text-green-400 text-xs">
+                              {update.category}
+                            </Badge>
+                            <Badge variant="outline" className={`text-xs ${getImpactColor(update.impact)}`}>
+                              {getImpactIcon(update.impact)}
+                              <span className="ml-1 capitalize">{update.impact}</span>
+                            </Badge>
+                          </div>
+                          <CardTitle className="text-lg mb-2 text-slate-100 group-hover:text-green-400 transition-colors line-clamp-2">
+                            {update.title}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
+                            <Badge variant="outline" className="border-teal-500/30 text-teal-400 bg-teal-500/10">
+                              {update.source}
+                            </Badge>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(update.timestamp).toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <CardDescription className="text-sm leading-relaxed text-slate-400 line-clamp-3">
+                        {update.summary}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1">
+                          {update.tags.map((tag: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700 hover:bg-green-500/20 hover:border-green-500/50 cursor-pointer">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-2">
+                          <Button 
+                            size="sm" 
+                            className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg shadow-green-500/25"
+                            onClick={() => window.open(update.url, '_blank')}
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Read More
+                          </Button>
+                          <Button size="sm" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-green-500/50">
+                            <Bookmark className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-green-500/50">
+                            <Share2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="reports" className="mt-6">
-            <div className="space-y-6">
-              {industryReports.map((report, index) => (
+            <div className="mb-6 flex items-center justify-between bg-gradient-to-r from-cyan-900/30 to-blue-900/30 p-4 rounded-xl border border-cyan-500/30">
+              <div>
+                <h3 className="text-lg font-bold text-slate-100 mb-1">Latest Industry Reports</h3>
+                <p className="text-sm text-slate-400">
+                  {reportsLastUpdated ? (
+                    <>Last updated: {reportsLastUpdated}</>
+                  ) : (
+                    <>Loading latest reports...</>
+                  )}
+                </p>
+              </div>
+              <Button
+                onClick={handleRefreshReports}
+                disabled={isLoadingReports}
+                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg shadow-cyan-500/25"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingReports ? 'animate-spin' : ''}`} />
+                {isLoadingReports ? 'Updating...' : 'Refresh Reports'}
+              </Button>
+            </div>
+
+            {isLoadingReports && industryReports.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <RefreshCw className="w-16 h-16 text-cyan-500 animate-spin mb-4" />
+                <h3 className="text-xl font-bold text-slate-200 mb-2">Fetching Latest Reports</h3>
+                <p className="text-slate-400">Getting the most recent industry insights from AI...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {industryReports.map((report, index) => (
                 <Card key={index} className="group hover:shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 border border-slate-700/50 hover:border-cyan-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm">
                   <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
                     <div className="flex items-start justify-between">
@@ -1325,7 +1413,8 @@ const IndustryTrends = () => {
                   </CardContent>
                 </Card>
               ))}
-            </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="emerging" className="mt-6">

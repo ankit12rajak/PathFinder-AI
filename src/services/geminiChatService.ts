@@ -10,7 +10,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export const getChatbotResponse = async (message: string): Promise<string> => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     
     const systemPrompt = `You are PathFinder AI Assistant, a helpful career guidance chatbot for students. You help with:
 

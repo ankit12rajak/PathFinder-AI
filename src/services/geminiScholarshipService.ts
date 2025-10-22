@@ -52,7 +52,7 @@ class GeminiScholarshipService {
     
     try {
       this.genAI = new GoogleGenerativeAI(apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
       console.log('✅ Gemini Scholarship service initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Gemini Scholarship service:', error);
