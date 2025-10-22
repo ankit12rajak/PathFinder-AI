@@ -11,6 +11,7 @@ import {
 interface Language {
   code: string;
   name: string;
+  nativeName: string;
   flag: string;
 }
 
@@ -18,9 +19,11 @@ const LanguageSelector = () => {
   const { i18n } = useTranslation();
 
   const languages: Language[] = [
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
-    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    { code: 'hi', name: 'Hindi', nativeName: 'हिंदी', flag: '🇮🇳' },
+    { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
+    { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+    { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' }, // Add Telugu here
   ];
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
@@ -34,7 +37,7 @@ const LanguageSelector = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           <Globe className="w-4 h-4" />
-          <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.name}</span>
+          <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.nativeName}</span>
           <span className="sm:hidden">{currentLanguage.flag}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -47,7 +50,7 @@ const LanguageSelector = () => {
           >
             <span className="flex items-center gap-2">
               <span>{language.flag}</span>
-              <span>{language.name}</span>
+              <span>{language.nativeName}</span>
             </span>
             {i18n.language === language.code && (
               <Check className="w-4 h-4 text-primary" />
