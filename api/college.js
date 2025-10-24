@@ -1,91 +1,128 @@
-const axios = require('axios');
+const express = require('express');
+const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 
-// Cache the college data
+// Cache for college data
 let cachedColleges = null;
-let cacheTime = null;
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-async function getCollegeData(baseUrl) {
-  // Check cache
-  if (cachedColleges && cacheTime && (Date.now() - cacheTime < CACHE_DURATION)) {
+// Load college data from JSON file
+function getCollegeData() {
+  if (cachedColleges) {
     return cachedColleges;
   }
 
   try {
-    // Fetch from public folder
-    const url = `${baseUrl}/data/colleges_500.json`;
-    const response = await axios.get(url, { timeout: 5000 });
-    cachedColleges = response.data;
-    cacheTime = Date.now();
-    return cachedColleges;
+    // Try loading from public/data first
+    const publicPath = path.join(__dirname, '../public/data/colleges_500.json');
+    if (fs.existsSync(publicPath)) {
+      const data = fs.readFileSync(publicPath, 'utf8');
+      cachedColleges = JSON.parse(data);
+      console.log(`✅ Loaded ${cachedColleges.length} colleges from public/data`);
+      return cachedColleges;
+    }
+
+    // Try loading from database folder
+    const dbPath = path.join(__dirname, '../database/colleges_500.json');
+    if (fs.existsSync(dbPath)) {
+      const data = fs.readFileSync(dbPath, 'utf8');
+      cachedColleges = JSON.parse(data);
+      console.log(`✅ Loaded ${cachedColleges.length} colleges from database`);
+      return cachedColleges;
+    }
+
+    console.warn('⚠️ College data file not found, using fallback data');
+    return getFallbackData();
   } catch (error) {
-    console.error('Error loading college data:', error.message);
-    
-    // Fallback: Return sample data if file not accessible
-    return [
-      {
-        id: 1,
-        name: "IIT Delhi",
-        location: "New Delhi",
-        type: "Government",
-        category: "Engineering",
-        ranking: 1,
-        fees: "2.5 LPA",
-        placement: "95%",
-        averagePackage: "18 LPA",
-        courses: ["B.Tech CSE", "B.Tech Mechanical"],
-        website: "https://home.iitd.ac.in"
-      },
-      {
-        id: 2,
-        name: "AIIMS Delhi",
-        location: "New Delhi",
-        type: "Government",
-        category: "Medical",
-        ranking: 1,
-        fees: "5000/year",
-        placement: "100%",
-        averagePackage: "15 LPA",
-        courses: ["MBBS", "MD"],
-        website: "https://www.aiims.edu"
-      }
-    ];
+    console.error('❌ Error loading college data:', error);
+    return getFallbackData();
   }
 }
 
-module.exports = async (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+function getFallbackData() {
+  return [
+    {
+      id: 1,
+      name: "IIT Delhi",
+      location: "New Delhi",
+      type: "Government",
+      category: "Engineering",
+      ranking: 1,
+      fees: "₹2.5 LPA",
+      averagePlacement: "₹18 LPA",
+      highestPlacement: "₹45 LPA",
+      placementRate: 95,
+      rating: 4.8,
+      infrastructure: 4.9,
+      faculty: 4.8,
+      placements: 4.9,
+      campusLife: 4.7,
+      courses: ["B.Tech CSE", "B.Tech Mechanical", "B.Tech Electrical"],
+      topRecruiters: ["Google", "Microsoft", "Amazon", "Goldman Sachs"],
+      website: "https://home.iitd.ac.in",
+      applyLink: "https://josaa.nic.in"
+    },
+    {
+      id: 2,
+      name: "AIIMS Delhi",
+      location: "New Delhi",
+      type: "Government",
+      category: "Medical",
+      ranking: 1,
+      fees: "₹5,000/year",
+      averagePlacement: "₹15 LPA",
+      highestPlacement: "₹25 LPA",
+      placementRate: 100,
+      rating: 4.9,
+      infrastructure: 4.8,
+      faculty: 4.9,
+      placements: 5.0,
+      campusLife: 4.6,
+      courses: ["MBBS", "MD", "MS"],
+      topRecruiters: ["AIIMS", "Max Hospital", "Apollo", "Fortis"],
+      website: "https://www.aiims.edu",
+      applyLink: "https://www.nta.ac.in/neet"
+    },
+    {
+      id: 3,
+      name: "IIT Bombay",
+      location: "Mumbai",
+      type: "Government",
+      category: "Engineering",
+      ranking: 2,
+      fees: "₹2.5 LPA",
+      averagePlacement: "₹20 LPA",
+      highestPlacement: "₹1.8 Cr",
+      placementRate: 96,
+      rating: 4.8,
+      infrastructure: 4.9,
+      faculty: 4.9,
+      placements: 4.9,
+      campusLife: 4.8,
+      courses: ["B.Tech CSE", "B.Tech Mechanical", "B.Tech Chemical"],
+      topRecruiters: ["Google", "Microsoft", "Goldman Sachs", "Apple"],
+      website: "https://www.iitb.ac.in",
+      applyLink: "https://josaa.nic.in"
+    }
+  ];
+}
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+// GET /api/colleges (with query parameters)
+router.get('/', (req, res) => {
   try {
-    // Get base URL from request
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const baseUrl = `${protocol}://${host}`;
+    const collegeData = getCollegeData();
 
-    const collegeData = await getCollegeData(baseUrl);
-
-    // Handle /top endpoint
-    if (req.url === '/api/colleges/top' || req.query.type === 'top') {
-      return res.status(200).json({
+    // Handle ?type=top
+    if (req.query.type === 'top') {
+      const topColleges = collegeData.slice(0, 10);
+      return res.json({
         success: true,
-        count: 10,
-        data: collegeData.slice(0, 10)
+        count: topColleges.length,
+        data: topColleges
       });
     }
 
-    // Handle /search endpoint
+    // Handle ?q=search_query
     if (req.query.q) {
       const query = req.query.q.toLowerCase();
       const results = collegeData.filter(college =>
@@ -93,14 +130,14 @@ module.exports = async (req, res) => {
         (college.location && college.location.toLowerCase().includes(query)) ||
         (college.category && college.category.toLowerCase().includes(query))
       );
-      return res.status(200).json({
+      return res.json({
         success: true,
         count: results.length,
         data: results.slice(0, 10)
       });
     }
 
-    // Return all colleges (with pagination)
+    // Handle pagination ?page=1&limit=50
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const startIndex = (page - 1) * limit;
@@ -108,7 +145,7 @@ module.exports = async (req, res) => {
 
     const paginatedData = collegeData.slice(startIndex, endIndex);
 
-    res.status(200).json({
+    res.json({
       success: true,
       total: collegeData.length,
       page,
@@ -117,11 +154,66 @@ module.exports = async (req, res) => {
       data: paginatedData
     });
   } catch (error) {
-    console.error('Error in colleges API:', error);
+    console.error('❌ Error in /api/colleges:', error);
     res.status(500).json({ 
       success: false,
       error: 'Failed to fetch colleges',
       message: error.message 
     });
   }
-};
+});
+
+// GET /api/colleges/top (alternative endpoint)
+router.get('/top', (req, res) => {
+  try {
+    const collegeData = getCollegeData();
+    const topColleges = collegeData.slice(0, 10);
+    res.json({
+      success: true,
+      count: topColleges.length,
+      data: topColleges
+    });
+  } catch (error) {
+    console.error('❌ Error in /api/colleges/top:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch top colleges',
+      message: error.message 
+    });
+  }
+});
+
+// GET /api/colleges/search (alternative endpoint)
+router.get('/search', (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: 'Search query is required'
+      });
+    }
+
+    const collegeData = getCollegeData();
+    const results = collegeData.filter(college =>
+      college.name.toLowerCase().includes(query.toLowerCase()) ||
+      (college.location && college.location.toLowerCase().includes(query.toLowerCase())) ||
+      (college.category && college.category.toLowerCase().includes(query.toLowerCase()))
+    );
+
+    res.json({
+      success: true,
+      count: results.length,
+      data: results.slice(0, 10)
+    });
+  } catch (error) {
+    console.error('❌ Error in /api/colleges/search:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Search failed',
+      message: error.message 
+    });
+  }
+});
+
+module.exports = router;

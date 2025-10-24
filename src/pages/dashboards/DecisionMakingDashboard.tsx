@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
-// Animation library
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchDeadlines } from "@/services/api"; // ← Import API function
 
 const DecisionMakingDashboard = () => {
   const navigate = useNavigate();
   const [deadlines, setDeadlines] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const mainFeatures = [
     {
@@ -94,44 +95,17 @@ const DecisionMakingDashboard = () => {
     { exam: "CLAT", progress: 45, color: "bg-orange-500", nextTest: "Legal Reasoning", rank: "National: 5,670" }
   ];
 
-  // Real-time deadlines state with error handling
+  // Fetch deadlines using API service
   useEffect(() => {
-    const fetchDeadlines = async () => {
+    const loadDeadlines = async () => {
       try {
         setLoading(true);
-        // Use fallback data if API is not available
-        const fallbackDeadlines = [
-          {
-            name: "JEE Main Registration",
-            date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
-            type: "registration"
-          },
-          {
-            name: "NEET Application",
-            date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-            type: "application"
-          },
-          {
-            name: "CUET Admit Card",
-            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-            type: "admit_card"
-          }
-        ];
-
-        let deadlinesData = fallbackDeadlines;
-
-        // Try to fetch from API, but use fallback if it fails
-        try {
-          const response = await fetch("http://localhost:3001/api/deadlines");
-          if (response.ok) {
-            deadlinesData = await response.json();
-          }
-        } catch (apiError) {
-          console.log("API not available, using fallback data");
-        }
-
+        setError(null);
+        
+        const data = await fetchDeadlines();
+        
         const today = new Date();
-        const formatted = deadlinesData.map((item) => {
+        const formatted = data.map((item: any) => {
           const deadlineDate = new Date(item.date);
           const diffTime = deadlineDate.getTime() - today.getTime();
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -155,15 +129,42 @@ const DecisionMakingDashboard = () => {
           };
         });
         setDeadlines(formatted);
-      } catch (error) {
-        console.error("Error fetching deadlines:", error);
-        setDeadlines([]);
+      } catch (err) {
+        console.error("Error loading deadlines:", err);
+        setError("Failed to load deadlines");
+        
+        // Fallback data in case of error
+        const fallbackDeadlines = [
+          {
+            name: "JEE Main Registration",
+            date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "upcoming",
+            timeLeft: "15 days left",
+            formattedDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }),
+          },
+          {
+            name: "NEET Application",
+            date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "upcoming",
+            timeLeft: "30 days left",
+            formattedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }),
+          },
+        ];
+        setDeadlines(fallbackDeadlines as any);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDeadlines();
+    loadDeadlines();
   }, []);
 
   const recentAchievements = [
@@ -373,6 +374,15 @@ const DecisionMakingDashboard = () => {
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                       <span className="ml-2">Loading deadlines...</span>
                     </motion.div>
+                  ) : error ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-8"
+                    >
+                      <p className="text-red-500 text-sm mb-2">{error}</p>
+                      <p className="text-muted-foreground text-xs">Showing fallback data</p>
+                    </motion.div>
                   ) : deadlines.length === 0 ? (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -384,7 +394,7 @@ const DecisionMakingDashboard = () => {
                   ) : (
                     <AnimatePresence>
                       <div className="space-y-3">
-                        {deadlines.slice(0, 5).map((dl, idx) => (
+                        {deadlines.slice(0, 5).map((dl: any, idx) => (
                           <motion.div
                             key={idx}
                             initial={{ opacity: 0, x: -20 }}
