@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Target, TrendingUp, DollarSign, Clock, Users, Building, Award, AlertCircle } from "lucide-react";
+import { Target, X, Building, Award, TrendingUp, AlertCircle, Clock, DollarSign } from "lucide-react"; // Ensure Award is imported
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,11 +7,17 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/DashboardLayout";
 import FlowchartDisplay from "@/components/FlowchartDisplay"; // Import the new component
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Import Gemini AI
+import jsPDF from "jspdf"; // Import jsPDF for PDF generation
 
 const CareerPathways = () => {
   const [selectedPathway, setSelectedPathway] = useState<string | null>(null);
   const [showFlowchart, setShowFlowchart] = useState(false);
   const [activeTab, setActiveTab] = useState("overview"); // New state for active tab
+  const [loadingReport, setLoadingReport] = useState(false); // State for report loading
+  const [reportData, setReportData] = useState<string | null>(null); // State for report data
+  const [error, setError] = useState<string | null>(null); // State for error handling
+  const [showPopup, setShowPopup] = useState(false); // State for popup display
 
   const pathways = [
     {
@@ -193,45 +199,118 @@ const CareerPathways = () => {
     setActiveTab("overview"); // Switch back to overview tab
   };
 
+  const generateDetailedReport = async () => {
+    setLoadingReport(true);
+    setError(null);
+
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      if (!apiKey) {
+        throw new Error("Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.");
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+      const prompt = `
+        You are an educational assistant. Generate a detailed comparison report for the following career pathways:
+        - Engineering
+        - Medical
+        - Commerce & Business
+        - Law
+
+        Include the following metrics:
+        - Job Market Demand
+        - Starting Salary
+        - Work-Life Balance
+        - Social Impact
+        - Growth Potential
+
+        Provide insights into pros, cons, and future trends for each pathway. Write the report in paragraph format.
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      // Set the report data as a paragraph
+      setReportData(text.trim());
+      setShowPopup(true); // Show the popup after generating the report
+    } catch (err: any) {
+      console.error("Error generating report:", err);
+      setError(err.message || "Failed to generate report.");
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
+  const downloadPDF = () => {
+    if (reportData) {
+      const doc = new jsPDF();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Detailed Comparison Report", 10, 10);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      doc.text(reportData, 10, 20, { maxWidth: 180 });
+      doc.save("CareerComparisonReport.pdf");
+    }
+  };
+
   return (
     <DashboardLayout 
       title="Career Pathway Explorer" 
       description="Analyze and compare different career paths with detailed insights"
     >
       <div className="p-6 space-y-8">
-        {/* Quick Comparison */}
+        {/* Generate Report Button */}
         <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6 border border-primary/20">
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
             <Target className="w-6 h-6" />
-            Quick Path Comparison
+            Generate Career Comparison Report
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Metric</th>
-                  <th className="text-center p-2">Engineering</th>
-                  <th className="text-center p-2">Medical</th>
-                  <th className="text-center p-2">Commerce</th>
-                  <th className="text-center p-2">Law</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comparisonMetrics.map((row, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="p-2 font-medium">{row.metric}</td>
-                    <td className="p-2 text-center">{row.engineering}/100</td>
-                    <td className="p-2 text-center">{row.medical}/100</td>
-                    <td className="p-2 text-center">{row.commerce}/100</td>
-                    <td className="p-2 text-center">{row.law}/100</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Button className="mt-4">Generate Detailed Comparison Report</Button>
+          <Button className="mt-4" onClick={generateDetailedReport}>
+            Generate Detailed Comparison Report
+          </Button>
+          {loadingReport && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-muted-foreground">Generating report...</p>
+            </div>
+          )}
+          {error && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-red-500">{error}</p>
+            </div>
+          )}
         </div>
 
+        {/* Popup for Detailed Report */}
+        {showPopup && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg shadow-lg p-6 max-w-3xl w-full text-white">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-primary">Detailed Comparison Report</h3>
+                <Button variant="ghost" onClick={() => setShowPopup(false)}>
+                  <X className="w-5 h-5 text-primary" />
+                </Button>
+              </div>
+              <div className="overflow-y-auto max-h-96 bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <p className="text-sm">{reportData}</p>
+              </div>
+              <div className="mt-4 flex justify-end gap-4">
+                <Button variant="outline" onClick={() => setShowPopup(false)}>
+                  Close
+                </Button>
+                <Button className="bg-primary text-white" onClick={downloadPDF}>
+                  Download PDF
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs for Overview and Detailed Analysis */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">Pathway Overview</TabsTrigger>
@@ -239,6 +318,7 @@ const CareerPathways = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            {/* Pathway Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pathways.map((pathway) => (
                 <Card 
@@ -287,7 +367,9 @@ const CareerPathways = () => {
             </div>
           </TabsContent>
 
+          {/* Detailed Analysis */}
           <TabsContent value="detailed" className="space-y-6">
+            {/* Flowchart and Detailed Analysis */}
             {showFlowchart && selectedPathway ? (
               <div className="space-y-6">
                 <Button onClick={handleBackToOverview} variant="outline">
@@ -306,6 +388,7 @@ const CareerPathways = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {/* Detailed Analysis Content */}
                   {(() => {
                     const pathway = pathways.find(p => p.id === selectedPathway);
                     if (!pathway) return null;

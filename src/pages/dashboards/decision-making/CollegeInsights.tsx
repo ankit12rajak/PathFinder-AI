@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Building, MapPin, Star, TrendingUp, AlertCircle } from "lucide-react"; // ← Add AlertCircle here
+import { Building, MapPin, Star, TrendingUp, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { fetchTopColleges, searchColleges as apiSearchColleges } from "@/services/api"; // ← Import API functions
 
 const trends = [
     {
@@ -51,18 +50,33 @@ const CollegeInsights = () => {
     const [error, setError] = useState<string | null>(null);
     const searchRef = useRef<HTMLInputElement>(null);
 
-    // Load initial colleges using API service
+    // Load colleges directly from JSON file
     useEffect(() => {
         const loadColleges = async () => {
             try {
                 setLoading(true);
                 setError(null);
-                const data = await fetchTopColleges();
-                setColleges(data);
-                setInitialColleges(data);
+                
+                // Fetch directly from public folder
+                const response = await fetch('/data/colleges_500.json');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load colleges: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                console.log(`✅ Loaded ${data.length} colleges from JSON file`);
+                
+                // Take top 10 colleges by default
+                const topColleges = data.slice(0, 10);
+                setColleges(topColleges);
+                setInitialColleges(data); // Store all colleges for search
+                
             } catch (err) {
                 console.error("Error loading colleges:", err);
-                setError("Failed to load colleges");
+                setError("Failed to load colleges from file");
+                
                 // Fallback data
                 const fallbackData = [
                     {
@@ -70,6 +84,7 @@ const CollegeInsights = () => {
                         name: "IIT Delhi",
                         location: "New Delhi",
                         type: "Government",
+                        category: "Engineering",
                         ranking: 1,
                         fees: "₹2.5 LPA",
                         averagePlacement: "₹18 LPA",
@@ -84,8 +99,51 @@ const CollegeInsights = () => {
                         topRecruiters: ["Google", "Microsoft", "Amazon", "Goldman Sachs"],
                         website: "https://home.iitd.ac.in",
                         applyLink: "https://josaa.nic.in"
+                    },
+                    {
+                        id: 2,
+                        name: "AIIMS Delhi",
+                        location: "New Delhi",
+                        type: "Government",
+                        category: "Medical",
+                        ranking: 1,
+                        fees: "₹5,000/year",
+                        averagePlacement: "₹15 LPA",
+                        highestPlacement: "₹25 LPA",
+                        placementRate: 100,
+                        rating: 4.9,
+                        infrastructure: 4.8,
+                        faculty: 4.9,
+                        placements: 5.0,
+                        campusLife: 4.6,
+                        courses: ["MBBS", "MD", "MS"],
+                        topRecruiters: ["AIIMS", "Max Hospital", "Apollo", "Fortis"],
+                        website: "https://www.aiims.edu",
+                        applyLink: "https://www.nta.ac.in/neet"
+                    },
+                    {
+                        id: 3,
+                        name: "IIT Bombay",
+                        location: "Mumbai",
+                        type: "Government",
+                        category: "Engineering",
+                        ranking: 2,
+                        fees: "₹2.5 LPA",
+                        averagePlacement: "₹20 LPA",
+                        highestPlacement: "₹1.8 Cr",
+                        placementRate: 96,
+                        rating: 4.8,
+                        infrastructure: 4.9,
+                        faculty: 4.9,
+                        placements: 4.9,
+                        campusLife: 4.8,
+                        courses: ["B.Tech CSE", "B.Tech Mechanical", "B.Tech Chemical"],
+                        topRecruiters: ["Google", "Microsoft", "Goldman Sachs", "Apple"],
+                        website: "https://www.iitb.ac.in",
+                        applyLink: "https://josaa.nic.in"
                     }
                 ];
+                
                 setColleges(fallbackData);
                 setInitialColleges(fallbackData);
             } finally {
@@ -96,28 +154,31 @@ const CollegeInsights = () => {
         loadColleges();
     }, []);
 
-    // Search API call with debounce
+    // Client-side search with debounce
     useEffect(() => {
         if (!searchTerm.trim()) {
             setSearchResults([]);
             setShowDropdown(false);
             setIsSearchMode(false);
-            setColleges(initialColleges);
+            setColleges(initialColleges.slice(0, 10)); // Show top 10 when search is cleared
             return;
         }
 
         setIsSearchMode(true);
-        const timer = setTimeout(async () => {
-            try {
-                const data = await apiSearchColleges(searchTerm);
-                setSearchResults(data);
-                setShowDropdown(true);
-            } catch (error) {
-                console.error('Search error:', error);
-                setSearchResults([]);
-                setShowDropdown(false);
-            }
+        const timer = setTimeout(() => {
+            // Perform local search on initialColleges
+            const query = searchTerm.toLowerCase();
+            const results = initialColleges.filter(college =>
+                college.name.toLowerCase().includes(query) ||
+                (college.location && college.location.toLowerCase().includes(query)) ||
+                (college.category && college.category.toLowerCase().includes(query))
+            );
+            
+            console.log(`🔍 Found ${results.length} results for "${searchTerm}"`);
+            setSearchResults(results.slice(0, 10)); // Show top 10 results
+            setShowDropdown(true);
         }, 300);
+        
         return () => clearTimeout(timer);
     }, [searchTerm, initialColleges]);
 
@@ -145,14 +206,14 @@ const CollegeInsights = () => {
         setSearchResults([]);
         setShowDropdown(false);
         setIsSearchMode(false);
-        setColleges(initialColleges);
+        setColleges(initialColleges.slice(0, 10)); // Show top 10
         if (searchRef.current) {
             searchRef.current.focus();
         }
     };
 
     // Filter logic
-    const filteredColleges = (isSearchMode ? colleges : initialColleges).filter((college) => {
+    const filteredColleges = (isSearchMode ? colleges : colleges).filter((college) => {
         const matchesSearch = isSearchMode 
             ? (college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                (college.location && college.location.toLowerCase().includes(searchTerm.toLowerCase())))
@@ -162,11 +223,33 @@ const CollegeInsights = () => {
         if (selectedFilter === "engineering")
             return (
                 matchesSearch &&
-                college.courses?.some((course: string) => course.includes("Computer") || course.includes("Electrical") || course.includes("Mechanical"))
+                college.courses?.some((course: string) => 
+                    course.toLowerCase().includes("computer") || 
+                    course.toLowerCase().includes("electrical") || 
+                    course.toLowerCase().includes("mechanical") ||
+                    course.toLowerCase().includes("tech") ||
+                    course.toLowerCase().includes("engineering")
+                )
             );
-        if (selectedFilter === "medical") return matchesSearch && college.courses?.some((course: string) => course.includes("MBBS") || course.includes("MD"));
-        if (selectedFilter === "management") return matchesSearch && college.courses?.some((course: string) => course.includes("MBA"));
-        if (selectedFilter === "law") return matchesSearch && college.courses?.some((course: string) => course.includes("LLB") || course.includes("LLM"));
+        if (selectedFilter === "medical") 
+            return matchesSearch && college.courses?.some((course: string) => 
+                course.toLowerCase().includes("mbbs") || 
+                course.toLowerCase().includes("md") ||
+                course.toLowerCase().includes("medical") ||
+                course.toLowerCase().includes("medicine")
+            );
+        if (selectedFilter === "management") 
+            return matchesSearch && college.courses?.some((course: string) => 
+                course.toLowerCase().includes("mba") ||
+                course.toLowerCase().includes("bba") ||
+                course.toLowerCase().includes("management")
+            );
+        if (selectedFilter === "law") 
+            return matchesSearch && college.courses?.some((course: string) => 
+                course.toLowerCase().includes("llb") || 
+                course.toLowerCase().includes("llm") ||
+                course.toLowerCase().includes("law")
+            );
         return matchesSearch;
     });
 
@@ -231,11 +314,6 @@ const CollegeInsights = () => {
                                             </div>
                                         </li>
                                     ))}
-                                    {!searchTerm && (
-                                        <li className="px-4 py-2 text-center text-sm text-muted-foreground border-t">
-                                            Clear search to see all colleges
-                                        </li>
-                                    )}
                                 </motion.ul>
                             )}
                         </AnimatePresence>

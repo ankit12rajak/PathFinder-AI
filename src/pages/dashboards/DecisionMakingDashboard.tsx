@@ -7,11 +7,11 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchDeadlines } from "@/services/api"; // ← Import API function
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const DecisionMakingDashboard = () => {
   const navigate = useNavigate();
-  const [deadlines, setDeadlines] = useState([]);
+  const [deadlines, setDeadlines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,23 +95,93 @@ const DecisionMakingDashboard = () => {
     { exam: "CLAT", progress: 45, color: "bg-orange-500", nextTest: "Legal Reasoning", rank: "National: 5,670" }
   ];
 
-  // Fetch deadlines using API service
+  // Fetch deadlines using Gemini AI
   useEffect(() => {
     const loadDeadlines = async () => {
       try {
         setLoading(true);
         setError(null);
+
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         
-        const data = await fetchDeadlines();
+        if (!apiKey) {
+          throw new Error("Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file");
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+        const currentDate = new Date().toLocaleDateString('en-IN', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+
+        const prompt = `You are an educational assistant. Today's date is ${currentDate}.
+
+Please provide the upcoming important exam deadlines for Indian competitive exams in 2024-2025 for the following categories:
+- JEE Main (Registration, Application, Exam dates)
+- NEET (Registration, Application, Exam dates)
+- CUET (Registration, Application, Exam dates)
+- CLAT (Registration, Application, Exam dates)
+- GATE (Registration, Application, Exam dates)
+- CAT (Registration, Application, Exam dates)
+
+Return ONLY a valid JSON array with this EXACT format (no markdown, no backticks, no explanation):
+[
+  {
+    "name": "JEE Main Registration",
+    "date": "2025-02-15",
+    "category": "Engineering",
+    "importance": "high"
+  },
+  {
+    "name": "NEET Application Deadline",
+    "date": "2025-03-20",
+    "category": "Medical",
+    "importance": "high"
+  }
+]
+
+Important: 
+- Use ONLY future dates from ${currentDate}
+- Use ISO date format (YYYY-MM-DD)
+- Include 8-10 upcoming deadlines
+- Do not include any markdown formatting
+- Return raw JSON only`;
+
+        console.log("🤖 Fetching deadlines from Gemini AI...");
         
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        console.log("📝 Gemini Response:", text);
+
+        // Clean the response - remove markdown code blocks if present
+        let cleanedText = text.trim();
+        cleanedText = cleanedText.replace(/```json\n?/g, '');
+        cleanedText = cleanedText.replace(/```\n?/g, '');
+        cleanedText = cleanedText.trim();
+
+        const deadlinesData = JSON.parse(cleanedText);
+        
+        if (!Array.isArray(deadlinesData)) {
+          throw new Error("Invalid response format from Gemini AI");
+        }
+
+        // Process deadlines
         const today = new Date();
-        const formatted = data.map((item: any) => {
+        const formatted = deadlinesData.map((item: any) => {
           const deadlineDate = new Date(item.date);
           const diffTime = deadlineDate.getTime() - today.getTime();
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
           let status = "upcoming";
           if (diffDays < 0) status = "expired";
           else if (diffDays === 0) status = "today";
+          else if (diffDays <= 7) status = "urgent";
+
           return {
             ...item,
             status,
@@ -119,46 +189,77 @@ const DecisionMakingDashboard = () => {
               status === "expired"
                 ? "Expired"
                 : status === "today"
-                ? "Today"
-                : `${diffDays} days left`,
+                ? "Today!"
+                : diffDays === 1
+                ? "Tomorrow"
+                : diffDays <= 7
+                ? `${diffDays} days left`
+                : `${diffDays} days`,
             formattedDate: deadlineDate.toLocaleDateString("en-IN", {
-              month: "short",
               day: "numeric",
+              month: "short",
               year: "numeric",
             }),
+            daysRemaining: diffDays
           };
         });
-        setDeadlines(formatted);
-      } catch (err) {
-        console.error("Error loading deadlines:", err);
-        setError("Failed to load deadlines");
+
+        // Sort by date (nearest first) and filter out expired
+        const sortedDeadlines = formatted
+          .filter((dl: any) => dl.status !== "expired")
+          .sort((a: any, b: any) => a.daysRemaining - b.daysRemaining);
+
+        console.log(`✅ Loaded ${sortedDeadlines.length} upcoming deadlines from Gemini AI`);
+        setDeadlines(sortedDeadlines);
+
+      } catch (err: any) {
+        console.error("❌ Error loading deadlines from Gemini:", err);
+        setError(err.message || "Failed to load deadlines from AI");
         
-        // Fallback data in case of error
+        // Fallback data
+        const today = new Date();
         const fallbackDeadlines = [
           {
             name: "JEE Main Registration",
-            date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+            date: new Date(today.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+            category: "Engineering",
+            importance: "high",
             status: "upcoming",
             timeLeft: "15 days left",
-            formattedDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", {
-              month: "short",
+            formattedDate: new Date(today.getTime() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", {
               day: "numeric",
+              month: "short",
               year: "numeric",
             }),
           },
           {
             name: "NEET Application",
-            date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            date: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            category: "Medical",
+            importance: "high",
             status: "upcoming",
             timeLeft: "30 days left",
-            formattedDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", {
-              month: "short",
+            formattedDate: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", {
               day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+          },
+          {
+            name: "CUET Registration",
+            date: new Date(today.getTime() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+            category: "University",
+            importance: "medium",
+            status: "upcoming",
+            timeLeft: "45 days",
+            formattedDate: new Date(today.getTime() + 45 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
               year: "numeric",
             }),
           },
         ];
-        setDeadlines(fallbackDeadlines as any);
+        setDeadlines(fallbackDeadlines);
       } finally {
         setLoading(false);
       }
@@ -355,24 +456,37 @@ const DecisionMakingDashboard = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
-            {/* Critical Deadlines */}
-            <Card className="feature-card">
-              <CardHeader>
-                <CardTitle className="flex items-center text-red-500">
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  Critical Deadlines
-                </CardTitle>
+            {/* Critical Deadlines - AI Powered */}
+            <Card className="feature-card border-2 border-red-200/50 dark:border-red-800/50">
+              <CardHeader className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center text-red-600 dark:text-red-400">
+                    <AlertCircle className="w-5 h-5 mr-2" />
+                    Critical Deadlines
+                  </CardTitle>
+                  <Badge variant="secondary" className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                    🤖 AI Powered
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Real-time updates from Gemini AI
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="space-y-3">
                   {loading ? (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="flex items-center justify-center py-8"
+                      className="flex flex-col items-center justify-center py-8"
                     >
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      <span className="ml-2">Loading deadlines...</span>
+                      <div className="relative">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        <Brain className="w-6 h-6 absolute top-3 left-3 text-primary animate-pulse" />
+                      </div>
+                      <span className="ml-2 mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Fetching from Gemini AI...
+                      </span>
                     </motion.div>
                   ) : error ? (
                     <motion.div
@@ -380,41 +494,79 @@ const DecisionMakingDashboard = () => {
                       animate={{ opacity: 1 }}
                       className="text-center py-8"
                     >
-                      <p className="text-red-500 text-sm mb-2">{error}</p>
-                      <p className="text-muted-foreground text-xs">Showing fallback data</p>
+                      <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-2" />
+                      <p className="text-red-600 dark:text-red-400 text-sm mb-2 font-medium">{error}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs mb-3">Showing fallback data</p>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => window.location.reload()}
+                        className="text-xs border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950/30"
+                      >
+                        Retry
+                      </Button>
                     </motion.div>
                   ) : deadlines.length === 0 ? (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-center py-8 text-muted-foreground"
+                      className="text-center py-8"
                     >
-                      No upcoming deadlines
+                      <CheckCircle className="w-10 h-10 mx-auto mb-2 text-green-500" />
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No urgent deadlines</p>
+                      <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">You&apos;re all caught up! 🎉</p>
                     </motion.div>
                   ) : (
                     <AnimatePresence>
-                      <div className="space-y-3">
-                        {deadlines.slice(0, 5).map((dl: any, idx) => (
+                      <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+                        {deadlines.slice(0, 8).map((dl: any, idx) => (
                           <motion.div
                             key={idx}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 * idx }}
-                            className={`flex items-center justify-between p-4 rounded-lg border ${
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ delay: 0.05 * idx }}
+                            className={`flex items-start justify-between p-4 rounded-lg border-2 transition-all hover:shadow-md ${
                               dl.status === 'today' 
-                                ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' 
+                                ? 'bg-red-100 border-red-400 dark:bg-red-900/50 dark:border-red-600 shadow-lg' 
+                                : dl.status === 'urgent'
+                                ? 'bg-orange-100 border-orange-400 dark:bg-orange-900/40 dark:border-orange-600'
                                 : dl.status === 'expired'
-                                ? 'bg-gray-50 border-gray-200 dark:bg-gray-800/20 dark:border-gray-700 opacity-60'
-                                : 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800'
+                                ? 'bg-gray-100 border-gray-300 dark:bg-gray-800/40 dark:border-gray-600 opacity-60'
+                                : 'bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700'
                             }`}
                           >
-                            <div>
-                              <p className="font-semibold text-sm">{dl.name}</p>
-                              <p className="text-xs text-muted-foreground">{dl.formattedDate}</p>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className="font-bold text-base text-gray-900 dark:text-black">{dl.name}</p>
+                                {dl.importance === 'high' && (
+                                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse flex-shrink-0"></span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Calendar className="w-4 h-4 flex-shrink-0 text-primary dark:text-primary-light" />
+                                <span className="font-bold text-base text-primary dark:text-primary-light">{dl.formattedDate}</span>
+                              </div>
+                              {dl.category && (
+                                <Badge variant="outline" className="mt-1 text-xs border-2 border-gray-600 dark:border-gray-400 text-gray-900 dark:text-gray-100 font-semibold">
+                                  {dl.category}
+                                </Badge>
+                              )}
                             </div>
                             <Badge 
-                              variant={dl.status === 'today' ? 'destructive' : dl.status === 'expired' ? 'secondary' : 'default'}
-                              className="text-xs"
+                              variant={
+                                dl.status === 'today' ? 'destructive' : 
+                                dl.status === 'urgent' ? 'default' :
+                                dl.status === 'expired' ? 'secondary' : 
+                                'outline'
+                              }
+                              className={`text-xs whitespace-nowrap ml-2 flex-shrink-0 font-bold ${
+                                dl.status === 'today' ? 'animate-pulse bg-red-600 text-white border-0 text-sm' : 
+                                dl.status === 'urgent' ? 'bg-orange-600 text-white border-0 text-sm' :
+                                dl.status === 'expired' ? 'bg-gray-600 text-white border-0 text-sm' :
+                                 'bg-blue-600 text-white border-0 text-sm'
+                                                          
+                              }`}
                             >
                               {dl.timeLeft}
                             </Badge>
@@ -427,93 +579,6 @@ const DecisionMakingDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Recent Achievements */}
-            <Card className="feature-card">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-                  Recent Wins
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentAchievements.map((achievement, index) => {
-                    const IconComponent = achievement.icon;
-                    return (
-                      <motion.div 
-                        key={index} 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1 * index }}
-                        className="flex items-center space-x-3 p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                          <IconComponent className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">{achievement.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {achievement.score && `Score: ${achievement.score}`}
-                            {achievement.streak && `${achievement.streak} streak`}
-                            {achievement.rank && `${achievement.rank} in ${achievement.exam}`}
-                          </p>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Weekly Performance */}
-            <Card className="feature-card">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  This Week
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="text-sm">Study Hours</span>
-                    <span className="font-medium">18.5 hrs</span>
-                  </motion.div>
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="text-sm">Mock Tests</span>
-                    <span className="font-medium">8 completed</span>
-                  </motion.div>
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="text-sm">Avg Score</span>
-                    <span className="font-medium text-primary">92.3%</span>
-                  </motion.div>
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="text-sm">Rank Improvement</span>
-                    <span className="font-medium text-green-500">↑ 245 positions</span>
-                  </motion.div>
-                </div>
-              </CardContent>
-            </Card>
           </motion.div>
         </div>
       </div>
