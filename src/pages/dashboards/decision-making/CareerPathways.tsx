@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Target, X, Building, Award, TrendingUp, AlertCircle, Clock, DollarSign } from "lucide-react"; // Ensure Award is imported
+import { Target, X, Building, Award, TrendingUp, AlertCircle, Clock, DollarSign, Brain } from "lucide-react"; // Added Brain icon
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -211,7 +211,7 @@ const CareerPathways = () => {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `
         You are an educational assistant. Generate a detailed comparison report for the following career pathways:
@@ -270,14 +270,17 @@ const CareerPathways = () => {
             <Target className="w-6 h-6" />
             Generate Career Comparison Report
           </h2>
-          <Button className="mt-4" onClick={generateDetailedReport}>
-            Generate Detailed Comparison Report
+          <Button className="mt-4 flex items-center gap-2" onClick={generateDetailedReport} disabled={loadingReport}>
+            <Brain className="w-5 h-5 text-primary" />
+            {loadingReport ? (
+              <span className="flex items-center gap-2">
+                Generating...
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-primary"></div>
+              </span>
+            ) : (
+              "Generate Detailed Comparison Report"
+            )}
           </Button>
-          {loadingReport && (
-            <div className="mt-4 text-center">
-              <p className="text-sm text-muted-foreground">Generating report...</p>
-            </div>
-          )}
           {error && (
             <div className="mt-4 text-center">
               <p className="text-sm text-red-500">{error}</p>
