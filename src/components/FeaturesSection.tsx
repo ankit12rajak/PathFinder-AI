@@ -4,7 +4,6 @@ import {
   BookOpen, 
   TrendingUp, 
   Users, 
-  Award,
   Lightbulb,
   BarChart3,
   Compass,
@@ -12,85 +11,88 @@ import {
   Shield,
   Zap
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const FeaturesSection = () => {
+  const { t } = useTranslation();
+
   const mainFeatures = [
     {
       icon: Brain,
-      title: "AI-Powered Assessment",
-      description: "Advanced algorithms analyze your skills, interests, and personality to provide personalized recommendations.",
+      title: t('features.main.aiAssessment.title'),
+      description: t('features.main.aiAssessment.description'),
       color: "text-primary"
     },
     {
       icon: Compass,
-      title: "Career Path Mapping",
-      description: "Visualize clear roadmaps for different career paths with required skills and milestones.",
+      title: t('features.main.careerMapping.title'),
+      description: t('features.main.careerMapping.description'),
       color: "text-secondary"
     },
     {
       icon: TrendingUp,
-      title: "Market Intelligence",
-      description: "Real-time insights into job market trends, salary expectations, and emerging opportunities.",
+      title: t('features.main.marketIntelligence.title'),
+      description: t('features.main.marketIntelligence.description'),
       color: "text-accent"
     },
     {
       icon: BookOpen,
-      title: "Skill Development",
-      description: "Curated learning paths and resources to build the skills you need for your chosen career.",
+      title: t('features.main.skillDevelopment.title'),
+      description: t('features.main.skillDevelopment.description'),
       color: "text-primary"
     }
   ];
 
   const categoryFeatures = [
     {
-      category: "Class 8-10",
-      subtitle: "Awareness & Discovery",
+      category: t('features.categories.class8to10.title'),
+      subtitle: t('features.categories.class8to10.subtitle'),
       icon: Lightbulb,
       features: [
-        "Aptitude tests & personality quizzes",
-        "Career awareness modules",
-        "Skill starter packs",
-        "Stress management guides",
-        "Gamified learning challenges"
+        t('features.categories.class8to10.features.aptitudeTests'),
+        t('features.categories.class8to10.features.careerAwareness'),
+        t('features.categories.class8to10.features.skillStarter'),
+        t('features.categories.class8to10.features.stressManagement'),
+        t('features.categories.class8to10.features.gamifiedLearning')
       ],
       color: "border-primary/30 bg-primary/5"
     },
     {
-      category: "Class 11-12", 
-      subtitle: "Decision Making",
+      category: t('features.categories.class11to12.title'),
+      subtitle: t('features.categories.class11to12.subtitle'),
       icon: Target,
       features: [
-        "Career pathway explorer",
-        "Competitive exam prep roadmap",
-        "Alternative career options",
-        "College & branch insights",
-        "Peer & mentor interaction"
+        t('features.categories.class11to12.features.pathwayExplorer'),
+        t('features.categories.class11to12.features.examPrep'),
+        t('features.categories.class11to12.features.alternativeOptions'),
+        t('features.categories.class11to12.features.collegeInsights'),
+        t('features.categories.class11to12.features.peerInteraction')
       ],
       color: "border-secondary/30 bg-secondary/5"
     },
     {
-      category: "Post-12th",
-      subtitle: "College Admission",
+      category: t('features.categories.post12th.title'),
+      subtitle: t('features.categories.post12th.subtitle'),
       icon: BarChart3,
       features: [
-        "College comparison tool",
-        "Career vs Interest matchmaker",
-        "ROI calculator",
-        "What If simulator",
-        "Scholarship & funding guides"
+        t('features.categories.post12th.features.collegeTool'),
+        t('features.categories.post12th.features.matchmaker'),
+        t('features.categories.post12th.features.roiCalculator'),
+        t('features.categories.post12th.features.simulator'),
+        t('features.categories.post12th.features.scholarshipGuides')
       ],
       color: "border-accent/30 bg-accent/5"
     },
     {
-      category: "College Students",
-      subtitle: "Skill Development",
+      category: t('features.categories.college.title'),
+      subtitle: t('features.categories.college.subtitle'),
       icon: Rocket,
       features: [
-        "Skill gap analyzer",
-        "Personalized learning paths",
-        "Industry trends dashboard",
-        "Internship opportunities",
-        "Placement readiness kit"
+        t('features.categories.college.features.gapAnalyzer'),
+        t('features.categories.college.features.learningPaths'),
+        t('features.categories.college.features.trendsDashboard'),
+        t('features.categories.college.features.internships'),
+        t('features.categories.college.features.placementKit')
       ],
       color: "border-primary/30 bg-primary/5"
     }
@@ -103,15 +105,14 @@ const FeaturesSection = () => {
         <div className="text-center mb-20">
           <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6">
             <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Powerful Features</span>
+            <span className="text-sm font-medium text-primary">{t('features.badge')}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-            Everything You Need for
-            <span className="text-glow block">Career Success</span>
+            {t('features.heading.line1')}
+            <span className="text-glow block">{t('features.heading.line2')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our comprehensive platform combines cutting-edge AI with expert career guidance 
-            to provide personalized recommendations for every stage of your journey.
+            {t('features.description')}
           </p>
         </div>
 
@@ -131,11 +132,11 @@ const FeaturesSection = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 bg-secondary/10 border border-secondary/20 rounded-full px-4 py-2 mb-6">
             <Users className="w-4 h-4 text-secondary" />
-            <span className="text-sm font-medium text-secondary">Tailored for Every Student</span>
+            <span className="text-sm font-medium text-secondary">{t('features.categorySection.badge')}</span>
           </div>
           <h3 className="text-3xl sm:text-4xl font-bold mb-6">
-            Specialized Features by
-            <span className="text-glow block">Student Category</span>
+            {t('features.categorySection.heading.line1')}
+            <span className="text-glow block">{t('features.categorySection.heading.line2')}</span>
           </h3>
         </div>
 

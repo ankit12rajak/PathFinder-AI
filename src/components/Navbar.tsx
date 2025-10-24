@@ -2,32 +2,51 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "./LanguageSelector";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const navItems = [
-    { name: "Home", href: "/" },
-    { name: "Features", href: "#features" },
-    { name: "Categories", href: "#categories" },
-    { name: "About", href: "#about" },
+    { name: t('navbar.home'), href: "/" },
+    { name: t('navbar.features'), href: "#features" },
+    { name: t('navbar.categories'), href: "#categories" },
+    { name: t('navbar.about'), href: "#about" },
   ];
 
   const dashboards = [
-    { name: "Class 8-10", href: "/auth", category: "Awareness" },
-    { name: "Class 11-12", href: "/auth", category: "Preparation" },
-    { name: "Post-12th", href: "/auth", category: "Admission" },
-    { name: "College", href: "/auth", category: "Development" },
+    { 
+      name: t('navbar.dashboard.class8to10'), 
+      href: "/dashboard/early-stage", 
+      category: t('navbar.category.awareness') 
+    },
+    { 
+      name: t('navbar.dashboard.class11to12'), 
+      href: "/dashboard/decision-making", 
+      category: t('navbar.category.preparation') 
+    },
+    { 
+      name: t('navbar.dashboard.post12th'), 
+      href: "/dashboard/college-admission", 
+      category: t('navbar.category.admission') 
+    },
+    { 
+      name: t('navbar.dashboard.college'), 
+      href: "/dashboard/skill-development", 
+      category: t('navbar.category.development') 
+    },
   ];
 
   const handleSignIn = () => {
-    navigate("/auth"); // Navigate to the Auth page for Sign In
+    navigate("/auth");
   };
 
   const handleGetStarted = () => {
-    navigate("/auth"); // Navigate to the Auth page for Get Started
+    navigate("/auth");
   };
 
   return (
@@ -39,12 +58,12 @@ const Navbar = () => {
             <div className="relative">
               <img 
                 src="/logo.png" 
-                alt="SkillAdvisor Logo" 
+                alt="PathFinderAI Logo" 
                 className="w-20 h-20 group-hover:scale-110 transition-transform duration-200" 
               />
               <Sparkles className="w-6 h-6 text-secondary absolute top-1 -left-1 animate-pulse" />
             </div>
-            <span className="text-xl font-bold text-glow">PathFinderAI</span>
+            <span className="text-xl font-bold text-glow">{t('navbar.logo')}</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -62,7 +81,7 @@ const Navbar = () => {
             {/* Dashboard Dropdown */}
             <div className="relative group">
               <button className="text-foreground/80 hover:text-primary transition-colors font-medium">
-                Dashboards
+                {t('navbar.dashboards')}
               </button>
               <div className="absolute top-full left-0 mt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                 <div className="feature-card p-4 space-y-2">
@@ -72,7 +91,7 @@ const Navbar = () => {
                       to={dashboard.href}
                       className="block p-3 rounded-lg hover:bg-primary/10 transition-colors group/item"
                     >
-                      <div className="font-medium text-foreground group-hover/item:text-primary">
+                      <div className="font-medium text-foreground group-hover:item:text-primary">
                         {dashboard.name}
                       </div>
                       <div className="text-sm text-muted-foreground">
@@ -83,20 +102,24 @@ const Navbar = () => {
                 </div>
               </div>
             </div>
+
+            {/* Language Selector */}
+            <LanguageSelector />
           </div>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <Button variant="ghost" className="text-foreground/80" onClick={handleSignIn}>
-              Sign In
+              {t('navbar.signIn')}
             </Button>
             <button className="btn-hero" onClick={handleGetStarted}>
-              Get Started
+              {t('navbar.getStarted')}
             </button>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-2">
+            <LanguageSelector />
             <Button
               variant="ghost"
               size="icon"
@@ -124,7 +147,7 @@ const Navbar = () => {
               
               <div className="border-t border-border/50 mt-4 pt-4">
                 <div className="text-sm font-medium text-muted-foreground px-3 mb-2">
-                  Dashboards
+                  {t('navbar.dashboards')}
                 </div>
                 {dashboards.map((dashboard) => (
                   <Link
@@ -133,17 +156,18 @@ const Navbar = () => {
                     className="block px-3 py-2 text-foreground/80 hover:text-primary transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    {dashboard.name}
+                    <div className="font-medium">{dashboard.name}</div>
+                    <div className="text-xs text-muted-foreground">{dashboard.category}</div>
                   </Link>
                 ))}
               </div>
               
               <div className="border-t border-border/50 mt-4 pt-4 space-y-2">
                 <button className="w-full btn-secondary text-left" onClick={handleSignIn}>
-                  Sign In
+                  {t('navbar.signIn')}
                 </button>
                 <button className="w-full btn-hero text-center" onClick={handleGetStarted}>
-                  Get Started
+                  {t('navbar.getStarted')}
                 </button>
               </div>
             </div>

@@ -2,16 +2,18 @@ import { ArrowRight, Sparkles, Target, Users, TrendingUp, X, Play } from "lucide
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-image.jpg";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const stats = [
-    { value: "50K+", label: "Students Guided", icon: Users },
-    { value: "95%", label: "Success Rate", icon: Target },
-    { value: "200+", label: "Career Paths", icon: TrendingUp },
+    { value: "50K+", label: t('hero.stats.studentsGuided'), icon: Users },
+    { value: "95%", label: t('hero.stats.successRate'), icon: Target },
+    { value: "200+", label: t('hero.stats.careerPaths'), icon: TrendingUp },
   ];
 
   const handleStartJourney = () => {
@@ -50,18 +52,17 @@ const HeroSection = () => {
               <div className="space-y-6">
                 <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">AI-Powered Career Guidance</span>
+                  <span className="text-sm font-medium text-primary">{t('hero.badge')}</span>
                 </div>
                 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-                  Navigate Your
-                  <span className="text-glow block">Future Career</span>
-                  with AI Precision
+                  {t('hero.heading.line1')}
+                  <span className="text-glow block">{t('hero.heading.line2')}</span>
+                  {t('hero.heading.line3')}
                 </h1>
                 
                 <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">
-                  Personalized career guidance powered by advanced AI. Discover your strengths, 
-                  explore career paths, and develop the skills needed for tomorrow's job market.
+                  {t('hero.description')}
                 </p>
               </div>
 
@@ -70,7 +71,7 @@ const HeroSection = () => {
                   onClick={handleStartJourney}
                   className="btn-hero flex items-center space-x-2 justify-center hover:scale-105 transition-transform duration-300"
                 >
-                  <span>Start Your Journey</span>
+                  <span>{t('hero.buttons.startJourney')}</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
                 <button 
@@ -78,7 +79,7 @@ const HeroSection = () => {
                   className="btn-secondary flex items-center space-x-2 justify-center hover:scale-105 transition-transform duration-300"
                 >
                   <Play className="w-5 h-5" />
-                  <span>Watch Demo</span>
+                  <span>{t('hero.buttons.watchDemo')}</span>
                 </button>
               </div>
 
@@ -101,7 +102,7 @@ const HeroSection = () => {
               <div className="relative rounded-2xl overflow-hidden">
                 <img 
                   src={heroImage} 
-                  alt="AI Career Guidance Platform" 
+                  alt={t('hero.imageAlt')}
                   className="w-full h-auto object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
@@ -111,14 +112,14 @@ const HeroSection = () => {
               <div className="absolute -top-4 -right-4 feature-card p-4 animate-pulse">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium">AI Active</span>
+                  <span className="text-sm font-medium">{t('hero.floatingCards.aiActive')}</span>
                 </div>
               </div>
               
               <div className="absolute -bottom-4 -left-4 feature-card p-4">
                 <div className="text-sm">
-                  <div className="font-semibold text-primary">Career Match</div>
-                  <div className="text-muted-foreground">96% Accuracy</div>
+                  <div className="font-semibold text-primary">{t('hero.floatingCards.careerMatch')}</div>
+                  <div className="text-muted-foreground">96% {t('hero.floatingCards.accuracy')}</div>
                 </div>
               </div>
             </div>
@@ -144,8 +145,8 @@ const HeroSection = () => {
                   <Play className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">PathFinder AI Demo</h3>
-                  <p className="text-sm text-muted-foreground">Discover how AI guides your career journey</p>
+                  <h3 className="font-semibold text-lg">{t('hero.modal.title')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('hero.modal.description')}</p>
                 </div>
               </div>
               <Button
@@ -163,7 +164,7 @@ const HeroSection = () => {
               <iframe
                 className="absolute top-0 left-0 w-full h-full"
                 src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-                title="PathFinder AI Demo Video"
+                title={t('hero.modal.title')}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -174,7 +175,7 @@ const HeroSection = () => {
             <div className="p-4 bg-muted/30 border-t">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  Ready to start your journey?
+                  {t('hero.modal.footer')}
                 </div>
                 <Button 
                   onClick={() => {
@@ -183,7 +184,7 @@ const HeroSection = () => {
                   }}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  Get Started Now
+                  {t('hero.modal.getStarted')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
