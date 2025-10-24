@@ -1,23 +1,21 @@
 {
-  "version": 2,
   "builds": [
+    {
+      "src": "server/index.js",
+      "use": "@vercel/node"
+    },
     {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "installCommand": "npm install",
+        "buildCommand": "npm run build",
+        "outputDirectory": "dist"
       }
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "functions": {
-     "api/**/*.js": {
-      "maxDuration": 10
-    }
-  }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server/index.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
