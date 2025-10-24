@@ -162,35 +162,49 @@ const ResumeBuilder = () => {
     toast.success("Resume duplicated");
   };
 
-  // Template list
+  // Template list - ATS-friendly templates
   const templates = [
     {
       id: "modern",
       name: "Modern",
-      description: "Contemporary design with clean layout",
+      description: "Clean, professional design with blue accents",
       color: "from-blue-500 to-purple-500",
       icon: "✨"
     },
     {
       id: "minimalist",
       name: "Minimalist",
-      description: "Simple and elegant appearance",
+      description: "Simple and elegant - ATS optimized",
       color: "from-slate-500 to-gray-500",
       icon: "⚡"
     },
     {
+      id: "professional",
+      name: "Professional",
+      description: "Corporate formal with serif fonts",
+      color: "from-indigo-500 to-blue-500",
+      icon: "💼"
+    },
+    {
       id: "creative",
       name: "Creative",
-      description: "Eye-catching design for creative roles",
+      description: "Modern colorful design with accent lines",
       color: "from-pink-500 to-orange-500",
       icon: "🎨"
     },
     {
-      id: "professional",
-      name: "Professional",
-      description: "Corporate and formal appearance",
-      color: "from-indigo-500 to-blue-500",
-      icon: "💼"
+      id: "compact",
+      name: "Compact",
+      description: "Maximum content density for ATS systems",
+      color: "from-green-500 to-emerald-500",
+      icon: "📊"
+    },
+    {
+      id: "twocolumn",
+      name: "Two Column",
+      description: "Sidebar layout with skills column",
+      color: "from-violet-500 to-fuchsia-500",
+      icon: "📋"
     }
   ];
 
@@ -374,7 +388,7 @@ const ResumeBuilder = () => {
                 <div className="flex flex-wrap items-center gap-3 mt-4">
                   <Badge className="bg-gradient-to-r from-emerald-500/40 to-emerald-600/30 border-emerald-400/60 text-emerald-100 backdrop-blur-sm shadow-md">
                     <FileText className="w-3 h-3 mr-2" />
-                    4 Premium Templates
+                    6 Professional Templates
                   </Badge>
                   <Badge className="bg-gradient-to-r from-teal-500/40 to-teal-600/30 border-teal-400/60 text-teal-100 backdrop-blur-sm shadow-md">
                     <Settings className="w-3 h-3 mr-2" />
@@ -465,7 +479,7 @@ const ResumeBuilder = () => {
             <p className="text-slate-400 mt-1">Start with a professionally designed resume template</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             {templates.map((template) => (
               <div
                 key={template.id}
@@ -507,9 +521,12 @@ const ResumeBuilder = () => {
           <h2 className="text-2xl font-bold text-white">Why Use Our Builder?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { title: "Professional Templates", description: "4 industry-proven resume templates", icon: "✨" },
-              { title: "ATS Optimized", description: "Compatible with all applicant tracking systems", icon: "🎯" },
-              { title: "Live PDF Preview", description: "See your resume instantly in PDF format", icon: "👁️" }
+              { title: "6 ATS-Optimized Templates", description: "Professional templates designed to pass applicant tracking systems", icon: "✨" },
+              { title: "ATS Optimized", description: "Compatible with all modern applicant tracking systems", icon: "🎯" },
+              { title: "Live PDF Preview", description: "See your resume instantly in PDF format", icon: "👁️" },
+              { title: "Format Flexibility", description: "Switch between formats instantly without losing data", icon: "🔄" },
+              { title: "Professional Designs", description: "From minimalist to creative - choose your style", icon: "🎨" },
+              { title: "Cloud Compatible", description: "Download in PDF or use directly for online applications", icon: "☁️" }
             ].map((feature, index) => (
               <div
                 key={index}
