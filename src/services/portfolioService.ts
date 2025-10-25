@@ -6,6 +6,14 @@ import {
   generateFreelanceTemplate,
   generateAgencyTemplate
 } from './enhancedPortfolioTemplates';
+import {
+  generatePremiumLuxuryMinimal,
+  generatePremiumGlassmorphism,
+  generatePremiumNeonCyberpunk,
+  generatePremiumElegantGradient,
+  generatePremiumNeumorphicPro,
+  PREMIUM_TEMPLATE_CATALOG
+} from './premiumPortfolioIndex';
 
 export class PortfolioHTMLGenerator {
   static generateHTML(data: PortfolioData): string {
@@ -14,13 +22,25 @@ export class PortfolioHTMLGenerator {
       return this.generateTemplateHTML(data, data.templateId);
     }
     
-    // Fallback to default template if no templateId specified
-    return this.generateDefaultTemplate(data);
+    // Default to premium luxury minimal template
+    return generatePremiumLuxuryMinimal(data);
   }
 
   private static generateTemplateHTML(data: PortfolioData, templateId: string): string {
     try {
+      // Premium Templates (New)
       switch (templateId) {
+        case 'premium-luxury-minimal':
+          return generatePremiumLuxuryMinimal(data);
+        case 'premium-glassmorphism':
+          return generatePremiumGlassmorphism(data);
+        case 'premium-neon-cyberpunk':
+          return generatePremiumNeonCyberpunk(data);
+        case 'premium-elegant-gradient':
+          return generatePremiumElegantGradient(data);
+        case 'premium-neumorphic-pro':
+          return generatePremiumNeumorphicPro(data);
+        // Legacy Templates (Old)
         case 'modern-tech':
           return generateModernTechTemplate(data);
         case 'creative':
@@ -32,12 +52,12 @@ export class PortfolioHTMLGenerator {
         case 'agency':
           return generateAgencyTemplate(data);
         default:
-          // Fallback to default template if unknown templateId
-          return this.generateDefaultTemplate(data);
+          // Fallback to premium luxury minimal
+          return generatePremiumLuxuryMinimal(data);
       }
     } catch (error) {
       console.error('Error generating template:', error);
-      return this.generateDefaultTemplate(data);
+      return generatePremiumLuxuryMinimal(data);
     }
   }
 
