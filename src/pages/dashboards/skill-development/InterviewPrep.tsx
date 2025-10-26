@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Brain, Clock, Target, Award, Star, Play, RotateCcw, CheckCircle, AlertCircle, TrendingUp, Download, Share2, Sparkles, Code, MessageSquare, Layers, Zap, Mic, FileText } from "lucide-react";
+import { Brain, Clock, Target, Award, Star, Play, RotateCcw, CheckCircle, AlertCircle, TrendingUp, Download, Sparkles, Code, MessageSquare, Layers, Zap, Mic, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 const InterviewPrep = () => {
   const [selectedRole, setSelectedRole] = useState<string>("frontend-developer");
   const [selectedRounds, setSelectedRounds] = useState<string[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<string>("all");
+  const [selectedLabel, setSelectedLabel] = useState<string>("sde1");
 
   const mockInterviews = [
     {
@@ -51,45 +53,6 @@ const InterviewPrep = () => {
       score: null,
       feedback: null,
       aiInsights: null
-    }
-  ];
-
-  const practiceQuestions = [
-    {
-      category: "Data Structures",
-      difficulty: "Medium",
-      question: "Implement a LRU Cache with O(1) operations",
-      topics: ["Hash Map", "Doubly Linked List"],
-      companies: ["Google", "Facebook", "Amazon"],
-      frequency: "Very High",
-      aiHint: "Consider using a combination of hash map and doubly linked list for O(1) operations"
-    },
-    {
-      category: "Algorithms",
-      difficulty: "Hard",
-      question: "Find the median of two sorted arrays",
-      topics: ["Binary Search", "Divide and Conquer"],
-      companies: ["Google", "Microsoft", "Apple"],
-      frequency: "High",
-      aiHint: "Think about binary search approach to reduce time complexity to O(log(min(m,n)))"
-    },
-    {
-      category: "System Design",
-      difficulty: "Hard",
-      question: "Design a URL shortening service like TinyURL",
-      topics: ["Scalability", "Database Design", "Caching"],
-      companies: ["Google", "Facebook", "Twitter"],
-      frequency: "Very High",
-      aiHint: "Consider aspects like URL encoding, database sharding, and caching strategies"
-    },
-    {
-      category: "Behavioral",
-      difficulty: "Medium",
-      question: "Tell me about a time you faced a challenging technical problem",
-      topics: ["Problem Solving", "Communication"],
-      companies: ["All Companies"],
-      frequency: "Very High",
-      aiHint: "Use the STAR method: Situation, Task, Action, Result"
     }
   ];
 
@@ -210,6 +173,43 @@ const InterviewPrep = () => {
                     <SelectItem value="ml-engineer" className="text-white hover:bg-slate-700">ML Engineer</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="text-sm text-slate-300 block mb-1">Select Company</label>
+                    <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                      <SelectTrigger className="bg-slate-800/50 border-slate-600/50 text-white">
+                        <SelectValue placeholder="All Companies" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        <SelectItem value="all" className="text-white hover:bg-slate-700">All Companies</SelectItem>
+                        <SelectItem value="google" className="text-white hover:bg-slate-700">Google</SelectItem>
+                        <SelectItem value="microsoft" className="text-white hover:bg-slate-700">Microsoft</SelectItem>
+                        <SelectItem value="amazon" className="text-white hover:bg-slate-700">Amazon</SelectItem>
+                        <SelectItem value="meta" className="text-white hover:bg-slate-700">Meta</SelectItem>
+                        <SelectItem value="apple" className="text-white hover:bg-slate-700">Apple</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-slate-300 block mb-1">Position / Level</label>
+                    <Select value={selectedLabel} onValueChange={setSelectedLabel}>
+                      <SelectTrigger className="bg-slate-800/50 border-slate-600/50 text-white">
+                        <SelectValue placeholder="SDE1" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        <SelectItem value="sde1" className="text-white hover:bg-slate-700">SDE1</SelectItem>
+                        <SelectItem value="sde2" className="text-white hover:bg-slate-700">SDE2</SelectItem>
+                        <SelectItem value="sde3" className="text-white hover:bg-slate-700">SDE3</SelectItem>
+                        <SelectItem value="junior" className="text-white hover:bg-slate-700">Junior</SelectItem>
+                        <SelectItem value="mid" className="text-white hover:bg-slate-700">Mid-level</SelectItem>
+                        <SelectItem value="senior" className="text-white hover:bg-slate-700">Senior</SelectItem>
+                        <SelectItem value="lead" className="text-white hover:bg-slate-700">Lead</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -463,9 +463,8 @@ const InterviewPrep = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="analytics" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700/50">
+          <TabsList className="grid w-full grid-cols-1 bg-slate-800/50 border border-slate-700/50">
             <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Analytics & Performance</TabsTrigger>
-            <TabsTrigger value="company-practice" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">Company Practice</TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics" className="mt-6">
@@ -638,113 +637,6 @@ const InterviewPrep = () => {
                     </Card>
                   ))}
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="company-practice" className="mt-6">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-white">Company-Specific Practice Questions</h2>
-                <div className="flex gap-3">
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-600/50 text-white">
-                      <SelectValue placeholder="Company" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="all" className="text-white hover:bg-slate-700">All Companies</SelectItem>
-                      <SelectItem value="google" className="text-white hover:bg-slate-700">Google</SelectItem>
-                      <SelectItem value="microsoft" className="text-white hover:bg-slate-700">Microsoft</SelectItem>
-                      <SelectItem value="amazon" className="text-white hover:bg-slate-700">Amazon</SelectItem>
-                      <SelectItem value="facebook" className="text-white hover:bg-slate-700">Meta</SelectItem>
-                      <SelectItem value="apple" className="text-white hover:bg-slate-700">Apple</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-[150px] bg-slate-800/50 border-slate-600/50 text-white">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="all" className="text-white hover:bg-slate-700">All Categories</SelectItem>
-                      <SelectItem value="algorithms" className="text-white hover:bg-slate-700">Algorithms</SelectItem>
-                      <SelectItem value="data-structures" className="text-white hover:bg-slate-700">Data Structures</SelectItem>
-                      <SelectItem value="system-design" className="text-white hover:bg-slate-700">System Design</SelectItem>
-                      <SelectItem value="behavioral" className="text-white hover:bg-slate-700">Behavioral</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-[120px] bg-slate-800/50 border-slate-600/50 text-white">
-                      <SelectValue placeholder="Difficulty" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="all" className="text-white hover:bg-slate-700">All Levels</SelectItem>
-                      <SelectItem value="easy" className="text-white hover:bg-slate-700">Easy</SelectItem>
-                      <SelectItem value="medium" className="text-white hover:bg-slate-700">Medium</SelectItem>
-                      <SelectItem value="hard" className="text-white hover:bg-slate-700">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {practiceQuestions.map((question, index) => (
-                  <Card key={index} className="hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="border-slate-600 text-slate-300">{question.category}</Badge>
-                            <Badge className={getDifficultyColor(question.difficulty)}>
-                              {question.difficulty}
-                            </Badge>
-                            <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
-                              {question.frequency}
-                            </Badge>
-                          </div>
-
-                          <h3 className="font-semibold text-lg mb-2 text-white">{question.question}</h3>
-
-                          <div className="space-y-2 mb-3">
-                            <div>
-                              <span className="text-sm text-slate-400">Topics: </span>
-                              {question.topics.map((topic, topicIndex) => (
-                                <Badge key={topicIndex} variant="outline" className="text-xs mr-1 border-slate-600 text-slate-300">
-                                  {topic}
-                                </Badge>
-                              ))}
-                            </div>
-
-                            <div>
-                              <span className="text-sm text-slate-400">Asked by: </span>
-                              {question.companies.map((company, companyIndex) => (
-                                <Badge key={companyIndex} variant="secondary" className="text-xs mr-1 bg-slate-700/50 text-slate-300">
-                                  {company}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-3 rounded-lg border border-blue-500/30">
-                            <p className="text-sm flex items-center gap-2 text-slate-300">
-                              <Brain className="w-4 h-4 text-blue-400" />
-                              <strong className="text-white">AI Hint:</strong> {question.aiHint}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2 ml-4">
-                          <Button size="sm" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 border-0">
-                            <Play className="w-4 h-4 mr-1" />
-                            Practice
-                          </Button>
-                          <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700/50">
-                            <Share2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
               </div>
             </div>
           </TabsContent>
