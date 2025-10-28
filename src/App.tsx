@@ -38,7 +38,6 @@ import ROICalculator from "./pages/dashboards/college-admission/ROICalculator";
 import WhatIfSimulator from "./pages/dashboards/college-admission/WhatIfSimulator";
 import Scholarships from "./pages/dashboards/college-admission/Scholarships";
 import ApplicationTracker from "./pages/dashboards/college-admission/ApplicationTracker";
-import Deadlines from "./pages/dashboards/college-admission/Deadlines";
 
 // Skill Development Dashboard Components
 import SkillGapAnalysis from "./pages/dashboards/skill-development/SkillGapAnalysis";
@@ -103,7 +102,6 @@ const App = () => (
           <Route path="/dashboard/college-admission/simulator" element={<WhatIfSimulator />} />
           <Route path="/dashboard/college-admission/scholarships" element={<Scholarships />} />
           <Route path="/dashboard/college-admission/applications" element={<ApplicationTracker />} />
-          <Route path="/dashboard/college-admission/deadlines" element={<Deadlines />} />
           
           {/* Skill Development Dashboard Routes */}
           <Route path="/dashboard/skill-development" element={<SkillDevelopmentDashboard />} />

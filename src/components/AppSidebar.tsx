@@ -115,7 +115,6 @@ const AppSidebar = () => {
         { title: "What-If Simulator", url: "/dashboard/college-admission/simulator", icon: Lightbulb },
         { title: "Scholarships", url: "/dashboard/college-admission/scholarships", icon: DollarSign },
         { title: "Application Tracker", url: "/dashboard/college-admission/applications", icon: FileText },
-        { title: "Deadlines", url: "/dashboard/college-admission/deadlines", icon: Clock },
       ];
     } else if (currentPath.includes('/dashboard/skill-development')) {
       return [
