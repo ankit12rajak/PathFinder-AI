@@ -41,7 +41,7 @@ import ApplicationTracker from "./pages/dashboards/college-admission/Application
 
 // Skill Development Dashboard Components
 import SkillGapAnalysis from "./pages/dashboards/skill-development/SkillGapAnalysis";
-import LearningPaths from "./pages/dashboards/skill-development/LearningPaths";
+import CareerAdvisor from "./pages/dashboards/skill-development/CareerAdvisor";
 import IndustryTrends from "./pages/dashboards/skill-development/IndustryTrends";
 import ProjectsInternships from "./pages/dashboards/skill-development/ProjectsInternships";
 import SkillTraining from "./pages/dashboards/skill-development/SkillTraining";
@@ -106,7 +106,7 @@ const App = () => (
           {/* Skill Development Dashboard Routes */}
           <Route path="/dashboard/skill-development" element={<SkillDevelopmentDashboard />} />
           <Route path="/dashboard/skill-development/gap-analysis" element={<SkillGapAnalysis />} />
-          <Route path="/dashboard/skill-development/learning-paths" element={<LearningPaths />} />
+          <Route path="/dashboard/skill-development/career-advisor" element={<CareerAdvisor />} />
           <Route path="/dashboard/skill-development/industry-trends" element={<IndustryTrends />} />
           <Route path="/dashboard/skill-development/projects-internships" element={<ProjectsInternships />} />
           <Route path="/dashboard/skill-development/skill-training" element={<SkillTraining />} />

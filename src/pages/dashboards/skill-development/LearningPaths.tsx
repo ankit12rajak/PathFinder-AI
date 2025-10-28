@@ -1,751 +1,678 @@
-import { useState } from "react";
-import { BookOpen, Brain, Clock, TrendingUp, PlayCircle, Star, Target, Code, Database, Palette, BarChart3, Zap, Users, Trophy, ArrowRight, Lock, Play, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { BookOpen, Target, TrendingUp, Award, Clock, CheckCircle2, Sparkles, Brain, ArrowLeft, Download, Share2, Loader2, Zap, Star, Trophy, Rocket, Code, Database, Layout, Server, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/DashboardLayout";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const API_KEY = import.meta.env.VITE_SKILL_API_KEY;
+
+interface LearningPathStep {
+  id: string;
+  phase: string;
+  title: string;
+  description: string;
+  duration: string;
+  resources: {
+    type: string;
+    title: string;
+    url?: string;
+  }[];
+  skills: string[];
+  projects: string[];
+  milestones: string[];
+}
+
+interface CareerSummary {
+  careerGoal: string;
+  keyInterests: string[];
+  currentLevel: string;
+  targetRole: string;
+  timeframe: string;
+  learningPath: LearningPathStep[];
+}
+
+interface DetailedLearningPath {
+  career: string;
+  overview: string;
+  totalDuration: string;
+  difficulty: string;
+  prerequisites: string[];
+  outcomes: string[];
+  phases: LearningPathStep[];
+  certifications: string[];
+  jobMarket: {
+    averageSalary: string;
+    demandLevel: string;
+    topCompanies: string[];
+    requiredSkills: string[];
+  };
+}
 
 const LearningPaths = () => {
-  const [selectedPath, setSelectedPath] = useState<string>("frontend");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [careerSummary, setCareerSummary] = useState<CareerSummary | null>(null);
+  const [detailedPath, setDetailedPath] = useState<DetailedLearningPath | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPhase, setSelectedPhase] = useState<number>(0);
 
-  const learningPaths = [
-    {
-      id: "frontend",
-      title: "Frontend Development",
-      icon: Code,
-      duration: "6-8 months",
-      difficulty: "Beginner to Advanced",
-      learners: "15K+",
-      rating: 4.8,
-      color: "from-blue-500 to-cyan-500",
-      colorDark: "from-blue-700 to-cyan-600",
-      skills: ["HTML/CSS", "JavaScript", "React", "TypeScript", "Next.js"],
-      description: "Master modern frontend development with AI-assisted learning"
-    },
-    {
-      id: "backend",
-      title: "Backend Development",
-      icon: Database,
-      duration: "7-9 months",
-      difficulty: "Intermediate",
-      learners: "12K+",
-      rating: 4.7,
-      color: "from-green-500 to-emerald-500",
-      colorDark: "from-green-700 to-emerald-600",
-      skills: ["Node.js", "Python", "Databases", "APIs", "Cloud"],
-      description: "Build scalable backend systems with modern technologies"
-    },
-    {
-      id: "data-science",
-      title: "Data Science & AI",
-      icon: BarChart3,
-      duration: "8-10 months",
-      difficulty: "Intermediate to Advanced",
-      learners: "10K+",
-      rating: 4.9,
-      color: "from-purple-500 to-pink-500",
-      colorDark: "from-purple-700 to-pink-600",
-      skills: ["Python", "Machine Learning", "Statistics", "Deep Learning", "MLOps"],
-      description: "Become an AI expert with hands-on projects and industry mentorship"
-    },
-    {
-      id: "design",
-      title: "UI/UX Design",
-      icon: Palette,
-      duration: "5-6 months",
-      difficulty: "Beginner to Advanced",
-      learners: "8K+",
-      rating: 4.6,
-      color: "from-orange-500 to-red-500",
-      colorDark: "from-orange-700 to-red-600",
-      skills: ["Design Thinking", "Figma", "Prototyping", "User Research", "Design Systems"],
-      description: "Create beautiful and user-friendly interfaces with design thinking"
-    }
-  ];
-
-  const pathDetails = {
-    frontend: {
-      modules: [
-        {
-          title: "HTML & CSS Fundamentals",
-          duration: "3-4 weeks",
-          lessons: 24,
-          projects: 3,
-          status: "completed",
-          aiFeatures: ["Code review", "Real-time debugging", "Performance optimization"],
-          materials: [
-            { title: 'MDN HTML Docs', url: 'https://developer.mozilla.org/en-US/docs/Web/HTML' },
-            { title: 'CSS Tricks Guide', url: 'https://css-tricks.com/guides/' },
-            { title: 'FreeCodeCamp HTML/CSS', url: 'https://www.freecodecamp.org/learn/responsive-web-design/' },
-            { title: 'W3Schools HTML', url: 'https://www.w3schools.com/html/' },
-            { title: 'Codecademy HTML/CSS', url: 'https://www.codecademy.com/learn/learn-html' }
-          ]
-        },
-        {
-          title: "JavaScript Mastery",
-          duration: "4-5 weeks",
-          lessons: 32,
-          projects: 5,
-          status: "in-progress",
-          aiFeatures: ["Algorithm explanation", "Code generation", "Error detection"],
-          materials: [
-            { title: 'MDN JavaScript Guide', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide' },
-            { title: 'Eloquent JavaScript', url: 'https://eloquentjavascript.net/' },
-            { title: 'JavaScript.info', url: 'https://javascript.info/' },
-            { title: 'FreeCodeCamp JS', url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/' },
-            { title: 'Codecademy JS', url: 'https://www.codecademy.com/learn/introduction-to-javascript' }
-          ]
-        },
-        {
-          title: "React Development",
-          duration: "6-7 weeks",
-          lessons: 38,
-          projects: 7,
-          status: "locked",
-          aiFeatures: ["Component suggestions", "State management", "Performance tuning"],
-          materials: [
-            { title: 'React Official Docs', url: 'https://react.dev/learn' },
-            { title: 'React Tutorial', url: 'https://react.dev/learn/tutorial-tic-tac-toe' },
-            { title: 'Scrimba React Course', url: 'https://scrimba.com/learn/learnreact' },
-            { title: 'Codecademy React', url: 'https://www.codecademy.com/learn/react-101' },
-            { title: 'Egghead React', url: 'https://egghead.io/courses/the-beginner-s-guide-to-react' }
-          ]
-        },
-        {
-          title: "Advanced React & TypeScript",
-          duration: "5-6 weeks",
-          lessons: 28,
-          projects: 4,
-          status: "locked",
-          aiFeatures: ["Type inference", "Refactoring assistance", "Testing automation"],
-          materials: [
-            { title: 'TypeScript Handbook', url: 'https://www.typescriptlang.org/docs/' },
-            { title: 'React TypeScript Cheatsheet', url: 'https://react-typescript-cheatsheet.netlify.app/' },
-            { title: 'Total TypeScript', url: 'https://www.totaltypescript.com/' },
-            { title: 'Codecademy TypeScript', url: 'https://www.codecademy.com/learn/learn-typescript' },
-            { title: 'Egghead TypeScript', url: 'https://egghead.io/courses/up-and-running-with-typescript' }
-          ]
-        },
-        {
-          title: "Next.js & Deployment",
-          duration: "4-5 weeks",
-          lessons: 22,
-          projects: 3,
-          status: "locked",
-          aiFeatures: ["SEO optimization", "Performance monitoring", "Deployment automation"],
-          materials: [
-            { title: 'Next.js Docs', url: 'https://nextjs.org/docs' },
-            { title: 'Vercel Deployment', url: 'https://vercel.com/docs' },
-            { title: 'Next.js Tutorial', url: 'https://nextjs.org/learn' },
-            { title: 'Netlify Deployment', url: 'https://docs.netlify.com/' },
-            { title: 'Railway Deployment', url: 'https://docs.railway.app/' }
-          ]
+  // Load career summary from location state or localStorage
+  useEffect(() => {
+    // First try to get from navigation state
+    if (location.state?.careerSummary) {
+      const summary = location.state.careerSummary as CareerSummary;
+      setCareerSummary(summary);
+      localStorage.setItem('careerSummary', JSON.stringify(summary));
+      generateDetailedLearningPath(summary);
+    } else {
+      // Try to get from localStorage
+      const savedSummary = localStorage.getItem('careerSummary');
+      if (savedSummary) {
+        try {
+          const summary = JSON.parse(savedSummary) as CareerSummary;
+          setCareerSummary(summary);
+          generateDetailedLearningPath(summary);
+        } catch (e) {
+          console.error('Error parsing saved career summary:', e);
+          setError('No career data found. Please complete the career advisor chat first.');
         }
-      ],
-      aiMentor: {
-        personalizedFeedback: true,
-        codeReview: true,
-        learningPath: true,
-        projectSuggestions: true
+      } else {
+        setError('No career data found. Please complete the career advisor chat first.');
       }
     }
-    ,
-    backend: {
-      modules: [
+  }, [location]);
+
+  const generateDetailedLearningPath = async (summary: CareerSummary) => {
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+      const prompt = `Create an extremely detailed, comprehensive learning path for someone who wants to become a ${summary.targetRole}.
+
+CONTEXT:
+- Career Goal: ${summary.careerGoal}
+- Target Role: ${summary.targetRole}
+- Current Level: ${summary.currentLevel}
+- Key Interests: ${summary.keyInterests.join(', ')}
+- Timeframe: ${summary.timeframe}
+
+Generate a professional, actionable learning roadmap with the following structure:
+
+CRITICAL: Respond with ONLY valid JSON. No markdown, no code blocks, no explanations.
+
+Required JSON structure:
+{
+  "career": "${summary.targetRole}",
+  "overview": "Comprehensive 2-3 sentence overview of this career path and what makes it exciting",
+  "totalDuration": "Realistic total time estimate (e.g., '8-12 months', '1-2 years')",
+  "difficulty": "Beginner-Friendly/Intermediate/Advanced/Expert-Level",
+  "prerequisites": ["Prerequisite 1", "Prerequisite 2", "Prerequisite 3"],
+  "outcomes": [
+    "Specific skill outcome 1",
+    "Specific skill outcome 2",
+    "Specific skill outcome 3",
+    "Career opportunity 1",
+    "Career opportunity 2"
+  ],
+  "phases": [
+    {
+      "id": "phase-1",
+      "phase": "Foundation",
+      "title": "Building Strong Fundamentals",
+      "description": "Detailed description of what this phase covers and why it's important",
+      "duration": "4-6 weeks",
+      "skills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"],
+      "resources": [
         {
-          title: 'Node.js & Express',
-          duration: '4-6 weeks',
-          lessons: 30,
-          projects: 5,
-          status: 'in-progress',
-          aiFeatures: ['API scaffolding', 'Security checks', 'Performance tips'],
-          materials: [
-            { title: 'Node.js Guide', url: 'https://nodejs.org/en/docs/guides/' },
-            { title: 'Express Docs', url: 'https://expressjs.com/' },
-            { title: 'Node.js Tutorial', url: 'https://www.w3schools.com/nodejs/' },
-            { title: 'FreeCodeCamp Node.js', url: 'https://www.freecodecamp.org/learn/back-end-development-and-apis/' },
-            { title: 'Codecademy Node.js', url: 'https://www.codecademy.com/learn/learn-node-js' }
-          ]
+          "type": "Course",
+          "title": "Specific course name",
+          "url": "https://example.com"
         },
         {
-          title: 'Databases & SQL',
-          duration: '4-5 weeks',
-          lessons: 28,
-          projects: 4,
-          status: 'locked',
-          aiFeatures: ['Query optimization', 'Schema suggestions'],
-          materials: [
-            { title: 'Postgres Tutorial', url: 'https://www.postgresql.org/docs/' },
-            { title: 'SQLBolt', url: 'https://sqlbolt.com/' },
-            { title: 'MySQL Tutorial', url: 'https://dev.mysql.com/doc/' },
-            { title: 'SQLZoo', url: 'https://sqlzoo.net/' },
-            { title: 'Codecademy SQL', url: 'https://www.codecademy.com/learn/learn-sql' }
-          ]
+          "type": "Book",
+          "title": "Specific book name",
+          "url": ""
         },
         {
-          title: 'Authentication & Security',
-          duration: '2-3 weeks',
-          lessons: 16,
-          projects: 2,
-          status: 'locked',
-          aiFeatures: ['Vulnerability detection', 'Secure defaults'],
-          materials: [
-            { title: 'OWASP Top Ten', url: 'https://owasp.org/www-project-top-ten/' },
-            { title: 'JWT.io', url: 'https://jwt.io/' },
-            { title: 'Passport.js Docs', url: 'http://www.passportjs.org/docs/' },
-            { title: 'Node.js Security Best Practices', url: 'https://nodejs.org/en/docs/guides/security/' },
-            { title: 'Auth0 Docs', url: 'https://auth0.com/docs/' }
-          ]
+          "type": "Documentation",
+          "title": "Official docs or guide",
+          "url": "https://example.com"
+        },
+        {
+          "type": "Video",
+          "title": "YouTube tutorial or series",
+          "url": "https://youtube.com"
         }
       ],
-      aiMentor: { personalizedFeedback: true, codeReview: true }
-    },
-    'data-science': {
-      modules: [
-        {
-          title: 'Python for Data Science',
-          duration: '3-4 weeks',
-          lessons: 20,
-          projects: 3,
-          status: 'completed',
-          aiFeatures: ['Data cleaning helpers', 'Visualization suggestions'],
-          materials: [
-            { title: 'Python Official', url: 'https://docs.python.org/3/tutorial/' },
-            { title: 'Pandas Guide', url: 'https://pandas.pydata.org/docs/' },
-            { title: 'NumPy Docs', url: 'https://numpy.org/doc/' },
-            { title: 'DataCamp Python', url: 'https://www.datacamp.com/courses/intro-to-python-for-data-science' },
-            { title: 'Codecademy Python', url: 'https://www.codecademy.com/learn/learn-python-3' }
-          ]
-        },
-        {
-          title: 'Machine Learning Foundations',
-          duration: '6-8 weeks',
-          lessons: 40,
-          projects: 6,
-          status: 'in-progress',
-          aiFeatures: ['Model explainability', 'Hyperparameter tuning'],
-          materials: [
-            { title: 'Coursera ML (Andrew Ng)', url: 'https://www.coursera.org/learn/machine-learning' },
-            { title: 'Scikit-learn', url: 'https://scikit-learn.org/stable/' },
-            { title: 'Kaggle Learn ML', url: 'https://www.kaggle.com/learn/intro-to-machine-learning' },
-            { title: 'Fast.ai', url: 'https://www.fast.ai/' },
-            { title: 'Google ML Crash Course', url: 'https://developers.google.com/machine-learning/crash-course' }
-          ]
-        },
-        {
-          title: 'Deep Learning & MLOps',
-          duration: '6-10 weeks',
-          lessons: 50,
-          projects: 6,
-          status: 'locked',
-          aiFeatures: ['Model deployment', 'Serving recommendations'],
-          materials: [
-            { title: 'TensorFlow Guides', url: 'https://www.tensorflow.org/learn' },
-            { title: 'MLOps Guide', url: 'https://ml-ops.org/' },
-            { title: 'PyTorch Tutorials', url: 'https://pytorch.org/tutorials/' },
-            { title: 'Hugging Face', url: 'https://huggingface.co/learn' },
-            { title: 'Kubeflow Docs', url: 'https://www.kubeflow.org/docs/' }
-          ]
-        }
+      "projects": [
+        "Beginner project 1 with specific description",
+        "Beginner project 2 with specific description"
       ],
-      aiMentor: { personalizedFeedback: true, projectSuggestions: true }
-    },
-    design: {
-      modules: [
-        {
-          title: 'Design Fundamentals',
-          duration: '3-4 weeks',
-          lessons: 18,
-          projects: 3,
-          status: 'completed',
-          aiFeatures: ['Layout suggestions', 'Color contrast checks'],
-          materials: [
-            { title: 'Interaction Design Foundation', url: 'https://www.interaction-design.org/' },
-            { title: 'Principles of Design', url: 'https://www.smashingmagazine.com/' },
-            { title: 'Canva Design School', url: 'https://www.canva.com/designschool/' },
-            { title: 'Adobe XD Tutorials', url: 'https://www.adobe.com/products/xd/learn.html' },
-            { title: 'Coursera Graphic Design', url: 'https://www.coursera.org/specializations/google-ux-design' }
-          ]
-        },
-        {
-          title: 'Figma & Prototyping',
-          duration: '4-5 weeks',
-          lessons: 22,
-          projects: 4,
-          status: 'in-progress',
-          aiFeatures: ['Auto-layout helpers', 'Accessibility checks'],
-          materials: [
-            { title: 'Figma Learn', url: 'https://help.figma.com/hc/en-us' },
-            { title: 'Figma Tutorials', url: 'https://www.figma.com/resources/learn-design/' },
-            { title: 'ProtoPie', url: 'https://www.protopie.io/' },
-            { title: 'InVision', url: 'https://www.invisionapp.com/inside-design/design-resources/' },
-            { title: 'Framer', url: 'https://www.framer.com/learn/' }
-          ]
-        },
-        {
-          title: 'User Research & Testing',
-          duration: '3-4 weeks',
-          lessons: 16,
-          projects: 2,
-          status: 'locked',
-          aiFeatures: ['Persona generation', 'Test script suggestions'],
-          materials: [
-            { title: 'Usability.gov', url: 'https://www.usability.gov/' },
-            { title: 'NNGroup UX Research', url: 'https://www.nngroup.com/articles/ux-research-cheat-sheet/' },
-            { title: 'UserTesting', url: 'https://www.usertesting.com/' },
-            { title: 'Optimal Workshop', url: 'https://www.optimalworkshop.com/' },
-            { title: 'Maze Design', url: 'https://maze.co/' }
-          ]
-        }
-      ],
-      aiMentor: { personalizedFeedback: true, projectSuggestions: true }
+      "milestones": [
+        "Concrete achievement 1",
+        "Concrete achievement 2",
+        "Concrete achievement 3"
+      ]
+    }
+  ],
+  "certifications": [
+    "Relevant certification 1",
+    "Relevant certification 2",
+    "Relevant certification 3"
+  ],
+  "jobMarket": {
+    "averageSalary": "$XX,XXX - $XXX,XXX per year",
+    "demandLevel": "High/Very High/Moderate/Growing",
+    "topCompanies": ["Company 1", "Company 2", "Company 3", "Company 4", "Company 5"],
+    "requiredSkills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"]
+  }
+}
+
+REQUIREMENTS:
+1. Create 4-6 progressive phases (Foundation, Intermediate, Advanced, Specialization, etc.)
+2. Each phase should have 5-8 specific skills
+3. Include 4-6 diverse resources per phase (courses, books, docs, videos)
+4. Suggest 2-3 hands-on projects per phase
+5. Define 3-5 clear milestones per phase
+6. Make everything SPECIFIC and ACTIONABLE (real course names, actual books, real platforms)
+7. Tailor to ${summary.currentLevel} level
+8. Focus on ${summary.keyInterests.join(', ')} interests
+9. Include real-world job market data
+10. Suggest industry-recognized certifications
+11. Make it practical and achievable within ${summary.timeframe}`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text();
+
+      console.log('🤖 Learning Path Response (first 300 chars):', text.substring(0, 300));
+
+      // Clean JSON
+      text = text.trim();
+      if (text.startsWith('```json')) {
+        text = text.replace(/```json\s*/, '').replace(/```\s*$/, '');
+      } else if (text.startsWith('```')) {
+        text = text.replace(/```\s*/, '').replace(/```\s*$/, '');
+      }
+
+      const startIndex = text.indexOf('{');
+      const lastIndex = text.lastIndexOf('}');
+      if (startIndex === -1 || lastIndex === -1) {
+        throw new Error('No valid JSON found in response');
+      }
+      text = text.substring(startIndex, lastIndex + 1);
+
+      const path: DetailedLearningPath = JSON.parse(text);
+
+      // Validate and ensure IDs
+      path.phases = path.phases.map((phase, index) => ({
+        ...phase,
+        id: phase.id || `phase-${index + 1}`
+      }));
+
+      console.log('✅ Detailed learning path generated:', path.career);
+      setDetailedPath(path);
+
+    } catch (error) {
+      console.error('❌ Error generating learning path:', error);
+      setError('Failed to generate learning path. Please try again or go back to career advisor.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const aiFeatures = [
-    {
-      title: "AI Learning Assistant",
-      description: "24/7 personalized help with code explanations and debugging",
-      icon: Brain,
-      active: true
-    },
-    {
-      title: "Adaptive Learning Path",
-      description: "AI adjusts your learning path based on progress and preferences",
-      icon: Target,
-      active: true
-    },
-    {
-      title: "Smart Progress Tracking",
-      description: "Track your learning journey with intelligent analytics and insights",
-      icon: TrendingUp,
-      active: true
-    },
-    {
-      title: "Project Recommendations",
-      description: "AI suggests projects based on your skill level and interests",
-      icon: Star,
-      active: false
-    }
-  ];
+  const getPhaseIcon = (index: number) => {
+    const icons = [Target, Lightbulb, Code, Database, Server, Layout, Rocket, Trophy];
+    const Icon = icons[index % icons.length];
+    return Icon;
+  };
 
+  const downloadPath = () => {
+    if (!detailedPath) return;
 
+    const content = `
+# ${detailedPath.career} Learning Path
+
+## Overview
+${detailedPath.overview}
+
+**Duration:** ${detailedPath.totalDuration}
+**Difficulty:** ${detailedPath.difficulty}
+
+## Prerequisites
+${detailedPath.prerequisites.map(p => `- ${p}`).join('\n')}
+
+## Learning Outcomes
+${detailedPath.outcomes.map(o => `- ${o}`).join('\n')}
+
+## Phases
+
+${detailedPath.phases.map((phase, index) => `
+### Phase ${index + 1}: ${phase.title}
+**Duration:** ${phase.duration}
+
+${phase.description}
+
+**Skills to Learn:**
+${phase.skills.map(s => `- ${s}`).join('\n')}
+
+**Resources:**
+${phase.resources.map(r => `- ${r.type}: ${r.title}${r.url ? ` (${r.url})` : ''}`).join('\n')}
+
+**Projects:**
+${phase.projects.map(p => `- ${p}`).join('\n')}
+
+**Milestones:**
+${phase.milestones.map(m => `- ${m}`).join('\n')}
+`).join('\n---\n')}
+
+## Recommended Certifications
+${detailedPath.certifications.map(c => `- ${c}`).join('\n')}
+
+## Job Market Insights
+- **Average Salary:** ${detailedPath.jobMarket.averageSalary}
+- **Demand Level:** ${detailedPath.jobMarket.demandLevel}
+- **Top Companies:** ${detailedPath.jobMarket.topCompanies.join(', ')}
+
+**In-Demand Skills:**
+${detailedPath.jobMarket.requiredSkills.map(s => `- ${s}`).join('\n')}
+
+---
+Generated by PathFinder AI
+    `;
+
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${detailedPath.career.replace(/\s+/g, '-')}-learning-path.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  if (error && !careerSummary) {
+    return (
+      <DashboardLayout
+        title="Learning Path"
+        description="Generate your personalized learning roadmap"
+      >
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6 flex items-center justify-center">
+          <Card className="max-w-md border-slate-800 bg-slate-900/50">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
+                <AlertCircle className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white">No Career Data Found</h3>
+              <p className="text-slate-400">{error}</p>
+              <Button
+                onClick={() => navigate('/career-advisor')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Go to Career Advisor
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isGenerating) {
+    return (
+      <DashboardLayout
+        title="Learning Path"
+        description="Generate your personalized learning roadmap"
+      >
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6 flex items-center justify-center">
+          <Card className="max-w-md border-slate-800 bg-slate-900/50">
+            <CardContent className="pt-6 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto">
+                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+              </div>
+              <h3 className="text-xl font-bold text-white">Generating Your Learning Path</h3>
+              <p className="text-slate-400">Creating a personalized roadmap for your career journey...</p>
+              <div className="space-y-2">
+                <Progress value={33} className="h-2" />
+                <p className="text-xs text-slate-500">Analyzing career requirements...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8">
-        {/* Premium Header Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-          <div className="absolute inset-0 opacity-20"></div>
-          <div className="relative">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600">
-                    <Brain className="w-6 h-6 text-white" />
-                  </div>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30">
-                    <Zap className="w-3 h-3 mr-1" />
-                    AI-Powered Learning
-                  </Badge>
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold text-white mb-2">Learning Paths</h1>
-                  <p className="text-slate-300 text-lg max-w-2xl">
-                    Accelerate your career with AI-guided learning journeys tailored to your goals and skill level
-                  </p>
-                </div>
-                <div className="flex items-center gap-6 text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    <span className="text-sm">45K+ Active Learners</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Trophy className="w-4 h-4" />
-                    <span className="text-sm">98% Success Rate</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
-                  <PlayCircle className="w-5 h-5 mr-2" />
-                  Continue Learning
-                </Button>
-                <Button size="lg" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white">
-                  View Progress
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* AI Features Grid - Dark Premium Design */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {aiFeatures.map((feature, index) => (
-            <Card key={index} className="group relative overflow-hidden border-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 hover:-translate-y-1">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <CardContent className="p-6 relative">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                    <feature.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <Badge
-                    variant={feature.active ? "default" : "secondary"}
-                    className={feature.active
-                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                      : "bg-slate-700 text-slate-400 border-slate-600"
-                    }
-                  >
-                    {feature.active ? "Active" : "Coming Soon"}
-                  </Badge>
-                </div>
-                <h3 className="font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Premium Learning Paths Grid - Dark Theme */}
-        <div className="space-y-6">
+    <DashboardLayout
+      title="Learning Path"
+      description="Your personalized career development roadmap"
+    >
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          
+          {/* Header Actions */}
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Choose Your Path</h2>
-              <p className="text-slate-600 mt-1">Select a learning journey that aligns with your career goals</p>
-            </div>
-            <Button variant="outline" className="hidden sm:flex border-slate-300 hover:bg-slate-100">
-              View All Paths
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button
+              onClick={() => navigate('/career-advisor')}
+              variant="outline"
+              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Advisor
             </Button>
+            {detailedPath && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={downloadPath}
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {learningPaths.map((path) => (
-              <Card
-                key={path.id}
-                className={`group cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-0 overflow-hidden bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 ${selectedPath === path.id
-                  ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-500/20'
-                  : 'hover:shadow-xl'
-                  }`}
-                onClick={() => setSelectedPath(path.id)}
-              >
-                <div className={`h-1 bg-gradient-to-r ${path.color}`}></div>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`p-4 rounded-2xl bg-gradient-to-r ${path.color} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
-                      <path.icon className="w-8 h-8 text-white" />
+          {detailedPath && (
+            <>
+              {/* Career Overview */}
+              <Card className="border-slate-800 bg-gradient-to-br from-purple-900/20 via-slate-900/50 to-indigo-900/20 backdrop-blur-sm">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-6">
+                    <div className="flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl">
+                      <Target className="w-10 h-10 text-white" />
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 mb-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-semibold text-slate-200">{path.rating}</span>
-                      </div>
-                      <p className="text-xs text-slate-400">{path.learners} learners</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
-                        {path.title}
-                      </h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">{path.description}</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 py-4 border-t border-slate-700">
+                    <div className="flex-1 space-y-4">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-4 h-4 text-slate-500" />
-                          <span className="text-xs text-slate-500 uppercase tracking-wide">Duration</span>
-                        </div>
-                        <p className="font-semibold text-slate-200">{path.duration}</p>
+                        <h1 className="text-3xl font-bold text-white mb-2">{detailedPath.career}</h1>
+                        <p className="text-slate-300 leading-relaxed">{detailedPath.overview}</p>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Target className="w-4 h-4 text-slate-500" />
-                          <span className="text-xs text-slate-500 uppercase tracking-wide">Level</span>
-                        </div>
-                        <Badge variant="secondary" className="bg-slate-700 text-slate-200 hover:bg-slate-600 border-slate-600">
-                          {path.difficulty}
+                      <div className="flex flex-wrap gap-3">
+                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 px-3 py-1">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {detailedPath.totalDuration}
+                        </Badge>
+                        <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 px-3 py-1">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          {detailedPath.difficulty}
+                        </Badge>
+                        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 px-3 py-1">
+                          <Award className="w-3 h-3 mr-1" />
+                          {detailedPath.phases.length} Phases
+                        </Badge>
+                        <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 px-3 py-1">
+                          <Star className="w-3 h-3 mr-1" />
+                          {detailedPath.certifications.length} Certifications
                         </Badge>
                       </div>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Key Skills</p>
-                      <div className="flex flex-wrap gap-2">
-                        {path.skills.slice(0, 4).map((skill, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 bg-slate-800/50"
-                          >
-                            {skill}
-                          </Badge>
-                        ))}
-                        {path.skills.length > 4 && (
-                          <Badge variant="outline" className="text-xs border-slate-600 text-slate-300 bg-slate-800/50">
-                            +{path.skills.length - 4} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-700">
-                      <Button
-                        className={`w-full ${selectedPath === path.id
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/30'
-                          : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500'
-                          } text-white transition-all duration-300`}
-                      >
-                        {selectedPath === path.id ? 'View Details' : 'Select Path'}
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </div>
 
-        {/* Premium Path Details Section - Dark Theme */}
-        {(() => {
-          const selectedPathObj = learningPaths.find(p => p.id === selectedPath);
-          return pathDetails[selectedPath] ? (
-            <Card className="border-0 shadow-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 overflow-hidden">
-              <div className={`h-1 bg-gradient-to-r ${selectedPathObj?.color}`}></div>
-              <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border-b border-slate-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {selectedPathObj?.icon && (
-                      <div className={`p-3 rounded-xl bg-gradient-to-r ${selectedPathObj.color} shadow-lg`}>
-                        <selectedPathObj.icon className="w-6 h-6 text-white" />
-                      </div>
-                    )}
-                    <div>
-                      <CardTitle className="text-2xl text-white">
-                        {selectedPathObj?.title ?? 'Learning Path'} Curriculum
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Left Sidebar - Quick Info */}
+                <div className="space-y-6">
+                  
+                  {/* Prerequisites */}
+                  <Card className="border-slate-800 bg-slate-900/50">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-yellow-400" />
+                        Prerequisites
                       </CardTitle>
-                      <CardDescription className="text-slate-400 mt-1">
-                        Complete curriculum with AI-powered assistance and real-world projects
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                    <Brain className="w-3 h-3 mr-1" />
-                    AI Enhanced
-                  </Badge>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {detailedPath.prerequisites.map((prereq, index) => (
+                          <li key={index} className="text-sm text-slate-300 flex items-start gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                            {prereq}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  {/* Job Market */}
+                  <Card className="border-slate-800 bg-slate-900/50">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-amber-400" />
+                        Job Market
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Average Salary</p>
+                        <p className="text-lg font-bold text-emerald-400">{detailedPath.jobMarket.averageSalary}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Demand Level</p>
+                        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                          {detailedPath.jobMarket.demandLevel}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">Top Companies</p>
+                        <div className="flex flex-wrap gap-2">
+                          {detailedPath.jobMarket.topCompanies.slice(0, 5).map((company, index) => (
+                            <Badge key={index} variant="outline" className="border-slate-700 text-slate-300 text-xs">
+                              {company}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Certifications */}
+                  <Card className="border-slate-800 bg-slate-900/50">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
+                        <Award className="w-5 h-5 text-purple-400" />
+                        Certifications
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {detailedPath.certifications.map((cert, index) => (
+                          <li key={index} className="text-sm text-slate-300 flex items-start gap-2">
+                            <Star className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                            {cert}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Tabs defaultValue="modules" className="w-full">
-                  <div className="px-6 pt-6">
-                    <TabsList className="grid w-full grid-cols-2 bg-slate-800 border border-slate-700">
-                      <TabsTrigger value="modules" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-slate-400">
-                        Modules
-                      </TabsTrigger>
-                      <TabsTrigger value="progress" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-slate-400">
-                        Progress
-                      </TabsTrigger>
-                    </TabsList>
-                  </div>
 
-                  <TabsContent value="modules" className="mt-0 p-6">
-                    <div className="space-y-6">
-                      {pathDetails[selectedPath].modules.map((module: any, index: number) => (
-                        <Card key={index} className="border border-slate-700 shadow-lg overflow-hidden group hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 bg-gradient-to-br from-slate-800 to-slate-900">
-                          <div className={`h-1 bg-gradient-to-r ${selectedPathObj?.color}`}></div>
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${module.status === 'completed' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white' :
-                                module.status === 'in-progress' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' :
-                                  'bg-slate-700 text-slate-400'
-                                } group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                                {module.status === 'completed' ? (
-                                  <CheckCircle className="w-6 h-6" />
-                                ) : module.status === 'in-progress' ? (
-                                  <Play className="w-5 h-5" />
-                                ) : (
-                                  <Lock className="w-5 h-5" />
-                                )}
+                {/* Main Content - Learning Phases */}
+                <div className="lg:col-span-2 space-y-6">
+                  
+                  {/* Learning Outcomes */}
+                  <Card className="border-slate-800 bg-slate-900/50">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
+                        <Rocket className="w-5 h-5 text-blue-400" />
+                        What You'll Achieve
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {detailedPath.outcomes.map((outcome, index) => (
+                          <div key={index} className="flex items-start gap-2 bg-slate-800/50 rounded-lg p-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-slate-300">{outcome}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Phase Tabs */}
+                  <Card className="border-slate-800 bg-slate-900/50">
+                    <CardHeader>
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
+                        <BookOpen className="w-5 h-5 text-purple-400" />
+                        Learning Phases
+                      </CardTitle>
+                      <CardDescription className="text-slate-400">
+                        Follow these phases step-by-step to master your career path
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Phase Navigation */}
+                      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                        {detailedPath.phases.map((phase, index) => {
+                          const Icon = getPhaseIcon(index);
+                          return (
+                            <Button
+                              key={phase.id}
+                              onClick={() => setSelectedPhase(index)}
+                              variant={selectedPhase === index ? "default" : "outline"}
+                              size="sm"
+                              className={`flex-shrink-0 ${
+                                selectedPhase === index
+                                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                                  : 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                              }`}
+                            >
+                              <Icon className="w-4 h-4 mr-2" />
+                              Phase {index + 1}
+                            </Button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Selected Phase Content */}
+                      <ScrollArea className="h-[600px] pr-4">
+                        {detailedPath.phases[selectedPhase] && (
+                          <div className="space-y-6">
+                            <div>
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                                  {React.createElement(getPhaseIcon(selectedPhase), { className: "w-6 h-6 text-white" })}
+                                </div>
+                                <div>
+                                  <h3 className="text-2xl font-bold text-white">{detailedPath.phases[selectedPhase].title}</h3>
+                                  <p className="text-sm text-slate-400">{detailedPath.phases[selectedPhase].phase} • {detailedPath.phases[selectedPhase].duration}</p>
+                                </div>
                               </div>
+                              <p className="text-slate-300 leading-relaxed">{detailedPath.phases[selectedPhase].description}</p>
+                            </div>
 
-                              <div className="flex-1 space-y-4">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h3 className="text-xl font-bold text-white mb-2">{module.title}</h3>
-                                    <div className="flex items-center gap-4 text-sm text-slate-400">
-                                      <div className="flex items-center gap-1">
-                                        <Clock className="w-4 h-4" />
-                                        <span>{module.duration}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <BookOpen className="w-4 h-4" />
-                                        <span>{module.lessons} lessons</span>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <Code className="w-4 h-4" />
-                                        <span>{module.projects} projects</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <Badge
-                                    className={
-                                      module.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                                        module.status === 'in-progress' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                                          'bg-slate-700 text-slate-400 border-slate-600'
-                                    }
-                                  >
-                                    {module.status === 'completed' ? 'Completed' :
-                                      module.status === 'in-progress' ? 'In Progress' : 'Locked'}
+                            {/* Skills */}
+                            <div>
+                              <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                <Zap className="w-5 h-5 text-yellow-400" />
+                                Skills You'll Learn
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {detailedPath.phases[selectedPhase].skills.map((skill, idx) => (
+                                  <Badge key={idx} className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                                    {skill}
                                   </Badge>
-                                </div>
+                                ))}
+                              </div>
+                            </div>
 
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-                                  <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                                    <Brain className="w-4 h-4 text-purple-400" />
-                                    AI-Powered Features
-                                  </h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {module.aiFeatures.map((feature: string, featureIndex: number) => (
-                                      <Badge key={featureIndex} variant="outline" className="text-xs bg-purple-500/10 border-purple-500/30 text-purple-300">
-                                        {feature}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-4 border-t border-slate-700">
-                                  <div className="flex items-center gap-3">
-                                    {module.status !== 'locked' && (
-                                      <Button
-                                        size="sm"
-                                        className={module.status === 'completed'
-                                          ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
-                                          : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/30'
-                                        }
-                                      >
-                                        {module.status === 'completed' ? 'Review' : 'Continue'}
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                      </Button>
-                                    )}
-                                  </div>
-
-                                  {module.materials && module.materials.length > 0 && (
-                                    <div className="flex gap-2">
-                                      {module.materials.slice(0, 3).map((m: any, mi: number) => (
-                                        <a
-                                          key={mi}
-                                          href={m.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-xs px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors border border-blue-500/30"
-                                        >
-                                          {m.title}
-                                        </a>
-                                      ))}
-                                      {module.materials.length > 3 && (
-                                        <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
-                                          +{module.materials.length - 3} more
+                            {/* Resources */}
+                            <div>
+                              <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                <BookOpen className="w-5 h-5 text-purple-400" />
+                                Learning Resources
+                              </h4>
+                              <div className="space-y-2">
+                                {detailedPath.phases[selectedPhase].resources.map((resource, idx) => (
+                                  <div key={idx} className="bg-slate-800/50 rounded-lg p-3 flex items-start gap-3 hover:bg-slate-800 transition-colors">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center">
+                                      <BookOpen className="w-4 h-4 text-purple-400" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Badge variant="outline" className="border-slate-700 text-slate-400 text-xs">
+                                          {resource.type}
                                         </Badge>
+                                        <p className="text-sm font-medium text-white">{resource.title}</p>
+                                      </div>
+                                      {resource.url && (
+                                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300">
+                                          {resource.url}
+                                        </a>
                                       )}
                                     </div>
-                                  )}
-                                </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="progress" className="mt-0 p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card className="border border-slate-700 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900">
-                        <CardHeader className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700">
-                          <CardTitle className="text-lg flex items-center gap-2 text-white">
-                            <TrendingUp className="w-5 h-5 text-blue-400" />
-                            Overall Progress
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-6">
-                          <div>
-                            <div className="flex justify-between text-sm mb-3">
-                              <span className="text-slate-400">Course Completion</span>
-                              <span className="font-semibold text-white">32%</span>
+                            {/* Projects */}
+                            <div>
+                              <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                <Code className="w-5 h-5 text-emerald-400" />
+                                Hands-on Projects
+                              </h4>
+                              <div className="space-y-2">
+                                {detailedPath.phases[selectedPhase].projects.map((project, idx) => (
+                                  <div key={idx} className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 flex items-start gap-2">
+                                    <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                                    <p className="text-sm text-slate-300">{project}</p>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            <Progress value={32} className="h-3 bg-slate-700" />
-                          </div>
-                          <div>
-                            <div className="flex justify-between text-sm mb-3">
-                              <span className="text-slate-400">Projects Submitted</span>
-                              <span className="font-semibold text-white">3 of 22</span>
+
+                            {/* Milestones */}
+                            <div>
+                              <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                <Target className="w-5 h-5 text-amber-400" />
+                                Milestones
+                              </h4>
+                              <div className="space-y-2">
+                                {detailedPath.phases[selectedPhase].milestones.map((milestone, idx) => (
+                                  <div key={idx} className="flex items-start gap-2">
+                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center mt-0.5">
+                                      <Trophy className="w-3 h-3 text-amber-400" />
+                                    </div>
+                                    <p className="text-sm text-slate-300">{milestone}</p>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            <Progress value={14} className="h-3 bg-slate-700" />
                           </div>
-                          <div>
-                            <div className="flex justify-between text-sm mb-3">
-                              <span className="text-slate-400">AI Assistance Used</span>
-                              <span className="font-semibold text-white">45 times</span>
-                            </div>
-                            <Progress value={75} className="h-3 bg-slate-700" />
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border border-slate-700 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900">
-                        <CardHeader className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-b border-slate-700">
-                          <CardTitle className="text-lg flex items-center gap-2 text-white">
-                            <BarChart3 className="w-5 h-5 text-emerald-400" />
-                            Learning Analytics
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-4">
-                          <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                            <span className="text-sm text-slate-400">Time Spent Learning</span>
-                            <span className="font-semibold text-white">42 hours</span>
-                          </div>
-                          <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                            <span className="text-sm text-slate-400">Average Session</span>
-                            <span className="font-semibold text-white">1.5 hours</span>
-                          </div>
-                          <div className="flex justify-between items-center py-2 border-b border-slate-700">
-                            <span className="text-sm text-slate-400">Current Streak</span>
-                            <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">7 days</Badge>
-                          </div>
-                          <div className="flex justify-between items-center py-2">
-                            <span className="text-sm text-slate-400">AI Recommendations</span>
-                            <span className="font-semibold text-white">12 followed</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-
-
-                </Tabs>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border border-slate-700 shadow-lg bg-gradient-to-br from-slate-800 to-slate-900">
-              <CardContent className="p-12 text-center">
-                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen className="w-8 h-8 text-slate-400" />
+                        )}
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">No Details Available</h3>
-                <p className="text-slate-400">Select a learning path to view detailed curriculum information.</p>
-              </CardContent>
-            </Card>
-          );
-        })()}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </DashboardLayout >
+    </DashboardLayout>
   );
 };
 

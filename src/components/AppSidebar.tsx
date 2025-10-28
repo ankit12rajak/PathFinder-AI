@@ -120,7 +120,7 @@ const AppSidebar = () => {
       return [
         { title: "Overview", url: "/dashboard/skill-development", icon: Home },
         { title: "Skill Gap Analysis", url: "/dashboard/skill-development/gap-analysis", icon: BarChart3 },
-        { title: "Learning Paths", url: "/dashboard/skill-development/learning-paths", icon: Target },
+        { title: "Career Advisor", url: "/dashboard/skill-development/career-advisor", icon: Target },
         { title: "Industry Ready skills", url: "/dashboard/skill-development/industry-trends", icon: TrendingUp },
         { title: "Projects & Internships", url: "/dashboard/skill-development/projects-internships", icon: Briefcase },
         { title: "Interview Prep", url: "/dashboard/skill-development/interview-prep", icon: Users },
