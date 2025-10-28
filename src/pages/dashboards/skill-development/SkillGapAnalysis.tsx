@@ -29,7 +29,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/DashboardLayout";
 import geminiSkillAssessmentService, { AssessmentQuestion } from "@/services/geminiSkillAssessmentService";
+import geminiCareerService, { CareerProfile, CareerSkill } from "@/services/geminiCareerService";
 import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Search, Sparkles } from "lucide-react";
 
 // ============ TypeScript Interfaces ============
 interface SkillItem {
@@ -284,15 +287,103 @@ export default function SkillGapAnalysis() {
   const [loadingQuestions, setLoadingQuestions] = useState<{ [key: string]: boolean }>({});
   const [questionDifficulty, setQuestionDifficulty] = useState<'beginner' | 'intermediate' | 'advanced' | 'expert'>('intermediate');
 
+  // New states for custom career target
+  const [customCareerInput, setCustomCareerInput] = useState('');
+  const [isGeneratingCareer, setIsGeneratingCareer] = useState(false);
+  const [customCareers, setCustomCareers] = useState<CareerProfile[]>([]);
+  const [allProfessionalRoles, setAllProfessionalRoles] = useState<ProfessionalRole[]>(professionalRoles);
+
   // ============ Event Handlers ============
   const handleRoleChange = (roleId: string) => {
-    const role = professionalRoles.find(r => r.id === roleId);
-    if (role) {
-      setSelectedRole(role);
-      setSkills(roleSkillsData[roleId as keyof typeof roleSkillsData]);
+  const role = allProfessionalRoles.find(r => r.id === roleId);
+  if (role) {
+    setSelectedRole(role);
+    setSkills(roleSkillsData[roleId as keyof typeof roleSkillsData] || []);
+    setAnalysisComplete(false);
+    setSkillAssessments({});
+    setCurrentSkillAssessment(null);
+    setDynamicQuestions({}); // Clear questions when switching roles
+  }
+};
+
+  // Add this function after the handleRoleChange function and before the loadQuestionsForSkill function
+
+  const handleGenerateCustomCareer = async () => {
+    if (!customCareerInput.trim()) {
+      return;
+    }
+
+    setIsGeneratingCareer(true);
+
+    try {
+      console.log('🎯 Generating custom career profile for:', customCareerInput);
+
+      // Generate career profile with Gemini
+      const careerProfile = await geminiCareerService.getCachedOrGenerateProfile(customCareerInput);
+
+      console.log('✅ Career profile generated:', careerProfile);
+
+      // Convert CareerProfile to ProfessionalRole format
+      const newRole: ProfessionalRole = {
+        id: `custom-${Date.now()}`,
+        name: careerProfile.name,
+        level: careerProfile.level,
+        demand: careerProfile.demand,
+        salary: careerProfile.salary,
+        growth: careerProfile.growth,
+        description: careerProfile.description,
+        keyResponsibilities: careerProfile.keyResponsibilities
+      };
+
+      // Convert CareerSkill[] to SkillItem[]
+      const newSkills: SkillItem[] = careerProfile.skills.map(skill => ({
+        id: skill.id,
+        name: skill.name,
+        category: skill.category,
+        currentLevel: 0,
+        targetLevel: skill.targetLevel,
+        importance: skill.importance,
+        trend: 'stable' as const,
+        marketDemand: skill.marketDemand
+      }));
+
+      console.log('📚 Generated skills:', newSkills);
+
+      // Generate learning resources
+      const resources = await geminiCareerService.generateLearningResources(
+        careerProfile.name,
+        careerProfile.skills.map(s => s.name)
+      );
+
+      console.log('📖 Learning resources:', resources);
+
+      // Add to state
+      setCustomCareers(prev => [...prev, careerProfile]);
+      setAllProfessionalRoles(prev => [...prev, newRole]);
+
+      // Store skills and resources using type assertion
+      (roleSkillsData as any)[newRole.id] = newSkills;
+      (learningResources as any)[newRole.id] = resources;
+
+      // Auto-select the new career
+      setSelectedRole(newRole);
+      setSkills(newSkills);
       setAnalysisComplete(false);
       setSkillAssessments({});
       setCurrentSkillAssessment(null);
+      setDynamicQuestions({});
+
+      // Clear input
+      setCustomCareerInput('');
+
+      console.log('✅ Custom career profile generated and loaded successfully!');
+
+    } catch (error) {
+      console.error('❌ Error generating custom career:', error);
+      // Optional: Add toast notification here
+      alert('Failed to generate career profile. Please try again.');
+    } finally {
+      setIsGeneratingCareer(false);
     }
   };
 
@@ -339,12 +430,12 @@ export default function SkillGapAnalysis() {
   };
 
   // Add this function inside the component, near other handler functions
-const handleAssessmentAnswer = (questionId: string, answerIndex: number) => {
-  setAssessmentAnswers(prev => ({
-    ...prev,
-    [questionId]: answerIndex
-  }));
-};
+  const handleAssessmentAnswer = (questionId: string, answerIndex: number) => {
+    setAssessmentAnswers(prev => ({
+      ...prev,
+      [questionId]: answerIndex
+    }));
+  };
   const startSkillAssessment = async (skillId: string) => {
     const skill = skills.find(s => s.id === skillId);
     if (!skill) return;
@@ -720,13 +811,62 @@ const handleAssessmentAnswer = (questionId: string, answerIndex: number) => {
                     <Target className="w-5 h-5 text-purple-400" />
                     Career Target
                   </CardTitle>
+                  <CardDescription className="text-slate-400">
+                    Select or create your career goal
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Custom Career Input */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                      Create Custom Career
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="e.g., AI Engineer, Data Scientist..."
+                        value={customCareerInput}
+                        onChange={(e) => setCustomCareerInput(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleGenerateCustomCareer()}
+                        className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                        disabled={isGeneratingCareer}
+                      />
+                      <Button
+                        onClick={handleGenerateCustomCareer}
+                        disabled={isGeneratingCareer || !customCareerInput.trim()}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shrink-0"
+                      >
+                        {isGeneratingCareer ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      AI will generate skills and assessments for your career
+                    </p>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-800"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-slate-900 px-2 text-slate-500">or select</span>
+                    </div>
+                  </div>
+
+                  {/* Existing Career Selection */}
                   <Select value={selectedRole.id} onValueChange={handleRoleChange}>
                     <SelectTrigger className="h-12 border-slate-700 bg-slate-800 text-white hover:bg-slate-700">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700">
+                    <SelectContent className="bg-slate-900 border-slate-700 max-h-[300px]">
+                      {/* Predefined Roles */}
+                      <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase">
+                        Popular Careers
+                      </div>
                       {professionalRoles.map(role => (
                         <SelectItem key={role.id} value={role.id} className="text-slate-100">
                           <div>
@@ -735,9 +875,34 @@ const handleAssessmentAnswer = (questionId: string, answerIndex: number) => {
                           </div>
                         </SelectItem>
                       ))}
+                      
+                      {/* Custom Careers */}
+                      {customCareers.length > 0 && (
+                        <>
+                          <div className="border-t border-slate-800 my-1"></div>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            Your Custom Careers
+                          </div>
+                          {allProfessionalRoles
+                            .filter(role => role.id.startsWith('custom-'))
+                            .map(role => (
+                              <SelectItem key={role.id} value={role.id} className="text-slate-100">
+                                <div>
+                                  <div className="font-semibold flex items-center gap-2">
+                                    {role.name}
+                                    <Badge className="bg-purple-500/30 text-purple-200 text-xs">AI</Badge>
+                                  </div>
+                                  <div className="text-xs text-slate-400">{role.level} • {role.salary}</div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
 
+                  {/* Role Details */}
                   <div className="space-y-3 pt-3 border-t border-slate-800">
                     <p className="text-sm text-slate-300">{selectedRole.description}</p>
                     <div className="grid grid-cols-2 gap-3 text-xs">
@@ -1251,6 +1416,36 @@ const handleAssessmentAnswer = (questionId: string, answerIndex: number) => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {isGeneratingCareer && (
+          <Card className="bg-gradient-to-r from-purple-900/20 to-indigo-900/20 border-purple-700/40">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+                <div className="flex-1">
+                  <h3 className="font-bold text-white mb-1">Generating Career Profile...</h3>
+                  <p className="text-sm text-slate-400">
+                    AI is analyzing "{customCareerInput}" and creating a personalized skill roadmap with assessments
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                  Analyzing industry requirements...
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse delay-75"></div>
+                  Generating skill assessments...
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+                  Creating learning roadmap...
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );
