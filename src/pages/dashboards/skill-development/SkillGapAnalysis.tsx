@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Target,
   TrendingUp,
@@ -28,6 +28,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/DashboardLayout";
+import geminiSkillAssessmentService, { AssessmentQuestion } from "@/services/geminiSkillAssessmentService";
+import { Loader2 } from "lucide-react";
 
 // ============ TypeScript Interfaces ============
 interface SkillItem {
@@ -39,23 +41,6 @@ interface SkillItem {
   importance: 'High' | 'Medium' | 'Low';
   trend: 'up' | 'down' | 'stable';
   marketDemand: number;
-}
-
-interface AssessmentQuestion {
-  id: string;
-  skillId: string;
-  question: string;
-  options: string[];
-  correct: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-}
-
-interface SkillAssessment {
-  skillId: string;
-  completed: boolean;
-  score: number;
-  questionsAnswered: number;
-  assessmentTime: number;
 }
 
 interface ProfessionalRole {
@@ -80,6 +65,15 @@ interface RoleResources {
   courses: LearningResource[];
   projects: (LearningResource & { difficulty: string })[];
   certifications: string[];
+}
+
+// Add this interface near the top with other interfaces
+interface SkillAssessment {
+  skillId: string;
+  completed: boolean;
+  score: number;
+  questionsAnswered: number;
+  assessmentTime: number;
 }
 
 // ============ Assessment Questions ============
@@ -285,6 +279,11 @@ export default function SkillGapAnalysis() {
   const [assessmentAnswers, setAssessmentAnswers] = useState<{ [key: string]: number }>({});
   const [skillAssessments, setSkillAssessments] = useState<{ [key: string]: SkillAssessment }>({});
 
+  // Add new state for dynamic questions
+  const [dynamicQuestions, setDynamicQuestions] = useState<{ [key: string]: AssessmentQuestion[] }>({});
+  const [loadingQuestions, setLoadingQuestions] = useState<{ [key: string]: boolean }>({});
+  const [questionDifficulty, setQuestionDifficulty] = useState<'beginner' | 'intermediate' | 'advanced' | 'expert'>('intermediate');
+
   // ============ Event Handlers ============
   const handleRoleChange = (roleId: string) => {
     const role = professionalRoles.find(r => r.id === roleId);
@@ -297,20 +296,70 @@ export default function SkillGapAnalysis() {
     }
   };
 
-  const startSkillAssessment = (skillId: string) => {
+  // New function to load questions for a skill
+  const loadQuestionsForSkill = async (skill: SkillItem) => {
+    // Check if questions already loaded
+    if (dynamicQuestions[skill.id]) {
+      return;
+    }
+
+    setLoadingQuestions(prev => ({ ...prev, [skill.id]: true }));
+
+    try {
+      // Determine difficulty based on current skill level
+      let difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+      if (skill.currentLevel < 30) {
+        difficulty = 'beginner';
+      } else if (skill.currentLevel < 60) {
+        difficulty = 'intermediate';
+      } else if (skill.currentLevel < 85) {
+        difficulty = 'advanced';
+      } else {
+        difficulty = 'expert';
+      }
+
+      const questions = await geminiSkillAssessmentService.getCachedOrGenerateQuestions(
+        skill.name,
+        skill.category,
+        difficulty,
+        5 // Number of questions
+      );
+
+      setDynamicQuestions(prev => ({
+        ...prev,
+        [skill.id]: questions
+      }));
+
+    } catch (error) {
+      console.error(`Failed to load questions for ${skill.name}:`, error);
+      // Optionally show error toast
+    } finally {
+      setLoadingQuestions(prev => ({ ...prev, [skill.id]: false }));
+    }
+  };
+
+  // Add this function inside the component, near other handler functions
+const handleAssessmentAnswer = (questionId: string, answerIndex: number) => {
+  setAssessmentAnswers(prev => ({
+    ...prev,
+    [questionId]: answerIndex
+  }));
+};
+  const startSkillAssessment = async (skillId: string) => {
+    const skill = skills.find(s => s.id === skillId);
+    if (!skill) return;
+
+    // Load questions if not already loaded
+    if (!dynamicQuestions[skillId]) {
+      await loadQuestionsForSkill(skill);
+    }
+
     setCurrentSkillAssessment(skillId);
     setAssessmentAnswers({});
   };
 
-  const handleAssessmentAnswer = (questionId: string, answerIndex: number) => {
-    setAssessmentAnswers(prev => ({
-      ...prev,
-      [questionId]: answerIndex
-    }));
-  };
-
   const completeSkillAssessment = (skillId: string) => {
-    const questions = assessmentQuestions[skillId] || [];
+    const questions = dynamicQuestions[skillId] || [];
     if (questions.length === 0) return;
 
     let correctAnswers = 0;
@@ -866,7 +915,7 @@ export default function SkillGapAnalysis() {
             </Card>
           </TabsContent>
 
-          {/* ============ Assessment Tab ============ */}
+          {/* ============ Assessment Tab - UPDATED ============ */}
           <TabsContent value="assessment" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="bg-slate-900 border-slate-800">
@@ -893,59 +942,102 @@ export default function SkillGapAnalysis() {
             </div>
 
             {currentSkillAssessment ? (
-              // Assessment Quiz View
+              // Assessment Quiz View - UPDATED
               <Card className="bg-slate-900 border-slate-800">
                 <CardHeader>
                   <CardTitle className="text-white">
                     {skills.find(s => s.id === currentSkillAssessment)?.name} Assessment
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    Answer questions to evaluate your proficiency level
+                    AI-generated questions to evaluate your proficiency level
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {(assessmentQuestions[currentSkillAssessment] || []).map((question, qIdx) => (
-                    <div key={question.id} className="border-b border-slate-800 pb-6 last:border-0">
-                      <h3 className="font-bold text-white mb-3">Question {qIdx + 1}: {question.question}</h3>
-                      <div className="space-y-2">
-                        {question.options.map((option, optIdx) => (
-                          <label key={optIdx} className="flex items-center gap-3 cursor-pointer p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
-                            <input
-                              type="radio"
-                              name={question.id}
-                              checked={assessmentAnswers[question.id] === optIdx}
-                              onChange={() => handleAssessmentAnswer(question.id, optIdx)}
-                              className="w-4 h-4 cursor-pointer"
-                            />
-                            <span className="text-slate-200">{option}</span>
-                          </label>
-                        ))}
-                      </div>
+                  {loadingQuestions[currentSkillAssessment] ? (
+                    // Loading State
+                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                      <Loader2 className="w-12 h-12 animate-spin text-purple-500" />
+                      <p className="text-slate-400">Generating personalized assessment questions...</p>
+                      <p className="text-xs text-slate-500">Powered by Gemini AI</p>
                     </div>
-                  ))}
-                  <div className="flex gap-3 pt-4">
-                    <Button
-                      onClick={() => completeSkillAssessment(currentSkillAssessment)}
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Submit Assessment
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentSkillAssessment(null)}
-                      className="border-slate-700 text-slate-300"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+                  ) : (
+                    <>
+                      {(dynamicQuestions[currentSkillAssessment] || []).map((question, qIdx) => (
+                        <div key={question.id} className="border-b border-slate-800 pb-6 last:border-0">
+                          <div className="flex items-start justify-between mb-3">
+                            <h3 className="font-bold text-white flex-1">
+                              Question {qIdx + 1}: {question.question}
+                            </h3>
+                            <Badge className="bg-purple-500/30 text-purple-200 text-xs">
+                              {question.difficulty}
+                            </Badge>
+                          </div>
+                          <div className="space-y-2">
+                            {question.options.map((option, optIdx) => {
+                              const isSelected = assessmentAnswers[question.id] === optIdx;
+                              return (
+                                <label
+                                  key={optIdx}
+                                  className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-all ${
+                                    isSelected
+                                      ? 'bg-purple-600/30 border-2 border-purple-500'
+                                      : 'bg-slate-800 hover:bg-slate-700 border-2 border-transparent'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={question.id}
+                                    checked={isSelected}
+                                    onChange={() => handleAssessmentAnswer(question.id, optIdx)}
+                                    className="w-4 h-4 cursor-pointer accent-purple-600"
+                                  />
+                                  <span className="text-slate-200">{option}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                          {question.explanation && (
+                            <div className="mt-3 p-3 bg-blue-950/30 border border-blue-800/50 rounded-lg">
+                              <p className="text-xs text-blue-300">
+                                <span className="font-semibold">💡 Tip: </span>
+                                {question.explanation}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      <div className="flex gap-3 pt-4">
+                        <Button
+                          onClick={() => completeSkillAssessment(currentSkillAssessment)}
+                          disabled={
+                            Object.keys(assessmentAnswers).length !==
+                            (dynamicQuestions[currentSkillAssessment]?.length || 0)
+                          }
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Submit Assessment
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setCurrentSkillAssessment(null)}
+                          className="border-slate-700 text-slate-300"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             ) : (
-              // Skills Assessment List View
+              // Skills Assessment List View - UPDATED
               <div className="space-y-3">
                 {skills.map((skill) => {
                   const assessment = skillAssessments[skill.id];
+                  const hasQuestions = !!dynamicQuestions[skill.id];
+                  const isLoading = loadingQuestions[skill.id];
+                  
                   return (
                     <Card key={skill.id} className="bg-slate-900 border-slate-800">
                       <CardContent className="pt-6">
@@ -955,7 +1047,16 @@ export default function SkillGapAnalysis() {
                               <h3 className="font-bold text-white">{skill.name}</h3>
                               <Badge className="bg-slate-800 text-slate-300 text-xs">{skill.category}</Badge>
                               {assessment?.completed && (
-                                <Badge className="bg-green-500/30 text-green-200">Assessed</Badge>
+                                <Badge className="bg-green-500/30 text-green-200">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Assessed
+                                </Badge>
+                              )}
+                              {hasQuestions && !assessment?.completed && (
+                                <Badge className="bg-blue-500/30 text-blue-200">
+                                  <Brain className="w-3 h-3 mr-1" />
+                                  Questions Ready
+                                </Badge>
                               )}
                             </div>
                             {assessment?.completed && (
@@ -969,10 +1070,20 @@ export default function SkillGapAnalysis() {
                             <Button
                               onClick={() => startSkillAssessment(skill.id)}
                               size="sm"
+                              disabled={isLoading}
                               className="bg-purple-600 hover:bg-purple-700"
                             >
-                              <Play className="w-3 h-3 mr-2" />
-                              Start
+                              {isLoading ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                  Loading...
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-3 h-3 mr-2" />
+                                  Start
+                                </>
+                              )}
                             </Button>
                           ) : (
                             <Button
@@ -985,6 +1096,12 @@ export default function SkillGapAnalysis() {
                                 setSkills(prev => prev.map(s =>
                                   s.id === skill.id ? { ...s, currentLevel: 0 } : s
                                 ));
+                                // Clear cached questions for retake
+                                setDynamicQuestions(prev => {
+                                  const newQuestions = { ...prev };
+                                  delete newQuestions[skill.id];
+                                  return newQuestions;
+                                });
                               }}
                               size="sm"
                               variant="outline"
