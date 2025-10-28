@@ -59,30 +59,6 @@ const CollegeAdmissionDashboard = () => {
     { name: "VIT Vellore", branch: "Computer Science", rank: "#18", fees: "₹2.8L/year", placement: "₹12L avg", roi: "4.1x", status: "pending" }
   ];
 
-  const applicationDeadlines = [
-    {
-      title: "IIT JEE Advanced Registration",
-      date: "Dec 30, 2024",
-      timeLeft: "5 days",
-      priority: "high",
-      status: "urgent"
-    },
-    {
-      title: "BITS Admission Form",
-      date: "Jan 10, 2025",
-      timeLeft: "16 days",
-      priority: "medium",
-      status: "upcoming"
-    },
-    {
-      title: "State Counselling",
-      date: "Feb 1, 2025",
-      timeLeft: "38 days",
-      priority: "medium",
-      status: "planned"
-    }
-  ];
-
   const recentUpdates = [
     { title: "New Scholarship Available", amount: "₹50K", type: "Merit-based", priority: "high" },
     { title: "Placement Data Updated", college: "IIIT Hyderabad", change: "+12%", priority: "medium" },
@@ -222,37 +198,6 @@ const CollegeAdmissionDashboard = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Critical Deadlines */}
-            <Card className="feature-card">
-              <CardHeader>
-                <CardTitle className="flex items-center text-red-500">
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  Critical Deadlines
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {applicationDeadlines.map((deadline, index) => (
-                    <div key={index} className={`p-3 rounded-lg border ${
-                      deadline.priority === 'high' ? 'bg-red-500/10 border-red-500/30' :
-                      'bg-yellow-500/10 border-yellow-500/30'
-                    }`}>
-                      <div className="flex justify-between items-start mb-1">
-                        <p className="font-medium text-sm">{deadline.title}</p>
-                        <Badge 
-                          variant={deadline.priority === 'high' ? 'destructive' : 'outline'}
-                          className="text-xs"
-                        >
-                          {deadline.timeLeft}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{deadline.date}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Recent Updates */}
             <Card className="feature-card">
               <CardHeader>
