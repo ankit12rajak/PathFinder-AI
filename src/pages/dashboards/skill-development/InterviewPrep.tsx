@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Brain, Clock, Target, Award, Star, Play, RotateCcw, CheckCircle, AlertCircle, TrendingUp, Download, Sparkles, Code, MessageSquare, Layers, Zap, Mic, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DashboardLayout from "@/components/DashboardLayout";
 
 const InterviewPrep = () => {
+  const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState<string>("frontend-developer");
   const [selectedRounds, setSelectedRounds] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>("all");
@@ -262,10 +264,10 @@ const InterviewPrep = () => {
             {/* Start Interview Button */}
             <Button
               className="w-full h-14 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              disabled={selectedRounds.length === 0}
+              onClick={() => navigate("/interview/setup")}
             >
               <Play className="w-5 h-5 mr-2" />
-              Start Interview
+              Start Mock Interview
             </Button>
           </div>
 

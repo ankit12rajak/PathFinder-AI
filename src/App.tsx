@@ -54,6 +54,15 @@ import ResumeBuilder from "./pages/dashboards/skill-development/ResumeBuilder";
 import CoverLetter from "./pages/dashboards/skill-development/CoverLetter";
 import Portfolio from "./pages/dashboards/skill-development/Portfolio";
 import InterviewQuestions from "./pages/dashboards/skill-development/InterviewQuestions";
+
+// Interview Preparation Flow
+import InterviewSetup from "./pages/interview/InterviewSetup";
+import MachineCoding from "./pages/interview/rounds/MachineCoding";
+import TechnicalDiscussion from "./pages/interview/rounds/TechnicalDiscussion";
+import SystemDesign from "./pages/interview/rounds/SystemDesign";
+import Behavioral from "./pages/interview/rounds/Behavioral";
+import InterviewSummary from "./pages/interview/InterviewSummary";
+
 import MockTestPage from "./Test/jeemain"; // Import jeemain.tsx
 import NEETTestPage from './Test/neet';
 import JEEAdvancedTestPage from './Test/jeeadvanced';
@@ -119,6 +128,14 @@ const App = () => (
           <Route path="/dashboard/skill-development/placement-kit/coverletter" element={<CoverLetter />} />
           <Route path="/dashboard/skill-development/placement-kit/portfolio" element={<Portfolio />} />
           <Route path="/dashboard/skill-development/placement-kit/interviewquestion" element={<InterviewQuestions />} />
+          
+          {/* Interview Preparation Flow Routes */}
+          <Route path="/interview/setup" element={<InterviewSetup />} />
+          <Route path="/interview/round/1" element={<MachineCoding />} />
+          <Route path="/interview/round/2" element={<TechnicalDiscussion />} />
+          <Route path="/interview/round/3" element={<SystemDesign />} />
+          <Route path="/interview/round/4" element={<Behavioral />} />
+          <Route path="/interview/summary" element={<InterviewSummary />} />
           
           {/* Mock Test Routes */}
           <Route path="/jeemain" element={<MockTestPage />} />
