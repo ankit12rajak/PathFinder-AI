@@ -1,15 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { MousePointer2, Pencil, Square, Circle, ArrowRight, Trash2, Minus, Undo2, Redo2, Eraser, Type, Download } from "lucide-react";
+import { MousePointer2, Pencil, Square, Circle, ArrowRight, Trash2, Minus, Eraser, Type, Download } from "lucide-react";
 
 interface CanvasToolbarProps {
   activeTool: "select" | "draw" | "rectangle" | "circle" | "arrow" | "line" | "eraser" | "text";
   onToolClick: (tool: "select" | "draw" | "rectangle" | "circle" | "arrow" | "line" | "eraser" | "text") => void;
   onClear: () => void;
   onExport: () => void;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
   color: string;
   onColorChange: (color: string) => void;
 }
@@ -25,38 +21,17 @@ const colors = [
   { name: "White", value: "#ffffff" },
 ];
 
-export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUndo, onRedo, canUndo, canRedo, color, onColorChange }: CanvasToolbarProps) => {
+export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, color, onColorChange }: CanvasToolbarProps) => {
   return (
-    <div className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg shadow-card flex-wrap">
-      {/* Undo/Redo */}
-      <div className="flex items-center gap-1 pr-3 border-r border-border">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Undo"
-        >
-          <Undo2 className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Redo"
-        >
-          <Redo2 className="w-4 h-4" />
-        </Button>
-      </div>
-
+    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-card/95 to-card/85 backdrop-blur-md border-2 border-border/50 rounded-xl shadow-lg flex-wrap">
       {/* Tools */}
-      <div className="flex items-center gap-1 pr-3 border-r border-border">
+      <div className="flex items-center gap-1 pr-3 border-r-2 border-border/50">
         <Button
           variant={activeTool === "select" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("select")}
-          title="Select"
+          title="Select (V)"
+          className={activeTool === "select" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <MousePointer2 className="w-4 h-4" />
         </Button>
@@ -64,7 +39,8 @@ export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUn
           variant={activeTool === "draw" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("draw")}
-          title="Draw"
+          title="Draw (P)"
+          className={activeTool === "draw" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <Pencil className="w-4 h-4" />
         </Button>
@@ -72,7 +48,8 @@ export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUn
           variant={activeTool === "line" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("line")}
-          title="Line"
+          title="Line (L)"
+          className={activeTool === "line" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <Minus className="w-4 h-4" />
         </Button>
@@ -80,7 +57,8 @@ export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUn
           variant={activeTool === "arrow" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("arrow")}
-          title="Arrow"
+          title="Arrow (A)"
+          className={activeTool === "arrow" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <ArrowRight className="w-4 h-4" />
         </Button>
@@ -88,7 +66,8 @@ export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUn
           variant={activeTool === "rectangle" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("rectangle")}
-          title="Rectangle"
+          title="Rectangle (R)"
+          className={activeTool === "rectangle" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <Square className="w-4 h-4" />
         </Button>
@@ -96,7 +75,8 @@ export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUn
           variant={activeTool === "circle" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("circle")}
-          title="Circle"
+          title="Circle (C)"
+          className={activeTool === "circle" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <Circle className="w-4 h-4" />
         </Button>
@@ -104,7 +84,8 @@ export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUn
           variant={activeTool === "text" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("text")}
-          title="Text"
+          title="Text (T)"
+          className={activeTool === "text" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <Type className="w-4 h-4" />
         </Button>
@@ -112,31 +93,47 @@ export const CanvasToolbar = ({ activeTool, onToolClick, onClear, onExport, onUn
           variant={activeTool === "eraser" ? "default" : "ghost"}
           size="icon"
           onClick={() => onToolClick("eraser")}
-          title="Eraser"
+          title="Eraser (E)"
+          className={activeTool === "eraser" ? "bg-primary shadow-md" : "hover:bg-primary/20"}
         >
           <Eraser className="w-4 h-4" />
         </Button>
       </div>
 
-      <div className="flex items-center gap-1 pr-3 border-r border-border">
+      {/* Color Palette */}
+      <div className="flex items-center gap-1.5 pr-3 border-r-2 border-border/50">
+        <span className="text-xs font-semibold text-muted-foreground mr-1">Color:</span>
         {colors.map((c) => (
           <button
             key={c.value}
             onClick={() => onColorChange(c.value)}
-            className={`w-6 h-6 rounded border-2 ${
-              color === c.value ? "border-primary scale-110" : "border-border"
-            } transition-all`}
+            className={`w-7 h-7 rounded-lg border-2 transition-all hover:scale-110 ${
+              color === c.value ? "border-primary scale-110 shadow-lg ring-2 ring-primary/30" : "border-border/50 hover:border-primary/50"
+            }`}
             style={{ backgroundColor: c.value }}
             title={c.name}
           />
         ))}
       </div>
 
-      <div className="flex items-center gap-1">
-        <Button variant="outline" size="icon" onClick={onExport} title="Export Canvas">
+      {/* Actions */}
+      <div className="flex items-center gap-1.5">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={onExport} 
+          title="Export as PNG"
+          className="hover:bg-green-500/20 hover:border-green-500/50 hover:text-green-500 transition-all"
+        >
           <Download className="w-4 h-4" />
         </Button>
-        <Button variant="destructive" size="icon" onClick={onClear} title="Clear Canvas">
+        <Button 
+          variant="destructive" 
+          size="icon" 
+          onClick={onClear} 
+          title="Clear Canvas"
+          className="hover:bg-red-500 shadow-md transition-all"
+        >
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>

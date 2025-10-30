@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas as FabricCanvas, Circle, Rect, Line, IText, PencilBrush } from "fabric";
+import { Canvas as FabricCanvas, Circle, Rect, Line, IText, PencilBrush, Group } from "fabric";
 import { CanvasToolbar } from "./CanvasToolbar";
 import { toast } from "sonner";
 import * as LucideIcons from "lucide-react";
@@ -13,31 +13,42 @@ export const DrawingCanvas = () => {
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const tempShapeRef = useRef<Rect | Circle | Line | null>(null);
   
-  // Undo/Redo state
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyStep, setHistoryStep] = useState(-1);
 
-  // Save canvas state for undo/redo
-  const saveState = useCallback(() => {
-    if (!fabricCanvas) return;
-    
-    const json = JSON.stringify(fabricCanvas.toJSON());
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyStep + 1);
-      newHistory.push(json);
-      return newHistory;
-    });
-    setHistoryStep(prev => prev + 1);
-  }, [fabricCanvas, historyStep]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    // Calculate optimal canvas size based on viewport
+    const canvasWidth = Math.min(window.innerWidth > 1400 ? 1400 : window.innerWidth - 200, 1600);
+    const canvasHeight = Math.min(window.innerHeight - 250, 800);
+
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: window.innerWidth > 1024 ? 1000 : 800,
-      height: 600,
+      width: canvasWidth,
+      height: canvasHeight,
       backgroundColor: "#1a1f2e",
     });
+
+    // Add a professional grid pattern
+    const gridSize = 25;
+    const gridColor = "#2d3748";
+    
+    for (let i = 0; i < (canvas.width! / gridSize); i++) {
+      canvas.add(new Line([i * gridSize, 0, i * gridSize, canvas.height!], {
+        stroke: gridColor,
+        strokeWidth: 0.5,
+        selectable: false,
+        evented: false,
+      }));
+    }
+    
+    for (let i = 0; i < (canvas.height! / gridSize); i++) {
+      canvas.add(new Line([0, i * gridSize, canvas.width!, i * gridSize], {
+        stroke: gridColor,
+        strokeWidth: 0.5,
+        selectable: false,
+        evented: false,
+      }));
+    }
 
     // Initialize freeDrawingBrush (ensure it exists)
     if (!canvas.freeDrawingBrush) {
@@ -54,30 +65,13 @@ export const DrawingCanvas = () => {
 
     setFabricCanvas(canvas);
 
-    // Save initial state
-    const initialState = JSON.stringify(canvas.toJSON());
-    setHistory([initialState]);
-    setHistoryStep(0);
-
     const handleResize = () => {
-      if (window.innerWidth > 1024) {
-        canvas.setDimensions({ width: 1000, height: 600 });
-      } else {
-        canvas.setDimensions({ width: 800, height: 600 });
-      }
+      const newWidth = Math.min(window.innerWidth > 1400 ? 1400 : window.innerWidth - 200, 1600);
+      const newHeight = Math.min(window.innerHeight - 250, 800);
+      canvas.setDimensions({ width: newWidth, height: newHeight });
     };
 
     window.addEventListener("resize", handleResize);
-
-    // Save state after object modifications
-    canvas.on("object:added", () => {
-      if (!isDrawingRef.current) {
-        setTimeout(saveState, 100);
-      }
-    });
-
-    canvas.on("object:modified", saveState);
-    canvas.on("object:removed", saveState);
 
     // Handle drop events for icon library
     const handleDrop = (e: DragEvent) => {
@@ -85,12 +79,12 @@ export const DrawingCanvas = () => {
       e.stopPropagation();
       const iconType = e.dataTransfer?.getData("iconType");
       const iconLabel = e.dataTransfer?.getData("icon");
+      const iconColor = e.dataTransfer?.getData("color");
       
       if (iconType && iconLabel) {
         const pointer = canvas.getPointer(e as any);
-        addSystemDesignIcon(canvas, iconType, iconLabel, pointer.x, pointer.y);
+        addSystemDesignIcon(canvas, iconType, iconLabel, pointer.x, pointer.y, iconColor);
         toast.success(`Added ${iconLabel} to canvas`);
-        setTimeout(saveState, 100);
       }
     };
 
@@ -329,7 +323,7 @@ export const DrawingCanvas = () => {
       fabricCanvas.off("mouse:move", handleMouseMove);
       fabricCanvas.off("mouse:up", handleMouseUp);
     };
-  }, [activeTool, activeColor, fabricCanvas, saveState]);
+  }, [activeTool, activeColor, fabricCanvas]);
 
   const handleToolClick = (tool: typeof activeTool) => {
     setActiveTool(tool);
@@ -339,8 +333,30 @@ export const DrawingCanvas = () => {
     if (!fabricCanvas) return;
     fabricCanvas.clear();
     fabricCanvas.backgroundColor = "#1a1f2e";
+    
+    // Restore grid pattern
+    const gridSize = 25;
+    const gridColor = "#2d3748";
+    
+    for (let i = 0; i < (fabricCanvas.width! / gridSize); i++) {
+      fabricCanvas.add(new Line([i * gridSize, 0, i * gridSize, fabricCanvas.height!], {
+        stroke: gridColor,
+        strokeWidth: 0.5,
+        selectable: false,
+        evented: false,
+      }));
+    }
+    
+    for (let i = 0; i < (fabricCanvas.height! / gridSize); i++) {
+      fabricCanvas.add(new Line([0, i * gridSize, fabricCanvas.width!, i * gridSize], {
+        stroke: gridColor,
+        strokeWidth: 0.5,
+        selectable: false,
+        evented: false,
+      }));
+    }
+    
     fabricCanvas.renderAll();
-    saveState();
     toast.success("Canvas cleared!");
   };
 
@@ -362,30 +378,6 @@ export const DrawingCanvas = () => {
     toast.success("Canvas exported as PNG!");
   };
 
-  const handleUndo = () => {
-    if (!fabricCanvas || historyStep <= 0) return;
-    
-    const newStep = historyStep - 1;
-    setHistoryStep(newStep);
-    
-    fabricCanvas.loadFromJSON(history[newStep], () => {
-      fabricCanvas.renderAll();
-      toast.info("Undo");
-    });
-  };
-
-  const handleRedo = () => {
-    if (!fabricCanvas || historyStep >= history.length - 1) return;
-    
-    const newStep = historyStep + 1;
-    setHistoryStep(newStep);
-    
-    fabricCanvas.loadFromJSON(history[newStep], () => {
-      fabricCanvas.renderAll();
-      toast.info("Redo");
-    });
-  };
-
   // Enable dropping on the container (works across browsers)
   const handleContainerDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -399,15 +391,15 @@ export const DrawingCanvas = () => {
 
     const iconType = e.dataTransfer.getData("iconType");
     const iconLabel = e.dataTransfer.getData("icon");
+    const iconColor = e.dataTransfer.getData("color");
     if (!iconType || !iconLabel) return;
 
     const rect = (canvasRef.current as HTMLCanvasElement).getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    addSystemDesignIcon(fabricCanvas, iconType, iconLabel, x, y);
+    addSystemDesignIcon(fabricCanvas, iconType, iconLabel, x, y, iconColor);
     toast.success(`Added ${iconLabel} to canvas`);
-    setTimeout(saveState, 100);
   };
 
   return (
@@ -417,10 +409,6 @@ export const DrawingCanvas = () => {
         onToolClick={handleToolClick}
         onClear={handleClear}
         onExport={handleExport}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        canUndo={historyStep > 0}
-        canRedo={historyStep < history.length - 1}
         color={activeColor}
         onColorChange={setActiveColor}
       />
@@ -435,13 +423,14 @@ export const DrawingCanvas = () => {
   );
 };
 
-// Helper function to add system design icons
+// Helper function to add system design icons with actual icon rendering
 const addSystemDesignIcon = (
   canvas: FabricCanvas,
   iconType: string,
   label: string,
   x: number,
-  y: number
+  y: number,
+  customColor?: string
 ) => {
   const colorMap: Record<string, string> = {
     database: "#3b82f6",
@@ -454,37 +443,309 @@ const addSystemDesignIcon = (
     api: "#eab308",
     service: "#06b6d4",
     loadbalancer: "#a855f7",
+    postgresql: "#336791",
+    mongodb: "#47A248",
+    mysql: "#4479A1",
+    redis: "#DC382D",
+    kafka: "#231F20",
+    aws: "#FF9900",
+    nginx: "#009639",
+    docker: "#2496ED",
+    kubernetes: "#326CE5",
+    memcached: "#00B8D4",
+    rabbitmq: "#FF6600",
+    azure: "#0089D6",
+    gcp: "#4285F4",
+    cdn: "#F16529",
+    lambda: "#FF9900",
+    s3: "#569A31",
+    users: "#8b5cf6",
+    "api-gateway": "#eab308",
+    microservice: "#06b6d4",
+    "rest-api": "#00D9FF",
+    auth: "#ef4444",
+    firewall: "#DC2626",
+    "blob-storage": "#0089D6",
+    cassandra: "#1287B1",
   };
 
-  const color = colorMap[iconType] || "#3b82f6";
+  const color = customColor || colorMap[iconType] || "#3b82f6";
+  
+  // Parse color to RGB for transparency effects
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 59, g: 130, b: 246 };
+  };
+  
+  const rgb = hexToRgb(color);
+  
+  // Card dimensions
+  const cardWidth = 140;
+  const cardHeight = 110;
+  const cardX = x - cardWidth / 2;
+  const cardY = y - cardHeight / 2;
+  
+  // Create all shapes as a group for better undo/redo
+  const shapes: any[] = [];
+  
+  // Outer glow/shadow effect
+  shapes.push(new Rect({
+    left: -3,
+    top: -3,
+    width: cardWidth + 6,
+    height: cardHeight + 6,
+    fill: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`,
+    rx: 14,
+    ry: 14,
+  }));
 
-  // Create a rounded rectangle background
-  const rect = new Rect({
-    left: x - 40,
-    top: y - 40,
-    width: 80,
-    height: 80,
-    fill: color + "30",
+  // Main card background
+  shapes.push(new Rect({
+    left: 0,
+    top: 0,
+    width: cardWidth,
+    height: cardHeight,
+    fill: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`,
     stroke: color,
-    strokeWidth: 2,
-    rx: 8,
-    ry: 8,
-    selectable: true,
-    evented: true,
-  });
+    strokeWidth: 3,
+    rx: 12,
+    ry: 12,
+  }));
 
-  // Create label text
-  const text = new IText(label, {
-    left: x - 35,
-    top: y + 50,
+  // Header section
+  shapes.push(new Rect({
+    left: 0,
+    top: 0,
+    width: cardWidth,
+    height: 50,
+    fill: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`,
+    rx: 12,
+    ry: 12,
+  }));
+
+  // Icon background circle
+  shapes.push(new Circle({
+    left: cardWidth / 2 - 22,
+    top: 3,
+    radius: 22,
+    fill: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.6)`,
+    stroke: color,
+    strokeWidth: 3,
+  }));
+
+  // Draw simplified icon representation based on type
+  const iconCenterX = cardWidth / 2;
+  const iconCenterY = 25;
+  
+  // Add icon shapes based on type
+  if (iconType.includes("database") || iconType === "postgresql" || iconType === "mongodb" || iconType === "mysql" || iconType === "cassandra") {
+    // Database cylinder
+    shapes.push(new Circle({
+      left: iconCenterX - 12,
+      top: iconCenterY - 15,
+      radius: 12,
+      radiusY: 4,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+    shapes.push(new Rect({
+      left: iconCenterX - 12,
+      top: iconCenterY - 11,
+      width: 24,
+      height: 20,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+    shapes.push(new Circle({
+      left: iconCenterX - 12,
+      top: iconCenterY + 9,
+      radius: 12,
+      radiusY: 4,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+  } else if (iconType.includes("redis") || iconType.includes("cache") || iconType === "memcached") {
+    // Cache/Layers icon
+    shapes.push(new Rect({
+      left: iconCenterX - 14,
+      top: iconCenterY - 12,
+      width: 28,
+      height: 6,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+      rx: 2,
+    }));
+    shapes.push(new Rect({
+      left: iconCenterX - 14,
+      top: iconCenterY - 3,
+      width: 28,
+      height: 6,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+      rx: 2,
+    }));
+    shapes.push(new Rect({
+      left: iconCenterX - 14,
+      top: iconCenterY + 6,
+      width: 28,
+      height: 6,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+      rx: 2,
+    }));
+  } else if (iconType.includes("server") || iconType === "nginx") {
+    // Server icon
+    shapes.push(new Rect({
+      left: iconCenterX - 12,
+      top: iconCenterY - 14,
+      width: 24,
+      height: 28,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+      rx: 2,
+    }));
+    shapes.push(new Circle({
+      left: iconCenterX - 2,
+      top: iconCenterY - 8,
+      radius: 2,
+      fill: "#ffffff",
+    }));
+    shapes.push(new Circle({
+      left: iconCenterX - 2,
+      top: iconCenterY,
+      radius: 2,
+      fill: "#ffffff",
+    }));
+  } else if (iconType.includes("cloud") || iconType === "aws" || iconType === "azure" || iconType === "gcp") {
+    // Cloud icon
+    shapes.push(new Circle({
+      left: iconCenterX - 10,
+      top: iconCenterY - 6,
+      radius: 7,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+    shapes.push(new Circle({
+      left: iconCenterX - 2,
+      top: iconCenterY - 8,
+      radius: 8,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+    shapes.push(new Circle({
+      left: iconCenterX + 4,
+      top: iconCenterY - 6,
+      radius: 6,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+  } else if (iconType.includes("docker") || iconType.includes("kubernetes") || iconType.includes("container")) {
+    // Container icon
+    shapes.push(new Rect({
+      left: iconCenterX - 12,
+      top: iconCenterY - 10,
+      width: 24,
+      height: 20,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+      rx: 2,
+    }));
+    shapes.push(new Line([iconCenterX - 12, iconCenterY - 3, iconCenterX + 12, iconCenterY - 3], {
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+    shapes.push(new Line([iconCenterX - 12, iconCenterY + 4, iconCenterX + 12, iconCenterY + 4], {
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+  } else if (iconType.includes("users") || iconType.includes("client")) {
+    // Users icon
+    shapes.push(new Circle({
+      left: iconCenterX - 8,
+      top: iconCenterY - 10,
+      radius: 5,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+    shapes.push(new Circle({
+      left: iconCenterX + 3,
+      top: iconCenterY - 10,
+      radius: 5,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+    }));
+  } else {
+    // Default: simple icon box
+    shapes.push(new Rect({
+      left: iconCenterX - 10,
+      top: iconCenterY - 10,
+      width: 20,
+      height: 20,
+      fill: "transparent",
+      stroke: "#ffffff",
+      strokeWidth: 2,
+      rx: 3,
+    }));
+  }
+
+  // Label text
+  shapes.push(new IText(label, {
+    left: cardWidth / 2 - 50,
+    top: 60,
+    width: 100,
     fontSize: 12,
     fill: "#ffffff",
-    fontFamily: "Arial",
+    fontFamily: "Arial, sans-serif",
     fontWeight: "bold",
+    textAlign: "center",
+  }));
+
+  // Badge at bottom
+  shapes.push(new Rect({
+    left: cardWidth / 2 - 50,
+    top: 82,
+    width: 100,
+    height: 18,
+    fill: color,
+    rx: 4,
+    ry: 4,
+    opacity: 0.9,
+  }));
+
+  shapes.push(new IText("Component", {
+    left: cardWidth / 2 - 35,
+    top: 85,
+    fontSize: 9,
+    fill: "#ffffff",
+    fontFamily: "Arial, sans-serif",
+    fontWeight: "600",
+  }));
+
+  // Create group from all shapes
+  const group = new Group(shapes, {
+    left: cardX,
+    top: cardY,
     selectable: true,
-    evented: true,
+    hasControls: true,
   });
 
-  canvas.add(rect, text);
+  canvas.add(group);
   canvas.renderAll();
 };
