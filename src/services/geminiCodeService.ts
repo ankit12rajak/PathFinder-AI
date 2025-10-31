@@ -18,9 +18,24 @@ export interface CodeExecutionResult {
     feedback: string;
     bugs: string[];
     suggestions: string[];
+    timeComplexity?: string;
+    spaceComplexity?: string;
+    optimalTimeComplexity?: string;
+    optimalSpaceComplexity?: string;
+    complexityAnalysis?: string;
   };
   executionTime?: string;
   syntaxErrors?: string[];
+  testCaseResults?: {
+    passed: number;
+    total: number;
+    details: {
+      input: string;
+      expectedOutput: string;
+      actualOutput: string;
+      passed: boolean;
+    }[];
+  };
 }
 
 /**
@@ -28,14 +43,29 @@ export interface CodeExecutionResult {
  * @param code - The code to analyze and execute
  * @param language - Programming language
  * @param problemDescription - Optional problem description for context
+ * @param testCases - Optional test cases for validation
+ * @param optimalComplexity - Optional optimal complexity for comparison
  */
 export async function analyzeAndExecuteCode(
   code: string,
   language: string,
-  problemDescription?: string
+  problemDescription?: string,
+  testCases?: { input: string; expectedOutput: string }[],
+  optimalComplexity?: { time: string; space: string }
 ): Promise<CodeExecutionResult> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const testCasesSection = testCases && testCases.length > 0 
+      ? `\n\nTest Cases to validate:
+${testCases.map((tc, idx) => `Test ${idx + 1}: Input: ${tc.input}, Expected: ${tc.expectedOutput}`).join('\n')}`
+      : '';
+
+    const optimalComplexitySection = optimalComplexity
+      ? `\n\nOptimal Solution Complexity:
+- Time Complexity: ${optimalComplexity.time}
+- Space Complexity: ${optimalComplexity.space}`
+      : '';
 
     const prompt = `You are an expert coding interviewer and code analyzer. Analyze the following ${language} code and provide detailed feedback.
 
@@ -44,25 +74,36 @@ Code to analyze:
 \`\`\`${language}
 ${code}
 \`\`\`
+${testCasesSection}${optimalComplexitySection}
 
 Please provide:
 1. **Syntax Check**: Identify any syntax errors (return empty array if none)
 2. **Code Execution**: Simulate the execution and provide the output (or explain what it would output)
-3. **Code Analysis**: Provide detailed analysis with scores (0-100) for:
+3. **Time & Space Complexity Analysis**: 
+   - Analyze the actual time complexity of this code
+   - Analyze the actual space complexity of this code
+   ${optimalComplexity ? `- Compare with optimal: ${optimalComplexity.time} time, ${optimalComplexity.space} space` : ''}
+   - Provide brief explanation of complexity analysis
+4. **Code Analysis**: Provide detailed analysis with scores (0-100) for:
    - Code Quality (readability, structure, naming)
    - Correctness (does it solve the problem correctly?)
    - Efficiency (time/space complexity)
    - Best Practices (follows language conventions)
-4. **Strengths**: List 2-3 things done well
-5. **Improvements**: List 2-3 areas for improvement
-6. **Bugs**: List any bugs or logical errors (empty if none)
-7. **Suggestions**: Specific actionable suggestions
-8. **Feedback**: Overall constructive feedback (2-3 sentences)
+5. **Strengths**: List 2-3 things done well
+6. **Improvements**: List 2-3 areas for improvement
+7. **Bugs**: List any bugs or logical errors (empty if none)
+8. **Suggestions**: Specific actionable suggestions
+9. **Feedback**: Overall constructive feedback (2-3 sentences)
+${testCases && testCases.length > 0 ? '10. **Test Case Validation**: For each test case, provide the actual output your code would produce' : ''}
 
 Return your response in the following JSON format:
 {
   "syntaxErrors": ["error1", "error2"] or [],
   "output": "simulated execution output",
+  "timeComplexity": "O(n)",
+  "spaceComplexity": "O(1)",
+  ${optimalComplexity ? '"optimalTimeComplexity": "' + optimalComplexity.time + '",\n  "optimalSpaceComplexity": "' + optimalComplexity.space + '",\n  ' : ''}
+  "complexityAnalysis": "brief explanation of the complexity",
   "codeQuality": 85,
   "correctness": 90,
   "efficiency": 75,
@@ -71,7 +112,7 @@ Return your response in the following JSON format:
   "improvements": ["improvement1", "improvement2"],
   "bugs": ["bug1"] or [],
   "suggestions": ["suggestion1", "suggestion2"],
-  "feedback": "overall feedback"
+  "feedback": "overall feedback"${testCases && testCases.length > 0 ? ',\n  "testCaseResults": [\n    {"input": "test input", "expectedOutput": "expected", "actualOutput": "actual", "passed": true}\n  ]' : ''}
 }`;
 
     const result = await model.generateContent(prompt);
@@ -94,12 +135,23 @@ Return your response in the following JSON format:
        analysis.bestPractices) / 4
     );
 
+    // Process test case results if present
+    let testCaseResults;
+    if (analysis.testCaseResults && testCases) {
+      testCaseResults = {
+        passed: analysis.testCaseResults.filter((tc: any) => tc.passed).length,
+        total: analysis.testCaseResults.length,
+        details: analysis.testCaseResults
+      };
+    }
+
     return {
       success: analysis.syntaxErrors.length === 0,
       output: analysis.output,
       error: analysis.syntaxErrors.length > 0 ? analysis.syntaxErrors.join("\n") : undefined,
       syntaxErrors: analysis.syntaxErrors,
       executionTime: "< 1s (simulated)",
+      testCaseResults,
       analysis: {
         codeQuality: analysis.codeQuality,
         correctness: analysis.correctness,
@@ -110,7 +162,12 @@ Return your response in the following JSON format:
         improvements: analysis.improvements,
         feedback: analysis.feedback,
         bugs: analysis.bugs,
-        suggestions: analysis.suggestions
+        suggestions: analysis.suggestions,
+        timeComplexity: analysis.timeComplexity,
+        spaceComplexity: analysis.spaceComplexity,
+        optimalTimeComplexity: analysis.optimalTimeComplexity,
+        optimalSpaceComplexity: analysis.optimalSpaceComplexity,
+        complexityAnalysis: analysis.complexityAnalysis
       }
     };
   } catch (error) {

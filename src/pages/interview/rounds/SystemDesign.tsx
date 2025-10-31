@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { DrawingCanvas } from "@/components/DrawingCanvas";
 import { SystemDesignIconLibrary } from "@/components/SystemDesignIconLibrary";
 import { Badge } from "@/components/ui/badge";
+import { markRoundComplete, isRoundAccessible } from "@/services/interviewProgressService";
 
 const SystemDesign = () => {
   const navigate = useNavigate();
@@ -35,10 +36,19 @@ const SystemDesign = () => {
 
   const handleSubmit = () => {
     toast.success("System design submitted successfully!");
+    markRoundComplete(3);
     setTimeout(() => {
       navigate("/interview/round/4");
     }, 1500);
   };
+
+  // Check if user can access this round
+  useEffect(() => {
+    if (!isRoundAccessible(3)) {
+      toast.error("Please complete Round 2 first!");
+      navigate("/interview/round/2");
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">

@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import LiveKitWidget from "@/components/ai_avatar/LiveKitWidget";
-import { markRoundComplete, isRoundAccessible } from "@/services/interviewProgressService";
+import dynamicInterviewService from "@/services/dynamicInterviewService";
+import { supabase } from "@/lib/supabase";
 
 const Behavioral = () => {
   const navigate = useNavigate();
@@ -16,17 +17,14 @@ const Behavioral = () => {
   
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [messages, setMessages] = useState([
-    {
-      role: "ai",
-      content: "Welcome to the behavioral interview round! I'll be asking you questions about your past experiences and how you handle different situations. Remember to use the STAR method (Situation, Task, Action, Result) when answering. Let's start with: Tell me about a time when you had to work with a difficult team member.",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showAvatar, setShowAvatar] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [contextData, setContextData] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const questions = [
@@ -57,6 +55,44 @@ const Behavioral = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    const loadBehavioralData = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) {
+          toast.error("Please log in first");
+          navigate("/auth");
+          return;
+        }
+        setUserId(session.user.id);
+
+        if (!sessionId) {
+          toast.error("No interview session found");
+          navigate("/interview/setup");
+          return;
+        }
+
+        // Fetch all context from previous rounds
+        const allContext = await dynamicInterviewService.getInterviewContext(sessionId, 4);
+        setContextData(allContext);
+
+        // Initialize with behavioral greeting
+        setMessages([{
+          role: "ai",
+          content: `Welcome to the behavioral interview round! I've reviewed your technical performance so far - great work! Now let's discuss your past experiences and how you handle different situations. Remember to use the STAR method (Situation, Task, Action, Result) when answering. Let's start with: ${questions[0]}`,
+          timestamp: new Date(),
+        }]);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading behavioral data:", error);
+        toast.error("Failed to load behavioral interview data");
+        setLoading(false);
+      }
+    };
+    loadBehavioralData();
+  }, [sessionId, navigate]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -66,10 +102,18 @@ const Behavioral = () => {
   const handleComplete = async () => {
     try {
       setIsSubmitting(true);
-      toast.success("Interview completed! Great job!");
-      markRoundComplete(4);
+      
+      // Store behavioral context
+      await dynamicInterviewService.storeInterviewContext(
+        sessionId!,
+        4,
+        "behavioral",
+        `Behavioral Discussion: ${messages.map(m => `${m.role}: ${m.content}`).join("\n")}`
+      );
+
+      toast.success("Behavioral round completed!");
       setTimeout(() => {
-        navigate("/interview/summary");
+        navigate(`/interview/summary?sessionId=${sessionId}`);
       }, 1500);
     } catch (error) {
       console.error("Error:", error);
@@ -78,14 +122,6 @@ const Behavioral = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Check if user can access this round
-  useEffect(() => {
-    if (!isRoundAccessible(4)) {
-      toast.error("Please complete Round 3 first!");
-      navigate("/interview/round/3");
-    }
-  }, [navigate]);
 
   const sendMessage = () => {
     if (!currentMessage.trim()) return;
@@ -166,7 +202,7 @@ const Behavioral = () => {
           </div>
           <Button
             onClick={handleComplete}
-            disabled={isSubmitting}
+            disabled={isSubmitting || loading}
             className="bg-gradient-to-r from-primary via-accent to-primary hover:opacity-90 transition-opacity shadow-lg"
           >
             {isSubmitting ? (
@@ -398,7 +434,7 @@ const Behavioral = () => {
                 </div>
                 <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
                   <AlertCircle className="w-3 h-3" />
-                  Tip: Be specific, use the STAR method, and focus on your personal contributions and learnings
+                  Tip: Use the STAR method to structure your answers effectively
                 </p>
               </div>
             </CardContent>

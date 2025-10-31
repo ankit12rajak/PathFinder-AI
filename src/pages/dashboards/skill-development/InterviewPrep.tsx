@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/DashboardLayout";
+import { resetInterviewProgress } from "@/services/interviewProgressService";
 
 const InterviewPrep = () => {
   const navigate = useNavigate();
@@ -96,6 +97,12 @@ const InterviewPrep = () => {
         ? prev.filter(id => id !== roundId)
         : [...prev, roundId]
     );
+  };
+
+  const handleStartInterview = () => {
+    // Reset interview progress when starting a new interview
+    resetInterviewProgress();
+    navigate("/interview/round/1");
   };
 
   return (
@@ -222,49 +229,44 @@ const InterviewPrep = () => {
                   <Layers className="w-5 h-5 text-blue-400" />
                   Interview Rounds
                 </CardTitle>
-                <CardDescription className="text-slate-400">Select rounds to practice</CardDescription>
+                <CardDescription className="text-slate-400">Complete all 4 rounds in sequential order</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {interviewRounds.map((round, index) => (
                   <div
                     key={round.id}
-                    onClick={() => toggleRound(round.id)}
-                    className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border ${selectedRounds.includes(round.id)
-                      ? 'bg-gradient-to-r ' + round.color + ' border-transparent shadow-lg scale-[1.02]'
-                      : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50'
-                      }`}
+                    className={`p-4 rounded-xl transition-all duration-300 border bg-gradient-to-r ${round.color} border-transparent shadow-lg`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${selectedRounds.includes(round.id)
-                        ? 'bg-white/20'
-                        : 'bg-slate-700/50'
-                        }`}>
-                        <round.icon className={`w-5 h-5 ${selectedRounds.includes(round.id)
-                          ? 'text-white'
-                          : 'text-slate-400'
-                          }`} />
+                      <div className="p-2 rounded-lg bg-white/20">
+                        <round.icon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className={`font-semibold text-sm ${selectedRounds.includes(round.id)
-                          ? 'text-white'
-                          : 'text-slate-300'
-                          }`}>
-                          {index + 1}. {round.name}
+                        <p className="font-semibold text-sm text-white">
+                          Round {index + 1}: {round.name}
                         </p>
                       </div>
-                      {selectedRounds.includes(round.id) && (
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      )}
+                      <div className="flex items-center gap-1">
+                        <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">{index + 1}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
+                <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <p className="text-xs text-blue-300 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Rounds must be completed in order (1 → 2 → 3 → 4)
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
             {/* Start Interview Button */}
             <Button
               className="w-full h-14 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              onClick={() => navigate("/interview/setup")}
+              onClick={handleStartInterview}
             >
               <Play className="w-5 h-5 mr-2" />
               Start Mock Interview

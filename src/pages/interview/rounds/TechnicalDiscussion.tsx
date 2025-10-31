@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, MessageSquare, Send, Bot, User, Code2, CheckCircle2, TrendingUp, Brain } from "lucide-react";
+import { Clock, MessageSquare, Send, Bot, User, Code2, CheckCircle2, TrendingUp, Brain, Video, VideoOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import LiveKitWidget from "@/components/ai_avatar/LiveKitWidget";
+import { markRoundComplete, isRoundAccessible } from "@/services/interviewProgressService";
 
 const TechnicalDiscussion = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
+  
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
   const [messages, setMessages] = useState([
     {
@@ -19,6 +24,8 @@ const TechnicalDiscussion = () => {
   const [currentMessage, setCurrentMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [showAvatar, setShowAvatar] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -45,12 +52,29 @@ const TechnicalDiscussion = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleSubmit = () => {
-    toast.success("Round completed successfully!");
-    setTimeout(() => {
-      navigate("/interview/round/3");
-    }, 1500);
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      toast.success("Round completed successfully!");
+      markRoundComplete(2);
+      setTimeout(() => {
+        navigate("/interview/round/3");
+      }, 1500);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to complete round");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // Check if user can access this round
+  useEffect(() => {
+    if (!isRoundAccessible(2)) {
+      toast.error("Please complete Round 1 first!");
+      navigate("/interview/round/1");
+    }
+  }, [navigate]);
 
   const sendMessage = () => {
     if (!currentMessage.trim()) return;
@@ -122,9 +146,14 @@ const TechnicalDiscussion = () => {
           </div>
           <Button
             onClick={handleSubmit}
+            disabled={isSubmitting}
             className="bg-gradient-to-r from-primary via-accent to-primary hover:opacity-90 transition-opacity shadow-lg"
           >
-            Complete Round
+            {isSubmitting ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Completing...</>
+            ) : (
+              <>Complete Round</>
+            )}
           </Button>
         </div>
 
@@ -150,6 +179,23 @@ const TechnicalDiscussion = () => {
                     <p className="text-xs text-muted-foreground">AI Agent</p>
                   </div>
                 </div>
+                <Button
+                  onClick={() => setShowAvatar(!showAvatar)}
+                  className="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500"
+                  size="sm"
+                >
+                  {showAvatar ? (
+                    <>
+                      <VideoOff className="w-4 h-4 mr-2" />
+                      End Video Call
+                    </>
+                  ) : (
+                    <>
+                      <Video className="w-4 h-4 mr-2" />
+                      Start Video Interview
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
 
@@ -331,6 +377,39 @@ const TechnicalDiscussion = () => {
           </Card>
         </div>
       </div>
+
+      {/* Avatar Modal */}
+      {showAvatar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">AI Technical Interviewer</h3>
+                  <p className="text-xs text-muted-foreground">Technical Discussion Session</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setShowAvatar(false)}
+                variant="outline"
+                size="sm"
+              >
+                <VideoOff className="w-4 h-4 mr-2" />
+                End Call
+              </Button>
+            </div>
+            <div className="p-6">
+              <LiveKitWidget 
+                setShowAvatar={setShowAvatar}
+                onDisconnected={() => setShowAvatar(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
