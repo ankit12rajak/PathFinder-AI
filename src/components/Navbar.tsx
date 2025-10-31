@@ -21,22 +21,22 @@ const Navbar = () => {
   const dashboards = [
     { 
       name: t('navbar.dashboard.class8to10'), 
-      href: "/dashboard/early-stage", 
+      href: "/auth", 
       category: t('navbar.category.awareness') 
     },
     { 
       name: t('navbar.dashboard.class11to12'), 
-      href: "/dashboard/decision-making", 
+      href: "/auth", 
       category: t('navbar.category.preparation') 
     },
     { 
       name: t('navbar.dashboard.post12th'), 
-      href: "/dashboard/college-admission", 
+      href: "/auth", 
       category: t('navbar.category.admission') 
     },
     { 
       name: t('navbar.dashboard.college'), 
-      href: "/dashboard/skill-development", 
+      href: "/auth", 
       category: t('navbar.category.development') 
     },
   ];

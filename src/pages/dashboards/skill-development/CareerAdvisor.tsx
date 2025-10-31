@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Volume2, VolumeX, Brain, Sparkles, MessageSquare, Zap, Send, User, Bot, Loader2, CheckCircle2, BookOpen, Target, TrendingUp, Award, Clock, Code, Trophy, Lightbulb, Star, Rocket, AlertCircle } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Brain, Sparkles, MessageSquare, Zap, Send, User, Bot, Loader2, CheckCircle2, BookOpen, Target, Code, Rocket, Trophy, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import DashboardLayout from "@/components/DashboardLayout";
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { LearningPath } from "@/components/LearningPath";
 
 const API_KEY = import.meta.env.VITE_CAREER_ADVISORY_API_KEY;
 
@@ -1034,7 +1035,7 @@ Provide helpful, conversational response (3-5 sentences):`;
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           
-          {/* Main Content Grid */}
+          {/* Main Chat Area */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Left Panel - AI Avatar */}
@@ -1050,7 +1051,7 @@ Provide helpful, conversational response (3-5 sentences):`;
               </CardHeader>
               <CardContent className="p-8">
                 
-                {/* Enhanced Human-like Robot Avatar */}
+                {/* AI Avatar (existing code) */}
                 <div className="relative flex items-center justify-center mb-8">
                   {/* Outer glow effect */}
                   <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 blur-3xl opacity-30 ${isSpeaking ? 'animate-pulse' : ''}`}></div>
@@ -1193,7 +1194,7 @@ Provide helpful, conversational response (3-5 sentences):`;
                   </div>
                 </div>
 
-                {/* Status Badges */}
+                {/* Status Badge (existing code) */}
                 <div className="text-center space-y-3 mb-6">
                   {conversationEnded && !isGeneratingSummary && !isGeneratingPath ? (
                     <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-sm px-4 py-2">
@@ -1233,361 +1234,228 @@ Provide helpful, conversational response (3-5 sentences):`;
                   )}
                 </div>
 
-                {/* Voice Controls */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      onClick={toggleListening}
-                      disabled={isProcessing || isSpeaking}
-                      size="lg"
-                      className={`${
-                        isListening
-                          ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
-                          : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700'
-                      } text-white shadow-lg transition-all duration-300 transform hover:scale-105`}
-                    >
-                      {isListening ? (
-                        <>
-                          <MicOff className="w-5 h-5 mr-2" />
-                          Stop
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="w-5 h-5 mr-2" />
-                          Speak
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      onClick={toggleMute}
-                      size="lg"
-                      variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300 transform hover:scale-105"
-                    >
-                      {isMuted ? (
-                        <>
-                          <VolumeX className="w-5 h-5 mr-2" />
-                          Unmute
-                        </>
-                      ) : (
-                        <>
-                          <Volume2 className="w-5 h-5 mr-2" />
-                          Mute
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                {/* Voice Controls (existing code) */}
+                {!conversationEnded ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        onClick={toggleListening}
+                        disabled={isProcessing || isSpeaking}
+                        size="lg"
+                        className={`${
+                          isListening
+                            ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
+                            : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700'
+                        } text-white shadow-lg transition-all duration-300 transform hover:scale-105`}
+                      >
+                        {isListening ? (
+                          <>
+                            <MicOff className="w-5 h-5 mr-2" />
+                            Stop
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="w-5 h-5 mr-2" />
+                            Speak
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={toggleMute}
+                        size="lg"
+                        variant="outline"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300 transform hover:scale-105"
+                      >
+                        {isMuted ? (
+                          <>
+                            <VolumeX className="w-5 h-5 mr-2" />
+                            Unmute
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-5 h-5 mr-2" />
+                            Mute
+                          </>
+                        )}
+                      </Button>
+                    </div>
 
-                  {/* Info */}
-                  <div className="text-center text-xs text-slate-400 space-y-1 pt-4 border-t border-slate-800">
-                    <p className="flex items-center justify-center gap-2">
-                      <Zap className="w-3 h-3 text-emerald-400" />
-                      Click "Speak" and ask anything
-                    </p>
-                    <p className="flex items-center justify-center gap-2">
-                      <MessageSquare className="w-3 h-3 text-blue-400" />
-                      Say "Thank you" when done
-                    </p>
+                    {/* Info */}
+                    <div className="text-center text-xs text-slate-400 space-y-1 pt-4 border-t border-slate-800">
+                      <p className="flex items-center justify-center gap-2">
+                        <Zap className="w-3 h-3 text-emerald-400" />
+                        Click "Speak" and ask anything
+                      </p>
+                      <p className="flex items-center justify-center gap-2">
+                        <MessageSquare className="w-3 h-3 text-blue-400" />
+                        Say "Thank you" when done
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <Button
+                    onClick={handleNewConversation}
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    New Conversation
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
-            {/* Right Panel - Chat or Learning Path */}
+            {/* Right Panel - Chat Interface (Always Visible) */}
             <Card className="lg:col-span-2 border-slate-800 bg-slate-900/50 backdrop-blur-sm shadow-2xl flex flex-col h-[700px]">
-              {!conversationEnded || !detailedPath ? (
-                <>
-                  <CardHeader className="border-b border-slate-800">
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5 text-blue-400" />
-                      Conversation
-                    </CardTitle>
-                    <CardDescription className="text-slate-400">
-                      {isGeneratingSummary ? "Analyzing goals..." : 
-                       isGeneratingPath ? "Creating path..." :
-                       "Chat with your AI advisor"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col p-6 overflow-hidden">
-                    
-                    {/* Messages Area */}
-                    <ScrollArea className="flex-1 pr-4 mb-4">
-                      <div className="space-y-4">
-                        {messages.map((msg) => (
-                          <div
-                            key={msg.id}
-                            className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
-                          >
-                            {msg.role === 'assistant' && (
-                              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                                <Bot className="w-5 h-5 text-white" />
-                              </div>
-                            )}
-                            <div
-                              className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-lg ${
-                                msg.role === 'user'
-                                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                                  : 'bg-slate-800 text-slate-100 border border-slate-700'
-                              }`}
-                            >
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                              <p className="text-xs mt-2 opacity-60">
-                                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            </div>
-                            {msg.role === 'user' && (
-                              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                                <User className="w-5 h-5 text-white" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                        
-                        {isGeneratingSummary && (
-                          <div className="flex justify-center">
-                            <div className="bg-slate-800/50 rounded-xl px-6 py-4 flex items-center gap-3">
-                              <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                              <div className="space-y-1">
-                                <p className="text-sm text-slate-300 font-medium">Analyzing...</p>
-                                <Progress value={33} className="h-1 w-48" />
-                              </div>
-                            </div>
+              <CardHeader className="border-b border-slate-800">
+                <CardTitle className="text-white flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-blue-400" />
+                  Conversation
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  {isGeneratingSummary ? "Analyzing goals..." : 
+                   isGeneratingPath ? "Creating path..." :
+                   conversationEnded ? "Conversation complete - See your learning path below" :
+                   "Chat with your AI advisor"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col p-6 overflow-hidden">
+                
+                <ScrollArea className="flex-1 pr-4 mb-4">
+                  <div className="space-y-4">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
+                      >
+                        {msg.role === 'assistant' && (
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                            <Bot className="w-5 h-5 text-white" />
                           </div>
                         )}
-                        
-                        {isGeneratingPath && (
-                          <div className="flex justify-center">
-                            <div className="bg-slate-800/50 rounded-xl px-6 py-4 flex items-center gap-3">
-                              <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
-                              <div className="space-y-1">
-                                <p className="text-sm text-slate-300 font-medium">Creating path...</p>
-                                <Progress value={66} className="h-1 w-48" />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div ref={messagesEndRef} />
-                      </div>
-                    </ScrollArea>
-
-                    {/* Input Area */}
-                    {!conversationEnded && (
-                      <div className="space-y-3 pt-4 border-t border-slate-800">
-                        <div className="flex gap-2">
-                          <Textarea
-                            value={inputMessage}
-                            onChange={(e) => setInputMessage(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSendMessage();
-                              }
-                            }}
-                            placeholder="Type your message..."
-                            className="flex-1 resize-none bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl"
-                            rows={2}
-                            disabled={isProcessing}
-                          />
-                          <Button
-                            onClick={() => handleSendMessage()}
-                            disabled={isProcessing || !inputMessage.trim()}
-                            size="lg"
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 rounded-xl shadow-lg"
-                          >
-                            {isProcessing ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                              <Send className="w-5 h-5" />
-                            )}
-                          </Button>
+                        <div
+                          className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-lg ${
+                            msg.role === 'user'
+                              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                              : 'bg-slate-800 text-slate-100 border border-slate-700'
+                          }`}
+                        >
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-xs mt-2 opacity-60">
+                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
                         </div>
-
-                        {/* Quick Actions */}
-                        <div className="space-y-2">
-                          <p className="text-xs text-slate-400 font-medium">Quick Actions:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {quickActions.map((action, index) => (
-                              <Button
-                                key={index}
-                                onClick={() => handleSendMessage(action)}
-                                disabled={isProcessing}
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
-                              >
-                                {action}
-                              </Button>
-                            ))}
+                        {msg.role === 'user' && (
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* Loading indicators */}
+                    {isGeneratingSummary && (
+                      <div className="flex justify-center">
+                        <div className="bg-slate-800/50 rounded-xl px-6 py-4 flex items-center gap-3">
+                          <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                          <div className="space-y-1">
+                            <p className="text-sm text-slate-300 font-medium">Analyzing...</p>
+                            <Progress value={33} className="h-1 w-48" />
                           </div>
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </>
-              ) : (
-                <>
-                  <CardHeader className="border-b border-slate-800">
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-emerald-400" />
-                      Your Learning Path
-                    </CardTitle>
-                    <CardDescription className="text-slate-400">
-                      Personalized roadmap for {detailedPath.career}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1 p-6 overflow-hidden">
-                    <ScrollArea className="h-full pr-4">
-                      <div className="space-y-6">
-                        
-                        {/* Career Overview */}
-                        <Card className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border-purple-700/40">
-                          <CardContent className="pt-6">
-                            <div className="space-y-4">
-                              <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                  <Target className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <h3 className="text-xl font-bold text-white mb-2">{detailedPath.career}</h3>
-                                  <p className="text-sm text-slate-300 mb-3">{detailedPath.overview}</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                                      <Clock className="w-3 h-3 mr-1" />
-                                      {detailedPath.totalDuration}
-                                    </Badge>
-                                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                                      <TrendingUp className="w-3 h-3 mr-1" />
-                                      {detailedPath.difficulty}
-                                    </Badge>
-                                    <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
-                                      <Award className="w-3 h-3 mr-1" />
-                                      {detailedPath.phases.length} Phases
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Learning Phases */}
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                            <BookOpen className="w-5 h-5 text-emerald-400" />
-                            Learning Phases
-                          </h3>
-                          
-                          {detailedPath.phases.map((phase, index) => {
-                            const Icon = getPhaseIcon(index);
-                            return (
-                              <Card key={phase.id} className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all">
-                                <CardContent className="pt-6">
-                                  <div className="flex gap-4">
-                                    <div className="flex-shrink-0">
-                                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white shadow-lg">
-                                        {index + 1}
-                                      </div>
-                                    </div>
-                                    <div className="flex-1 space-y-3">
-                                      <div>
-                                        <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                                          <Icon className="w-5 h-5 text-purple-400" />
-                                          {phase.title}
-                                        </h4>
-                                        <p className="text-sm text-slate-400 mb-2">{phase.description}</p>
-                                        <Badge variant="outline" className="border-slate-600 text-slate-400 text-xs">
-                                          <Clock className="w-3 h-3 mr-1" />
-                                          {phase.duration}
-                                        </Badge>
-                                      </div>
-
-                                      {phase.skills && phase.skills.length > 0 && (
-                                        <div className="space-y-2">
-                                          <p className="text-xs font-semibold text-slate-400 uppercase">Skills:</p>
-                                          <div className="flex flex-wrap gap-2">
-                                            {phase.skills.map((skill, idx) => (
-                                              <Badge key={idx} className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
-                                                {skill}
-                                              </Badge>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {phase.projects && phase.projects.length > 0 && (
-                                        <div className="space-y-2">
-                                          <p className="text-xs font-semibold text-slate-400 uppercase">Projects:</p>
-                                          <div className="space-y-1">
-                                            {phase.projects.map((project, idx) => (
-                                              <div key={idx} className="text-xs text-slate-300 flex items-start gap-2">
-                                                <CheckCircle2 className="w-3 h-3 text-emerald-400 mt-0.5 flex-shrink-0" />
-                                                {project}
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
+                    
+                    {isGeneratingPath && (
+                      <div className="flex justify-center">
+                        <div className="bg-slate-800/50 rounded-xl px-6 py-4 flex items-center gap-3">
+                          <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                          <div className="space-y-1">
+                            <p className="text-sm text-slate-300 font-medium">Creating path...</p>
+                            <Progress value={66} className="h-1 w-48" />
+                          </div>
                         </div>
-
-                        {/* Job Market */}
-                        <Card className="bg-gradient-to-br from-emerald-900/20 to-green-900/20 border-emerald-700/40">
-                          <CardHeader>
-                            <CardTitle className="text-white text-lg flex items-center gap-2">
-                              <Trophy className="w-5 h-5 text-amber-400" />
-                              Job Market
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            <div>
-                              <p className="text-xs text-slate-400 mb-1">Avg Salary</p>
-                              <p className="text-lg font-bold text-emerald-400">{detailedPath.jobMarket.averageSalary}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-400 mb-1">Demand</p>
-                              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
-                                {detailedPath.jobMarket.demandLevel}
-                              </Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Success */}
-                        <Card className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-700/40">
-                          <CardContent className="pt-6 text-center space-y-3">
-                            <div className="flex justify-center">
-                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                <Rocket className="w-8 h-8 text-white" />
-                              </div>
-                            </div>
-                            <h3 className="text-xl font-bold text-white">Ready to Start! 🚀</h3>
-                            <p className="text-sm text-slate-300">
-                              Follow this path and become a {careerSummary?.targetRole}!
-                            </p>
-                            <Button
-                              onClick={handleNewConversation}
-                              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 mt-4"
-                            >
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              New Conversation
-                            </Button>
-                          </CardContent>
-                        </Card>
                       </div>
-                    </ScrollArea>
-                  </CardContent>
-                </>
-              )}
+                    )}
+                    
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+
+                {!conversationEnded && (
+                  <div className="space-y-3 pt-4 border-t border-slate-800">
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        placeholder="Type your message..."
+                        className="flex-1 resize-none bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl"
+                        rows={2}
+                        disabled={isProcessing}
+                      />
+                      <Button
+                        onClick={() => handleSendMessage()}
+                        disabled={isProcessing || !inputMessage.trim()}
+                        size="lg"
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 rounded-xl shadow-lg"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Send className="w-5 h-5" />
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-400 font-medium">Quick Actions:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {quickActions.map((action, index) => (
+                          <Button
+                            key={index}
+                            onClick={() => handleSendMessage(action)}
+                            disabled={isProcessing}
+                            variant="outline"
+                            size="sm"
+                            className="border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                          >
+                            {action}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {conversationEnded && detailedPath && (
+                  <div className="pt-4 border-t border-slate-800">
+                    <div className="flex items-center justify-center gap-2 text-emerald-400">
+                      <CheckCircle2 className="w-5 h-5" />
+                      <p className="text-sm font-medium">Your personalized learning path is ready below! 🎉</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </div>
 
-          {/* Info Bar */}
+          {/* Learning Path Section - Displayed Below Chat */}
+          {conversationEnded && detailedPath && (
+            <div className="animate-fadeIn">
+              <LearningPath 
+                path={detailedPath} 
+                onStartNew={handleNewConversation}
+              />
+            </div>
+          )}
+
+          {/* Bottom Info Bar */}
           <Card className="border-slate-800 bg-slate-900/30 backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex flex-wrap items-center justify-between gap-4">
