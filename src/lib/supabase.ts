@@ -229,3 +229,28 @@ export const deleteLearningPath = async (
     return { success: false, error: 'Failed to delete learning path' };
   }
 };
+// Add after existing functions
+
+// Get all learning paths with their career targets
+export const getAllUserLearningPaths = async (
+  userId: string
+): Promise<{ success: boolean; data?: SavedLearningPath[]; error?: string }> => {
+  try {
+    const { data, error } = await supabase
+      .from('learning_paths')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching learning paths:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`✅ Fetched ${data.length} learning paths`);
+    return { success: true, data };
+  } catch (error) {
+    console.error('❌ Error in getAllUserLearningPaths:', error);
+    return { success: false, error: 'Failed to fetch learning paths' };
+  }
+};

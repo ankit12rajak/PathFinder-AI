@@ -33,6 +33,20 @@ import geminiCareerService, { CareerProfile, CareerSkill } from "@/services/gemi
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Search, Sparkles } from "lucide-react";
+// Add after existing imports (around line 45)
+import { getAllUserLearningPaths, type SavedLearningPath } from '@/lib/supabase';
+import { autoGenerateAssessmentsFromLearningPath } from '@/services/autoAssessmentService';
+// Add after existing imports
+import {
+  saveSkillAssessment,
+  completeAssessment,
+  getSkillAssessmentsByCareer,
+  getOrCreateAssessment,
+  saveCareerProfile,
+  getUserCareerProfiles,
+  type SavedSkillAssessment
+} from '@/lib/SkillAssessmentService';
+import { supabase } from '@/lib/supabase';
 
 // ============ TypeScript Interfaces ============
 interface SkillItem {
@@ -293,37 +307,200 @@ export default function SkillGapAnalysis() {
   const [customCareers, setCustomCareers] = useState<CareerProfile[]>([]);
   const [allProfessionalRoles, setAllProfessionalRoles] = useState<ProfessionalRole[]>(professionalRoles);
 
+  // Add after existing state variables (around line 283)
+  const [userId, setUserId] = useState<string | null>(null);
+  const [savedAssessments, setSavedAssessments] = useState<{ [key: string]: SavedSkillAssessment }>({});
+  const [isLoadingAssessments, setIsLoadingAssessments] = useState(true);
+  const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
+  const [assessmentStartTime, setAssessmentStartTime] = useState<number | null>(null);
+  const [learningPaths, setLearningPaths] = useState<SavedLearningPath[]>([]);
+  const [isLoadingLearningPaths, setIsLoadingLearningPaths] = useState(true);
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false);
+  const [autoGenerationStatus, setAutoGenerationStatus] = useState<string>('');
+
+  // Initialize user and load saved assessments
+  useEffect(() => {
+    const initializeUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          setUserId(user.id);
+          console.log('👤 User ID:', user.id);
+          
+          // ✅ CHANGED: Don't load assessments here, wait for career profile to load first
+          // await loadSavedAssessments(user.id, selectedRole.id);
+        } else {
+          console.warn('⚠️ No user logged in');
+        }
+      } catch (error) {
+        console.error('❌ Error initializing user:', error);
+      } finally {
+        setIsLoadingAssessments(false);
+      }
+    };
+
+    initializeUser();
+  }, []);
+
+  // Load saved career profiles on mount
+  useEffect(() => {
+    const loadSavedCareerProfiles = async () => {
+      if (!userId) return;
+
+      const result = await getUserCareerProfiles(userId);
+      
+      if (result.success && result.data && result.data.length > 0) {
+        const savedCustomCareers = result.data.filter(cp => cp.is_custom);
+        
+        const newRoles: ProfessionalRole[] = [];
+        
+        // Restore custom careers
+        savedCustomCareers.forEach(savedCareer => {
+          const existingCareer = allProfessionalRoles.find(r => r.id === savedCareer.career_id);
+          
+          if (!existingCareer) {
+            const newRole: ProfessionalRole = {
+              id: savedCareer.career_id,
+              name: savedCareer.career_name,
+              level: savedCareer.level,
+              demand: savedCareer.demand,
+              salary: savedCareer.salary,
+              growth: savedCareer.growth,
+              description: savedCareer.description,
+              keyResponsibilities: savedCareer.key_responsibilities
+            };
+
+            newRoles.push(newRole);
+
+            // Restore skills and resources
+            (roleSkillsData as any)[newRole.id] = savedCareer.skills;
+            (learningResources as any)[newRole.id] = savedCareer.learning_resources || {
+              courses: [],
+              projects: [],
+              certifications: []
+            };
+          }
+        });
+
+        if (newRoles.length > 0) {
+          setAllProfessionalRoles(prev => [...prev, ...newRoles]);
+          
+          // ✅ FIX: Set the most recent custom career as selected role
+          const mostRecentCareer = savedCustomCareers[0]; // Already sorted by created_at DESC
+          const mostRecentRole = newRoles.find(r => r.id === mostRecentCareer.career_id);
+          
+          if (mostRecentRole) {
+            setSelectedRole(mostRecentRole);
+            setSkills(mostRecentCareer.skills);
+            
+            console.log(`✅ Auto-selected most recent career: ${mostRecentRole.name}`);
+          }
+        }
+
+        console.log(`✅ Loaded ${savedCustomCareers.length} saved career profiles`);
+      }
+    };
+
+    if (userId) {
+      loadSavedCareerProfiles();
+    }
+  }, [userId]);
+
+  // Reload assessments when role changes
+  useEffect(() => {
+    if (userId && selectedRole) {
+      loadSavedAssessments(userId, selectedRole.id);
+    }
+  }, [selectedRole.id, userId]);
+
+  // ✅ NEW: Load assessments when selected role changes
+  useEffect(() => {
+    if (userId && selectedRole.id) {
+      console.log(`🔄 Loading assessments for role: ${selectedRole.name}`);
+      loadSavedAssessments(userId, selectedRole.id);
+    }
+  }, [userId, selectedRole.id]);
+
+  // Load saved assessments
+  const loadSavedAssessments = async (uid: string, roleId: string) => {
+    setIsLoadingAssessments(true);
+    const result = await getSkillAssessmentsByCareer(uid, roleId);
+    
+    if (result.success && result.data) {
+      const assessmentsMap: { [key: string]: SavedSkillAssessment } = {};
+      result.data.forEach(assessment => {
+        assessmentsMap[assessment.skill_id] = assessment;
+        
+        // Restore dynamic questions
+        if (assessment.questions) {
+          setDynamicQuestions(prev => ({
+            ...prev,
+            [assessment.skill_id]: assessment.questions
+          }));
+        }
+        
+        // Restore assessment status
+        if (assessment.status === 'completed') {
+          setSkillAssessments(prev => ({
+            ...prev,
+            [assessment.skill_id]: {
+              skillId: assessment.skill_id,
+              completed: true,
+              score: assessment.score || 0,
+              questionsAnswered: assessment.questions.length,
+              assessmentTime: Date.now()
+            }
+          }));
+          
+          // Update skill level
+          setSkills(prev => prev.map(skill =>
+            skill.id === assessment.skill_id
+              ? { ...skill, currentLevel: assessment.current_level }
+              : skill
+          ));
+        }
+      });
+      
+      setSavedAssessments(assessmentsMap);
+      console.log(`✅ Loaded ${result.data.length} saved assessments`);
+    }
+    
+    setIsLoadingAssessments(false);
+  };
+
   // ============ Event Handlers ============
-  const handleRoleChange = (roleId: string) => {
-  const role = allProfessionalRoles.find(r => r.id === roleId);
-  if (role) {
-    setSelectedRole(role);
-    setSkills(roleSkillsData[roleId as keyof typeof roleSkillsData] || []);
-    setAnalysisComplete(false);
-    setSkillAssessments({});
-    setCurrentSkillAssessment(null);
-    setDynamicQuestions({}); // Clear questions when switching roles
-  }
-};
+  const handleRoleChange = async (roleId: string) => {
+    const role = allProfessionalRoles.find(r => r.id === roleId);
+    if (role) {
+      setSelectedRole(role);
+      setSkills(roleSkillsData[roleId as keyof typeof roleSkillsData] || []);
+      setAnalysisComplete(false);
+      setSkillAssessments({});
+      setCurrentSkillAssessment(null);
+      setDynamicQuestions({});
+      setSavedAssessments({});
+      
+      // Load saved assessments for new role
+      if (userId) {
+        await loadSavedAssessments(userId, roleId);
+      }
+    }
+  };
 
   // Add this function after the handleRoleChange function and before the loadQuestionsForSkill function
 
   const handleGenerateCustomCareer = async () => {
-    if (!customCareerInput.trim()) {
-      return;
-    }
+    if (!customCareerInput.trim()) return;
 
     setIsGeneratingCareer(true);
 
     try {
       console.log('🎯 Generating custom career profile for:', customCareerInput);
 
-      // Generate career profile with Gemini
       const careerProfile = await geminiCareerService.getCachedOrGenerateProfile(customCareerInput);
-
       console.log('✅ Career profile generated:', careerProfile);
 
-      // Convert CareerProfile to ProfessionalRole format
       const newRole: ProfessionalRole = {
         id: `custom-${Date.now()}`,
         name: careerProfile.name,
@@ -335,7 +512,6 @@ export default function SkillGapAnalysis() {
         keyResponsibilities: careerProfile.keyResponsibilities
       };
 
-      // Convert CareerSkill[] to SkillItem[]
       const newSkills: SkillItem[] = careerProfile.skills.map(skill => ({
         id: skill.id,
         name: skill.name,
@@ -347,40 +523,52 @@ export default function SkillGapAnalysis() {
         marketDemand: skill.marketDemand
       }));
 
-      console.log('📚 Generated skills:', newSkills);
-
-      // Generate learning resources
       const resources = await geminiCareerService.generateLearningResources(
         careerProfile.name,
         careerProfile.skills.map(s => s.name)
       );
 
-      console.log('📖 Learning resources:', resources);
+      // Save to Supabase if user is logged in
+      if (userId) {
+        const saveResult = await saveCareerProfile(userId, {
+          career_id: newRole.id,
+          career_name: newRole.name,
+          level: newRole.level,
+          demand: newRole.demand,
+          salary: newRole.salary,
+          growth: newRole.growth,
+          description: newRole.description,
+          key_responsibilities: newRole.keyResponsibilities,
+          skills: newSkills,
+          learning_resources: resources,
+          is_custom: true
+        });
 
-      // Add to state
+        if (saveResult.success) {
+          console.log('✅ Custom career saved to database');
+        }
+      }
+
       setCustomCareers(prev => [...prev, careerProfile]);
       setAllProfessionalRoles(prev => [...prev, newRole]);
 
-      // Store skills and resources using type assertion
       (roleSkillsData as any)[newRole.id] = newSkills;
       (learningResources as any)[newRole.id] = resources;
 
-      // Auto-select the new career
       setSelectedRole(newRole);
       setSkills(newSkills);
       setAnalysisComplete(false);
       setSkillAssessments({});
       setCurrentSkillAssessment(null);
       setDynamicQuestions({});
+      setSavedAssessments({});
 
-      // Clear input
       setCustomCareerInput('');
 
       console.log('✅ Custom career profile generated and loaded successfully!');
 
     } catch (error) {
       console.error('❌ Error generating custom career:', error);
-      // Optional: Add toast notification here
       alert('Failed to generate career profile. Please try again.');
     } finally {
       setIsGeneratingCareer(false);
@@ -389,7 +577,7 @@ export default function SkillGapAnalysis() {
 
   // New function to load questions for a skill
   const loadQuestionsForSkill = async (skill: SkillItem) => {
-    // Check if questions already loaded
+    // Check if already loaded from saved assessment
     if (dynamicQuestions[skill.id]) {
       return;
     }
@@ -397,23 +585,19 @@ export default function SkillGapAnalysis() {
     setLoadingQuestions(prev => ({ ...prev, [skill.id]: true }));
 
     try {
-      // Determine difficulty based on current skill level
+      // Determine difficulty
       let difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-      if (skill.currentLevel < 30) {
-        difficulty = 'beginner';
-      } else if (skill.currentLevel < 60) {
-        difficulty = 'intermediate';
-      } else if (skill.currentLevel < 85) {
-        difficulty = 'advanced';
-      } else {
-        difficulty = 'expert';
-      }
+      if (skill.currentLevel < 30) difficulty = 'beginner';
+      else if (skill.currentLevel < 60) difficulty = 'intermediate';
+      else if (skill.currentLevel < 85) difficulty = 'advanced';
+      else difficulty = 'expert';
 
+      // Generate questions
       const questions = await geminiSkillAssessmentService.getCachedOrGenerateQuestions(
         skill.name,
         skill.category,
         difficulty,
-        5 // Number of questions
+        5
       );
 
       setDynamicQuestions(prev => ({
@@ -421,9 +605,30 @@ export default function SkillGapAnalysis() {
         [skill.id]: questions
       }));
 
+      // Save to Supabase if user is logged in
+      if (userId) {
+        const result = await getOrCreateAssessment(userId, {
+          career_role_id: selectedRole.id,
+          career_role_name: selectedRole.name,
+          skill_id: skill.id,
+          skill_name: skill.name,
+          skill_category: skill.category,
+          questions: questions,
+          target_level: skill.targetLevel,
+          importance: skill.importance
+        });
+
+        if (result.success && result.data) {
+          setSavedAssessments(prev => ({
+            ...prev,
+            [skill.id]: result.data!
+          }));
+          console.log(result.isNew ? '✅ New assessment saved' : '✅ Loaded existing assessment');
+        }
+      }
+
     } catch (error) {
-      console.error(`Failed to load questions for ${skill.name}:`, error);
-      // Optionally show error toast
+      console.error(`❌ Failed to load questions for ${skill.name}:`, error);
     } finally {
       setLoadingQuestions(prev => ({ ...prev, [skill.id]: false }));
     }
@@ -447,9 +652,48 @@ export default function SkillGapAnalysis() {
 
     setCurrentSkillAssessment(skillId);
     setAssessmentAnswers({});
+    setAssessmentStartTime(Date.now());
+    
+    // Get or create assessment ID
+    let assessmentId = savedAssessments[skillId]?.id;
+    
+    if (!assessmentId && userId) {
+      // Create new assessment if it doesn't exist
+      const result = await getOrCreateAssessment(userId, {
+        career_role_id: selectedRole.id,
+        career_role_name: selectedRole.name,
+        skill_id: skill.id,
+        skill_name: skill.name,
+        skill_category: skill.category,
+        questions: dynamicQuestions[skillId] || [],
+        target_level: skill.targetLevel,
+        importance: skill.importance
+      });
+
+      if (result.success && result.data) {
+        assessmentId = result.data.id;
+        setSavedAssessments(prev => ({
+          ...prev,
+          [skillId]: result.data!
+        }));
+      }
+    }
+    
+    setCurrentAssessmentId(assessmentId || null);
+    
+    // Update status in database
+    if (assessmentId && userId) {
+      await supabase
+        .from('skill_assessments')
+        .update({
+          status: 'in_progress',
+          started_at: new Date().toISOString()
+        })
+        .eq('id', assessmentId);
+    }
   };
 
-  const completeSkillAssessment = (skillId: string) => {
+  const completeSkillAssessment = async (skillId: string) => {
     const questions = dynamicQuestions[skillId] || [];
     if (questions.length === 0) return;
 
@@ -462,7 +706,9 @@ export default function SkillGapAnalysis() {
 
     const score = Math.round((correctAnswers / questions.length) * 100);
     const calculatedLevel = Math.min(Math.round(score * 0.8) + Math.floor(Math.random() * 15), 100);
+    const timeTaken = assessmentStartTime ? Math.round((Date.now() - assessmentStartTime) / 1000) : undefined;
 
+    // Update local state
     setSkillAssessments(prev => ({
       ...prev,
       [skillId]: {
@@ -480,8 +726,41 @@ export default function SkillGapAnalysis() {
         : skill
     ));
 
+    // Save to Supabase - FIX: Get assessment ID from savedAssessments
+    if (userId) {
+      const assessmentId = currentAssessmentId || savedAssessments[skillId]?.id;
+      
+      if (assessmentId) {
+        const result = await completeAssessment(
+          assessmentId,
+          userId,
+          {
+            answers: assessmentAnswers,
+            score,
+            calculated_level: calculatedLevel,
+            questions_answered: questions.length,
+            correct_answers: correctAnswers,
+            time_taken: timeTaken
+          }
+        );
+
+        if (result.success) {
+          console.log('✅ Assessment result saved to database');
+          
+          // Refresh saved assessments to get updated data
+          await loadSavedAssessments(userId, selectedRole.id);
+        } else {
+          console.error('❌ Failed to save assessment result:', result.error);
+        }
+      } else {
+        console.error('❌ No assessment ID found for skill:', skillId);
+      }
+    }
+
     setCurrentSkillAssessment(null);
     setAssessmentAnswers({});
+    setCurrentAssessmentId(null);
+    setAssessmentStartTime(null);
   };
 
   const handleAnalyzeGaps = () => {
@@ -564,6 +843,12 @@ export default function SkillGapAnalysis() {
 
   const getTopRecommendations = () => {
     const roleResources = learningResources[selectedRole.id as keyof typeof learningResources];
+    
+    // ✅ Add null check
+    if (!roleResources || !roleResources.courses || !roleResources.projects) {
+      return [];
+    }
+    
     return skills
       .filter(skill => skill.targetLevel - skill.currentLevel > 0)
       .sort((a, b) => {
@@ -641,12 +926,237 @@ export default function SkillGapAnalysis() {
   const assessedSkillsCount = Object.values(skillAssessments).filter(a => a.completed).length;
   const recommendations = getTopRecommendations();
 
+  // ✅ DEBUG: Log state changes
+  useEffect(() => {
+    console.log('📊 Current State:', {
+      userId,
+      selectedRoleId: selectedRole.id,
+      selectedRoleName: selectedRole.name,
+      totalRoles: allProfessionalRoles.length,
+      customRoles: allProfessionalRoles.filter(r => r.id.startsWith('custom-')).length,
+      totalSkills: skills.length,
+      assessedSkills: Object.keys(savedAssessments).length
+    });
+  }, [userId, selectedRole, allProfessionalRoles, skills, savedAssessments]);
+
+  // ✅ NEW: Load learning paths and auto-generate assessments
+  useEffect(() => {
+    const loadAndGenerateFromLearningPaths = async () => {
+      if (!userId) return;
+
+      setIsLoadingLearningPaths(true);
+      setAutoGenerationStatus('Loading your career paths...');
+
+      try {
+        // Fetch all learning paths
+        const result = await getAllUserLearningPaths(userId);
+
+        if (result.success && result.data && result.data.length > 0) {
+          setLearningPaths(result.data);
+          console.log(`📚 Found ${result.data.length} learning paths`);
+
+          // Auto-generate assessments for each learning path
+          setIsAutoGenerating(true);
+          
+          for (const learningPath of result.data) {
+            setAutoGenerationStatus(`Generating assessments for ${learningPath.target_role}...`);
+            
+            const assessmentResult = await autoGenerateAssessmentsFromLearningPath(
+              userId,
+              learningPath
+            );
+
+            if (assessmentResult.success) {
+              console.log(`✅ Generated ${assessmentResult.generatedSkills} assessments for ${learningPath.target_role}`);
+            }
+          }
+
+          setAutoGenerationStatus('All assessments ready! 🎉');
+          
+          // Auto-select the most recent learning path
+          const mostRecent = result.data[0];
+          const careerProfile = allProfessionalRoles.find(
+            r => r.id === `lp-${mostRecent.id}` || r.name === mostRecent.target_role
+          );
+
+          if (!careerProfile) {
+            // Create role from learning path
+            const newRole: ProfessionalRole = {
+              id: `lp-${mostRecent.id}`,
+              name: mostRecent.target_role,
+              level: mostRecent.current_level || 'Beginner',
+              demand: 'High',
+              salary: 'Competitive',
+              growth: '+20%',
+              description: mostRecent.career_overview,
+              keyResponsibilities: mostRecent.outcomes || []
+            };
+
+            setAllProfessionalRoles(prev => [...prev, newRole]);
+            setSelectedRole(newRole);
+
+            // Extract skills from phases
+            const skillsFromPhases = extractSkillsFromLearningPath(mostRecent);
+            setSkills(skillsFromPhases);
+            (roleSkillsData as any)[newRole.id] = skillsFromPhases;
+          }
+
+        } else {
+          console.log('📝 No learning paths found');
+          setAutoGenerationStatus('');
+        }
+      } catch (error) {
+        console.error('❌ Error loading learning paths:', error);
+        setAutoGenerationStatus('');
+      } finally {
+        setIsLoadingLearningPaths(false);
+        setIsAutoGenerating(false);
+      }
+    };
+
+    if (userId) {
+      loadAndGenerateFromLearningPaths();
+    }
+  }, [userId]);
+
+  // Helper function to extract skills from learning path phases
+  const extractSkillsFromLearningPath = (learningPath: SavedLearningPath): SkillItem[] => {
+    const skillsMap = new Map<string, SkillItem>();
+
+    learningPath.phases.forEach((phase: any, phaseIdx: number) => {
+      if (phase.skills && Array.isArray(phase.skills)) {
+        phase.skills.forEach((skillName: string, skillIdx: number) => {
+          if (!skillsMap.has(skillName)) {
+            skillsMap.set(skillName, {
+              id: `skill-${phaseIdx}-${skillIdx}`,
+              name: skillName,
+              category: phase.title || 'General',
+              currentLevel: 0,
+              targetLevel: 80 + Math.floor(Math.random() * 20), // 80-100
+              importance: phaseIdx < 2 ? 'High' : phaseIdx < 4 ? 'Medium' : 'Low',
+              trend: 'up' as const,
+              marketDemand: 70 + Math.floor(Math.random() * 30) // 70-100
+            });
+          }
+        });
+      }
+    });
+
+    return Array.from(skillsMap.values());
+  };
+
   return (
     <DashboardLayout
       title="Skill Gap Analysis"
       description="AI-powered skill assessment and career development insights"
     >
       <div className="p-6 space-y-8 bg-slate-950">
+        {/* ✅ NEW: Auto-Generation Status Banner */}
+        {isAutoGenerating && (
+          <Card className="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border-purple-500/50 shadow-lg">
+            <CardContent className="py-6">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
+                  <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-purple-400" />
+                    AI is Preparing Your Assessments
+                  </h3>
+                  <p className="text-sm text-slate-300">{autoGenerationStatus}</p>
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-purple-300">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                      Analyzing your learning path from Career AI Advisor
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-indigo-300">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse delay-75"></div>
+                      Generating personalized assessment questions
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-blue-300">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+                      Saving to database for instant access
+                    </div>
+                  </div>
+                </div>
+                <Badge className="bg-purple-500/30 text-purple-200 border-purple-400/50 text-lg px-4 py-2">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Powered
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ✅ NEW: Learning Paths Quick Access */}
+        {!isLoadingLearningPaths && learningPaths.length > 0 && (
+          <Card className="bg-gradient-to-br from-emerald-900/20 to-cyan-900/20 border-emerald-700/40">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-white text-lg">
+                    <Target className="w-5 h-5 text-emerald-400" />
+                    Your Career Learning Paths
+                  </CardTitle>
+                  <CardDescription className="text-slate-400">
+                    {learningPaths.length} career path{learningPaths.length !== 1 ? 's' : ''} from AI Career Advisor
+                  </CardDescription>
+                </div>
+                <Badge className="bg-emerald-500/30 text-emerald-200 border-emerald-400/50">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Ready
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {learningPaths.map((path, idx) => {
+                  const isSelected = selectedRole.id === `lp-${path.id}`;
+                  return (
+                    <Button
+                      key={path.id}
+                      onClick={() => {
+                        const role = allProfessionalRoles.find(r => r.id === `lp-${path.id}`);
+                        if (role) {
+                          handleRoleChange(role.id);
+                        }
+                      }}
+                      variant={isSelected ? "default" : "outline"}
+                      className={`h-auto p-4 justify-start ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white border-0'
+                          : 'border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/20'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 w-full">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold ${
+                          isSelected ? 'bg-white/20' : 'bg-emerald-500/20'
+                        }`}>
+                          #{idx + 1}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="font-bold text-sm mb-1">{path.target_role}</div>
+                          <div className="text-xs opacity-80 line-clamp-2">
+                            {path.phases.length} phases • {path.total_duration}
+                          </div>
+                          {isSelected && (
+                            <Badge className="mt-2 bg-white/20 text-white border-0 text-xs">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* ============ Premium Header Section ============ */}
         <div className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl border border-transparent">
           {/* Premium Gradient Background */}
@@ -860,7 +1370,14 @@ export default function SkillGapAnalysis() {
                   {/* Existing Career Selection */}
                   <Select value={selectedRole.id} onValueChange={handleRoleChange}>
                     <SelectTrigger className="h-12 border-slate-700 bg-slate-800 text-white hover:bg-slate-700">
-                      <SelectValue />
+                      <SelectValue>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{selectedRole.name}</span>
+                          {selectedRole.id.startsWith('custom-') && (
+                            <Badge className="bg-purple-500/30 text-purple-200 text-xs">AI</Badge>
+                          )}
+                        </div>
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-700 max-h-[300px]">
                       {/* Predefined Roles */}
@@ -877,7 +1394,7 @@ export default function SkillGapAnalysis() {
                       ))}
                       
                       {/* Custom Careers */}
-                      {customCareers.length > 0 && (
+                      {allProfessionalRoles.filter(role => role.id.startsWith('custom-')).length > 0 && (
                         <>
                           <div className="border-t border-slate-800 my-1"></div>
                           <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase flex items-center gap-1">
@@ -1021,267 +1538,330 @@ export default function SkillGapAnalysis() {
                     </div>
                     <div className="bg-purple-950/20 border border-purple-700/30 rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-purple-400">{skillsByStatus.developing}</div>
-                      <div className="text-xs text-slate-400 mt-1">In Progress</div>
+                      <div className="text-xs text-slate-400 mt-1">Learning</div>
                     </div>
-                    <div className="bg-blue-950/20 border border-blue-700/30 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-blue-400">{marketInsights.avgMarketDemand}%</div>
-                      <div className="text-xs text-slate-400 mt-1">Demand</div>
+                    <div className="bg-amber-950/20 border border-amber-700/30 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-amber-400">{recommendations.length}</div>
+                      <div className="text-xs text-slate-400 mt-1">Recommendations</div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
 
-            {/* Recommendations */}
-            <Card className="bg-slate-900 border-slate-800">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Lightbulb className="w-5 h-5 text-yellow-400" />
-                  Top Recommendations
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Prioritized learning path based on market demand and your gaps
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {recommendations.slice(0, 3).map((rec, idx) => (
-                    <div key={idx} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-white text-sm">{rec.skill}</h3>
-                          <Badge className="mt-1 bg-purple-500/30 text-purple-200 text-xs">
-                            {rec.priority} Priority
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-amber-400">{rec.gap}%</div>
-                          <div className="text-xs text-slate-400">Gap</div>
-                        </div>
-                      </div>
-                      <div className="space-y-1 text-xs">
-                        <div className="flex justify-between text-slate-400">
-                          <span>Market Demand</span>
-                          <span className="font-semibold text-green-400">{rec.marketDemand}%</span>
-                        </div>
-                        <div className="w-full bg-slate-700 rounded-full h-1.5">
-                          <div className="bg-gradient-to-r from-green-500 to-emerald-400 h-1.5 rounded-full" style={{ width: `${rec.marketDemand}%` }}></div>
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t border-slate-700">
-                        <div className="text-xs text-slate-400 mb-1">Recommended Course</div>
-                        <div className="text-xs font-medium text-slate-200">{rec.course.name}</div>
-                        <div className="text-xs text-slate-500">{rec.course.provider} • {rec.course.duration}</div>
-                      </div>
+              {/* Assessment History */}
+              {assessedSkillsCount > 0 && (
+                <Card className="bg-slate-900 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      Recent Assessment Results
+                    </CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Your completed skill assessments for {selectedRole.name}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {Object.values(skillAssessments).filter(a => a.completed).map(assessment => {
+                        const skill = skills.find(s => s.id === assessment.skillId);
+                        return (
+                          <div key={assessment.skillId} className="p-4 bg-slate-800 rounded-lg border border-slate-700">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold text-white">{skill?.name}</div>
+                                <div className="text-xs text-slate-400">
+                                  Score: <span className="font-bold text-green-400">{assessment.score}%</span>
+                                  {' | '} Level: <span className="font-bold text-blue-400">{skill?.currentLevel}%</span>
+                                </div>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <Badge className="bg-green-500/30 text-green-200 text-xs">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Assessed
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 text-xs">
+                              <Button
+                                onClick={() => {
+                                  setCurrentSkillAssessment(assessment.skillId);
+                                  setAssessmentAnswers({});
+                                  setAssessmentStartTime(Date.now());
+                                }}
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                size="sm"
+                              >
+                                View Details
+                              </Button>
+                              <Button
+                                onClick={async () => {
+                                  // Reset assessment
+                                  setSkillAssessments(prev => {
+                                    const newAssessments = { ...prev };
+                                    delete newAssessments[assessment.skillId];
+                                    return newAssessments;
+                                  });
+                                  setSkills(prev => prev.map(s =>
+                                    s.id === assessment.skillId ? { ...s, currentLevel: 0 } : s
+                                  ));
+                                  setDynamicQuestions(prev => {
+                                    const newQuestions = { ...prev };
+                                    delete newQuestions[assessment.skillId];
+                                    return newQuestions;
+                                  });
+
+                                  // Optionally, reload assessments
+                                  await loadSavedAssessments(userId, selectedRole.id);
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-700 text-slate-300"
+                              >
+                                Retake
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           {/* ============ Assessment Tab - UPDATED ============ */}
           <TabsContent value="assessment" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {isLoadingAssessments ? (
               <Card className="bg-slate-900 border-slate-800">
-                <CardContent className="pt-6 text-center">
-                  <Users className="w-8 h-8 mx-auto mb-2 text-purple-400" />
-                  <div className="text-2xl font-bold text-white">{skills.length}</div>
-                  <div className="text-sm text-slate-400">Total Skills</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-slate-900 border-slate-800">
-                <CardContent className="pt-6 text-center">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-400" />
-                  <div className="text-2xl font-bold text-white">{assessedSkillsCount}</div>
-                  <div className="text-sm text-slate-400">Assessed</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-slate-900 border-slate-800">
-                <CardContent className="pt-6 text-center">
-                  <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-                  <div className="text-2xl font-bold text-white">{Math.round((assessedSkillsCount / skills.length) * 100)}%</div>
-                  <div className="text-sm text-slate-400">Completion</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {currentSkillAssessment ? (
-              // Assessment Quiz View - UPDATED
-              <Card className="bg-slate-900 border-slate-800">
-                <CardHeader>
-                  <CardTitle className="text-white">
-                    {skills.find(s => s.id === currentSkillAssessment)?.name} Assessment
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    AI-generated questions to evaluate your proficiency level
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {loadingQuestions[currentSkillAssessment] ? (
-                    // Loading State
-                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                      <Loader2 className="w-12 h-12 animate-spin text-purple-500" />
-                      <p className="text-slate-400">Generating personalized assessment questions...</p>
-                      <p className="text-xs text-slate-500">Powered by Gemini AI</p>
-                    </div>
-                  ) : (
-                    <>
-                      {(dynamicQuestions[currentSkillAssessment] || []).map((question, qIdx) => (
-                        <div key={question.id} className="border-b border-slate-800 pb-6 last:border-0">
-                          <div className="flex items-start justify-between mb-3">
-                            <h3 className="font-bold text-white flex-1">
-                              Question {qIdx + 1}: {question.question}
-                            </h3>
-                            <Badge className="bg-purple-500/30 text-purple-200 text-xs">
-                              {question.difficulty}
-                            </Badge>
-                          </div>
-                          <div className="space-y-2">
-                            {question.options.map((option, optIdx) => {
-                              const isSelected = assessmentAnswers[question.id] === optIdx;
-                              return (
-                                <label
-                                  key={optIdx}
-                                  className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-all ${
-                                    isSelected
-                                      ? 'bg-purple-600/30 border-2 border-purple-500'
-                                      : 'bg-slate-800 hover:bg-slate-700 border-2 border-transparent'
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name={question.id}
-                                    checked={isSelected}
-                                    onChange={() => handleAssessmentAnswer(question.id, optIdx)}
-                                    className="w-4 h-4 cursor-pointer accent-purple-600"
-                                  />
-                                  <span className="text-slate-200">{option}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                          {question.explanation && (
-                            <div className="mt-3 p-3 bg-blue-950/30 border border-blue-800/50 rounded-lg">
-                              <p className="text-xs text-blue-300">
-                                <span className="font-semibold">💡 Tip: </span>
-                                {question.explanation}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                      <div className="flex gap-3 pt-4">
-                        <Button
-                          onClick={() => completeSkillAssessment(currentSkillAssessment)}
-                          disabled={
-                            Object.keys(assessmentAnswers).length !==
-                            (dynamicQuestions[currentSkillAssessment]?.length || 0)
-                          }
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Submit Assessment
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setCurrentSkillAssessment(null)}
-                          className="border-slate-700 text-slate-300"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                <CardContent className="py-12">
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <Loader2 className="w-12 h-12 animate-spin text-purple-500" />
+                    <p className="text-slate-400">Loading your assessments...</p>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
-              // Skills Assessment List View - UPDATED
-              <div className="space-y-3">
-                {skills.map((skill) => {
-                  const assessment = skillAssessments[skill.id];
-                  const hasQuestions = !!dynamicQuestions[skill.id];
-                  const isLoading = loadingQuestions[skill.id];
-                  
-                  return (
-                    <Card key={skill.id} className="bg-slate-900 border-slate-800">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-bold text-white">{skill.name}</h3>
-                              <Badge className="bg-slate-800 text-slate-300 text-xs">{skill.category}</Badge>
-                              {assessment?.completed && (
-                                <Badge className="bg-green-500/30 text-green-200">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Assessed
+              <>
+                {/* Stats Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="bg-slate-900 border-slate-800">
+                    <CardContent className="pt-6 text-center">
+                      <Users className="w-8 h-8 mx-auto mb-2 text-purple-400" />
+                      <div className="text-2xl font-bold text-white">{skills.length}</div>
+                      <div className="text-sm text-slate-400">Total Skills</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-slate-900 border-slate-800">
+                    <CardContent className="pt-6 text-center">
+                      <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-400" />
+                      <div className="text-2xl font-bold text-white">{assessedSkillsCount}</div>
+                      <div className="text-sm text-slate-400">Assessed</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-slate-900 border-slate-800">
+                    <CardContent className="pt-6 text-center">
+                      <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
+                      <div className="text-2xl font-bold text-white">{Math.round((assessedSkillsCount / skills.length) * 100)}%</div>
+                      <div className="text-sm text-slate-400">Completion</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {currentSkillAssessment ? (
+                  // Assessment Quiz View
+                  <Card className="bg-slate-900 border-slate-800">
+                    <CardHeader>
+                      <CardTitle className="text-white">
+                        {skills.find(s => s.id === currentSkillAssessment)?.name} Assessment
+                      </CardTitle>
+                      <CardDescription className="text-slate-400">
+                        AI-generated questions to evaluate your proficiency level
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {loadingQuestions[currentSkillAssessment] ? (
+                        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                          <Loader2 className="w-12 h-12 animate-spin text-purple-500" />
+                          <p className="text-slate-400">Generating personalized assessment questions...</p>
+                          <p className="text-xs text-slate-500">Powered by Gemini AI</p>
+                        </div>
+                      ) : (
+                        <>
+                          {(dynamicQuestions[currentSkillAssessment] || []).map((question, qIdx) => (
+                            <div key={question.id} className="border-b border-slate-800 pb-6 last:border-0">
+                              <div className="flex items-start justify-between mb-3">
+                                <h3 className="font-bold text-white flex-1">
+                                  Question {qIdx + 1}: {question.question}
+                                </h3>
+                                <Badge className="bg-purple-500/30 text-purple-200 text-xs">
+                                  {question.difficulty}
                                 </Badge>
-                              )}
-                              {hasQuestions && !assessment?.completed && (
-                                <Badge className="bg-blue-500/30 text-blue-200">
-                                  <Brain className="w-3 h-3 mr-1" />
-                                  Questions Ready
-                                </Badge>
+                              </div>
+                              <div className="space-y-2">
+                                {question.options.map((option, optIdx) => {
+                                  const isSelected = assessmentAnswers[question.id] === optIdx;
+                                  return (
+                                    <label
+                                      key={optIdx}
+                                      className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-all ${
+                                        isSelected
+                                          ? 'bg-purple-600/30 border-2 border-purple-500'
+                                          : 'bg-slate-800 hover:bg-slate-700 border-2 border-transparent'
+                                      }`}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name={question.id}
+                                        checked={isSelected}
+                                        onChange={() => handleAssessmentAnswer(question.id, optIdx)}
+                                        className="w-4 h-4 cursor-pointer accent-purple-600"
+                                      />
+                                      <span className="text-slate-200">{option}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              {question.explanation && (
+                                <div className="mt-3 p-3 bg-blue-950/30 border border-blue-800/50 rounded-lg">
+                                  <p className="text-xs text-blue-300">
+                                    <span className="font-semibold">💡 Tip: </span>
+                                    {question.explanation}
+                                  </p>
+                                </div>
                               )}
                             </div>
-                            {assessment?.completed && (
-                              <div className="text-sm text-slate-400">
-                                Assessment Score: <span className="font-bold text-green-400">{assessment.score}%</span>
-                                {' | '} Level: <span className="font-bold text-blue-400">{skill.currentLevel}%</span>
-                              </div>
-                            )}
-                          </div>
-                          {!assessment?.completed ? (
+                          ))}
+                          <div className="flex gap-3 pt-4">
                             <Button
-                              onClick={() => startSkillAssessment(skill.id)}
-                              size="sm"
-                              disabled={isLoading}
-                              className="bg-purple-600 hover:bg-purple-700"
+                              onClick={() => completeSkillAssessment(currentSkillAssessment)}
+                              disabled={
+                                Object.keys(assessmentAnswers).length !==
+                                (dynamicQuestions[currentSkillAssessment]?.length || 0)
+                              }
+                              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
                             >
-                              {isLoading ? (
-                                <>
-                                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                                  Loading...
-                                </>
-                              ) : (
-                                <>
-                                  <Play className="w-3 h-3 mr-2" />
-                                  Start
-                                </>
-                              )}
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Submit Assessment
                             </Button>
-                          ) : (
                             <Button
-                              onClick={() => {
-                                setSkillAssessments(prev => {
-                                  const newAssessments = { ...prev };
-                                  delete newAssessments[skill.id];
-                                  return newAssessments;
-                                });
-                                setSkills(prev => prev.map(s =>
-                                  s.id === skill.id ? { ...s, currentLevel: 0 } : s
-                                ));
-                                // Clear cached questions for retake
-                                setDynamicQuestions(prev => {
-                                  const newQuestions = { ...prev };
-                                  delete newQuestions[skill.id];
-                                  return newQuestions;
-                                });
-                              }}
-                              size="sm"
                               variant="outline"
-                              className="border-slate-700"
+                              onClick={() => setCurrentSkillAssessment(null)}
+                              className="border-slate-700 text-slate-300"
                             >
-                              <RotateCcw className="w-3 h-3 mr-2" />
-                              Retake
+                              Cancel
                             </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : skills.length === 0 ? (
+                  // Empty state - no skills yet
+                  <Card className="bg-slate-900 border-slate-800">
+                    <CardContent className="py-12 text-center">
+                      <Target className="w-16 h-16 mx-auto mb-4 text-slate-600" />
+                      <div className="text-2xl font-bold text-slate-200 mb-4">Ready to Start?</div>
+                      <p className="text-sm text-slate-400 mb-6">
+                        Begin your skill assessment journey by selecting a career target or creating a custom one.
+                      </p>
+                      <Button
+                        onClick={() => setActiveTab('overview')}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                      >
+                        <Target className="w-4 h-4 mr-2" />
+                        Set Career Target
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  // Skills Assessment List View
+                  <div className="space-y-3">
+                    {skills.map((skill) => {
+                      const assessment = skillAssessments[skill.id];
+                      const hasQuestions = !!dynamicQuestions[skill.id];
+                      const isLoading = loadingQuestions[skill.id];
+                      
+                      return (
+                        <Card key={skill.id} className="bg-slate-900 border-slate-800">
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-bold text-white">{skill.name}</h3>
+                                  <Badge className="bg-slate-800 text-slate-300 text-xs">{skill.category}</Badge>
+                                  {assessment?.completed && (
+                                    <Badge className="bg-green-500/30 text-green-200">
+                                      <CheckCircle className="w-3 h-3 mr-1" />
+                                      Assessed
+                                    </Badge>
+                                  )}
+                                  {hasQuestions && !assessment?.completed && (
+                                    <Badge className="bg-blue-500/30 text-blue-200">
+                                      <Brain className="w-3 h-3 mr-1" />
+                                      Questions Ready
+                                    </Badge>
+                                  )}
+                                </div>
+                                {assessment?.completed && (
+                                  <div className="text-sm text-slate-400">
+                                    Assessment Score: <span className="font-bold text-green-400">{assessment.score}%</span>
+                                    {' | '} Level: <span className="font-bold text-blue-400">{skill.currentLevel}%</span>
+                                  </div>
+                                )}
+                              </div>
+                              {!assessment?.completed ? (
+                                <Button
+                                  onClick={() => startSkillAssessment(skill.id)}
+                                  size="sm"
+                                  disabled={isLoading}
+                                  className="bg-purple-600 hover:bg-purple-700"
+                                >
+                                  {isLoading ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                      Loading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Play className="w-3 h-3 mr-2" />
+                                      Start
+                                    </>
+                                  )}
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => {
+                                    setSkillAssessments(prev => {
+                                      const newAssessments = { ...prev };
+                                      delete newAssessments[skill.id];
+                                      return newAssessments;
+                                    });
+                                    setSkills(prev => prev.map(s =>
+                                      s.id === skill.id ? { ...s, currentLevel: 0 } : s
+                                    ));
+                                    setDynamicQuestions(prev => {
+                                      const newQuestions = { ...prev };
+                                      delete newQuestions[skill.id];
+                                      return newQuestions;
+                                    });
+                                  }}
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-slate-700"
+                                >
+                                  <RotateCcw className="w-3 h-3 mr-2" />
+                                  Retake
+                                </Button>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
@@ -1294,6 +1874,7 @@ export default function SkillGapAnalysis() {
                   Detailed Skill Gap Analysis
                 </CardTitle>
                 <CardDescription className="text-slate-400">
+
                   Comprehensive view of your skill levels against industry targets
                 </CardDescription>
               </CardHeader>
@@ -1370,7 +1951,7 @@ export default function SkillGapAnalysis() {
                   .map((skill, idx) => (
                     <div key={skill.id} className="flex gap-4">
                       <div className="flex flex-col items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                        <div className={`w-10 h-10 rounded-full flex items-center justifycenter font-bold text-white ${
                           idx < 2 ? 'bg-green-600' : idx < 4 ? 'bg-blue-600' : 'bg-purple-600'
                         }`}>
                           {idx + 1}
@@ -1396,7 +1977,7 @@ export default function SkillGapAnalysis() {
                               <span className="text-xs font-semibold text-purple-300">Course</span>
                             </div>
                             <div className="text-xs text-slate-300">
-                              {learningResources[selectedRole.id as keyof typeof learningResources]?.courses[idx % 3]?.name || 'Professional Development'}
+                              {learningResources[selectedRole.id as keyof typeof learningResources]?.courses?.[idx % 3]?.name || 'Professional Development Course'}
                             </div>
                           </div>
                           <div className="bg-emerald-950/30 border border-emerald-800/50 p-3 rounded-lg">
@@ -1405,7 +1986,7 @@ export default function SkillGapAnalysis() {
                               <span className="text-xs font-semibold text-emerald-300">Project</span>
                             </div>
                             <div className="text-xs text-slate-300">
-                              {learningResources[selectedRole.id as keyof typeof learningResources]?.projects[idx % 3]?.name || 'Hands-on Practice'}
+                              {learningResources[selectedRole.id as keyof typeof learningResources]?.projects?.[idx % 3]?.name || 'Hands-on Practice Project'}
                             </div>
                           </div>
                         </div>
