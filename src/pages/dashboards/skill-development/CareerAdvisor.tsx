@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Volume2, VolumeX, Brain, Sparkles, MessageSquare, Zap, Send, User, Bot, Loader2, CheckCircle2, BookOpen, Target, Code, Rocket, Trophy, Lightbulb } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Brain, Sparkles, MessageSquare, Zap, Send, User, Bot, Loader2, CheckCircle2, BookOpen, Target, Code, Rocket, Trophy, Lightbulb,History,Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,12 @@ import { Progress } from "@/components/ui/progress";
 import DashboardLayout from "@/components/DashboardLayout";
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { LearningPath } from "@/components/LearningPath";
-
+import { 
+  saveLearningPath, 
+  getLatestLearningPath, 
+  supabase,
+  type SavedLearningPath 
+} from "@/lib/supabase";
 const API_KEY = import.meta.env.VITE_CAREER_ADVISORY_API_KEY;
 
 interface Message {
@@ -82,6 +87,12 @@ const CareerAdvisor = () => {
   const [detailedPath, setDetailedPath] = useState<DetailedLearningPath | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [isGeneratingPath, setIsGeneratingPath] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoadingPreviousPath, setIsLoadingPreviousPath] = useState(true);
+  const [hasPreviousPath, setHasPreviousPath] = useState(false);
+  const [showAllPaths, setShowAllPaths] = useState(false);
+  const [allPaths, setAllPaths] = useState<SavedLearningPath[]>([]);
+    const [showPathsSection, setShowPathsSection] = useState(false);
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -128,6 +139,92 @@ const CareerAdvisor = () => {
       }
     };
   }, []);
+
+      // Initialize and load previous learning path
+  useEffect(() => {
+    const initializeUser = async () => {
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          setUserId(user.id);
+          console.log('👤 User ID:', user.id);
+          
+          // Load previous learning path
+          const result = await getLatestLearningPath(user.id);
+          
+          if (result.success && result.data) {
+            console.log('📚 Previous learning path found!');
+            setHasPreviousPath(true);
+            
+            // ✅ CHANGED: Only restore if it's the first load (no messages yet)
+            // Don't restore if user has already started a new conversation
+            if (messages.length === 1 && messages[0].role === 'assistant' && !conversationEnded) {
+              // Restore the learning path
+              const savedPath = result.data;
+              
+              setCareerSummary({
+                careerGoal: savedPath.career_goal,
+                keyInterests: savedPath.key_interests,
+                currentLevel: savedPath.current_level,
+                targetRole: savedPath.target_role,
+                timeframe: savedPath.timeframe,
+                learningPath: []
+              });
+              
+              setDetailedPath({
+                career: savedPath.target_role,
+                overview: savedPath.career_overview,
+                totalDuration: savedPath.total_duration,
+                difficulty: savedPath.difficulty,
+                prerequisites: savedPath.prerequisites,
+                outcomes: savedPath.outcomes,
+                phases: savedPath.phases,
+                certifications: savedPath.certifications,
+                jobMarket: savedPath.job_market
+              });
+              
+              // Restore conversation messages
+              if (savedPath.conversation_messages && savedPath.conversation_messages.length > 0) {
+                setMessages(savedPath.conversation_messages.map(msg => ({
+                  ...msg,
+                  timestamp: new Date(msg.timestamp)
+                })));
+              }
+              
+              setConversationEnded(true);
+              setHasSpokenGreeting(true);
+              
+              // Show success message
+              const welcomeBackMessage: Message = {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: `Welcome back! I've loaded your previous learning path for ${savedPath.target_role}. You can continue from where you left off, or start a new conversation.`,
+                timestamp: new Date()
+              };
+              
+              setMessages(prev => [...prev, welcomeBackMessage]);
+              
+              if (!isMuted) {
+                speakText(welcomeBackMessage.content);
+              }
+            }
+          } else {
+            console.log('📝 No previous learning path found');
+          }
+        } else {
+          console.warn('⚠️ No user logged in');
+        }
+      } catch (error) {
+        console.error('Error initializing user:', error);
+      } finally {
+        setIsLoadingPreviousPath(false);
+      }
+    };
+
+    initializeUser();
+  }, []); // ✅ CHANGED: Remove dependencies, only run once on mount
 
   // Auto-speak greeting on component mount
   useEffect(() => {
@@ -910,7 +1007,7 @@ Provide helpful, conversational response (3-5 sentences):`;
         speakText(farewellMessage.content);
       }
 
-      // Generate summary and learning path after a short delay
+            // Generate summary and learning path after a short delay
       setTimeout(async () => {
         setIsProcessing(false);
         setConversationEnded(true);
@@ -956,6 +1053,35 @@ Provide helpful, conversational response (3-5 sentences):`;
         if (!isMuted) {
           speakText(finalMessage.content);
         }
+
+        // ✅ NEW: Save to Supabase
+        if (userId) {
+          console.log('💾 Saving learning path to database...');
+          const allMessages = [...messages, userMessage, farewellMessage, statusMessage, summaryMessage, finalMessage];
+          
+          const saveResult = await saveLearningPath(
+            userId,
+            summary,
+            detailedLearningPath,
+            allMessages
+          );
+
+          if (saveResult.success) {
+            console.log('✅ Learning path saved successfully!');
+            setHasPreviousPath(true);
+            
+            // Show save confirmation
+            const saveConfirmation: Message = {
+              id: (Date.now() + 5).toString(),
+              role: 'assistant',
+              content: "Your learning path has been saved! You can return anytime to continue your journey.",
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, saveConfirmation]);
+          } else {
+            console.error('❌ Failed to save learning path:', saveResult.error);
+          }
+        }
       }, 2000);
 
       return;
@@ -989,6 +1115,7 @@ Provide helpful, conversational response (3-5 sentences):`;
   };
 
   // Start a new conversation
+    // Start a new conversation
   const handleNewConversation = () => {
     setMessages([
       {
@@ -1004,12 +1131,61 @@ Provide helpful, conversational response (3-5 sentences):`;
     setHasSpokenGreeting(false);
     setIsGeneratingSummary(false);
     setIsGeneratingPath(false);
+    // ✅ CHANGED: Don't reset hasPreviousPath - keep it true so users know they have saved paths
+    // setHasPreviousPath(false); // ❌ Remove this line
     
     setTimeout(() => {
       if (!isMuted && synthRef.current) {
         speakText("Hello! I'm PathFinder AI. What would you like to discuss today?");
       }
     }, 500);
+  };
+
+    // Load all saved learning paths
+  const loadAllPaths = async () => {
+    if (!userId) return;
+    
+    const { getAllLearningPaths } = await import('@/lib/supabase');
+    const result = await getAllLearningPaths(userId);
+    
+    if (result.success && result.data) {
+      setAllPaths(result.data);
+      setShowPathsSection(true); // Show the section below chat
+    }
+  };
+
+  // Load a specific saved path
+  const loadSavedPath = (savedPath: SavedLearningPath) => {
+    setCareerSummary({
+      careerGoal: savedPath.career_goal,
+      keyInterests: savedPath.key_interests,
+      currentLevel: savedPath.current_level,
+      targetRole: savedPath.target_role,
+      timeframe: savedPath.timeframe,
+      learningPath: []
+    });
+    
+    setDetailedPath({
+      career: savedPath.target_role,
+      overview: savedPath.career_overview,
+      totalDuration: savedPath.total_duration,
+      difficulty: savedPath.difficulty,
+      prerequisites: savedPath.prerequisites,
+      outcomes: savedPath.outcomes,
+      phases: savedPath.phases,
+      certifications: savedPath.certifications,
+      jobMarket: savedPath.job_market
+    });
+    
+    if (savedPath.conversation_messages && savedPath.conversation_messages.length > 0) {
+      setMessages(savedPath.conversation_messages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      })));
+    }
+    
+    setConversationEnded(true);
+    setShowAllPaths(false);
   };
 
   // Get icon component for each phase
@@ -1032,8 +1208,118 @@ Provide helpful, conversational response (3-5 sentences):`;
       title="AI Career Advisor"
       description="Voice-enabled personal career counselor powered by AI"
     >
+      {isLoadingPreviousPath ? (
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center">
+          <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
+              <p className="text-slate-300 text-lg">Loading your learning path...</p>
+            </div>
+          </Card>
+        </div>
+      ) : (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
+
+                      {/* ✅ UPDATED: Show previous path indicator with view all button */}
+            {hasPreviousPath && !conversationEnded && (
+              <Card className="border-emerald-800 bg-emerald-900/20 backdrop-blur-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <History className="w-5 h-5 text-emerald-400" />
+                      <div>
+                        <p className="text-sm font-medium text-emerald-300">Previous Learning Paths Available</p>
+                        <p className="text-xs text-slate-400">You have saved learning paths from previous sessions</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Saved
+                      </Badge>
+                      <Button
+                        onClick={loadAllPaths}
+                        size="sm"
+                        variant="outline"
+                        className="border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/20"
+                      >
+                        <History className="w-4 h-4 mr-2" />
+                        View All
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ✅ NEW: Show all saved paths modal/section */}
+            {showAllPaths && allPaths.length > 0 && (
+              <Card className="border-purple-800 bg-purple-900/20 backdrop-blur-sm">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <History className="w-5 h-5 text-purple-400" />
+                        Your Saved Learning Paths
+                      </CardTitle>
+                      <CardDescription className="text-slate-400">
+                        {allPaths.length} saved career path{allPaths.length !== 1 ? 's' : ''}
+                      </CardDescription>
+                    </div>
+                    <Button
+                      onClick={() => setShowAllPaths(false)}
+                      size="sm"
+                      variant="ghost"
+                      className="text-slate-400 hover:text-white"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {allPaths.map((path) => (
+                      <Card
+                        key={path.id}
+                        className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all cursor-pointer"
+                        onClick={() => loadSavedPath(path)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="text-lg font-bold text-white mb-1">{path.target_role}</h4>
+                              <p className="text-sm text-slate-400 line-clamp-2">{path.career_overview}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {path.total_duration}
+                              </Badge>
+                              <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
+                                {path.difficulty}
+                              </Badge>
+                              <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
+                                {path.phases.length} Phases
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              Created: {new Date(path.created_at).toLocaleDateString()}
+                            </div>
+                            <Button
+                              size="sm"
+                              className="w-full bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/30"
+                            >
+                              Load This Path
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           
           {/* Main Chat Area */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1445,6 +1731,225 @@ Provide helpful, conversational response (3-5 sentences):`;
             </Card>
           </div>
 
+                    {/* ✅ NEW: All Learning Paths Dropdown Section - Below Chat */}
+          {hasPreviousPath && (
+            <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm shadow-2xl">
+              <CardHeader 
+                className="cursor-pointer hover:bg-slate-800/30 transition-colors"
+                onClick={() => {
+                  if (!showPathsSection && allPaths.length === 0) {
+                    loadAllPaths();
+                  } else {
+                    setShowPathsSection(!showPathsSection);
+                  }
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${showPathsSection ? 'bg-purple-500/20' : 'bg-slate-800'} transition-colors`}>
+                      <History className={`w-5 h-5 ${showPathsSection ? 'text-purple-400' : 'text-slate-400'}`} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-white text-lg">My Learning Paths</CardTitle>
+                      <CardDescription className="text-slate-400">
+                        {allPaths.length > 0 
+                          ? `${allPaths.length} saved career path${allPaths.length !== 1 ? 's' : ''}` 
+                          : 'View all your saved learning paths'}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {allPaths.length > 0 && (
+                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        {allPaths.length} Saved
+                      </Badge>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-slate-400 hover:text-white"
+                    >
+                      {showPathsSection ? (
+                        <>
+                          Hide
+                          <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                        </>
+                      ) : (
+                        <>
+                          View All
+                          <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              {/* Collapsible Content */}
+              {showPathsSection && (
+                <CardContent className="pt-0 animate-slideDown">
+                  {allPaths.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Loader2 className="w-12 h-12 text-purple-400 animate-spin mb-4" />
+                      <p className="text-slate-400">Loading your learning paths...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Summary Stats */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-4 border-b border-slate-800">
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardContent className="p-4 text-center">
+                            <div className="text-2xl font-bold text-purple-400">{allPaths.length}</div>
+                            <div className="text-xs text-slate-400 mt-1">Total Paths</div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardContent className="p-4 text-center">
+                            <div className="text-2xl font-bold text-blue-400">
+                              {allPaths.reduce((sum, path) => sum + path.phases.length, 0)}
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">Total Phases</div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardContent className="p-4 text-center">
+                            <div className="text-2xl font-bold text-emerald-400">
+                              {new Set(allPaths.map(p => p.target_role)).size}
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">Career Goals</div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-slate-800/50 border-slate-700">
+                          <CardContent className="p-4 text-center">
+                            <div className="text-2xl font-bold text-amber-400">
+                              {allPaths.filter(p => p.created_at > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()).length}
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">This Week</div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Learning Paths Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {allPaths.map((path, index) => (
+                          <Card
+                            key={path.id}
+                            className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all cursor-pointer group hover:shadow-lg hover:shadow-purple-500/10 animate-fadeIn"
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                            onClick={() => loadSavedPath(path)}
+                          >
+                            <CardContent className="p-5">
+                              <div className="space-y-4">
+                                {/* Header with Number Badge */}
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white shadow-lg">
+                                      #{index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="text-base font-bold text-white truncate group-hover:text-purple-300 transition-colors">
+                                        {path.target_role}
+                                      </h4>
+                                      <p className="text-xs text-slate-500">
+                                        {new Date(path.created_at).toLocaleDateString('en-US', { 
+                                          month: 'short', 
+                                          day: 'numeric',
+                                          year: 'numeric'
+                                        })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Description */}
+                                <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">
+                                  {path.career_overview}
+                                </p>
+
+                                {/* Stats Badges */}
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {path.total_duration}
+                                  </Badge>
+                                  <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
+                                    {path.difficulty}
+                                  </Badge>
+                                  <Badge variant="outline" className="border-slate-600 text-slate-300 text-xs">
+                                    <Target className="w-3 h-3 mr-1" />
+                                    {path.phases.length} Phases
+                                  </Badge>
+                                </div>
+
+                                {/* Key Interests */}
+                                {path.key_interests && path.key_interests.length > 0 && (
+                                  <div className="space-y-2">
+                                    <p className="text-xs text-slate-500 font-medium">Key Interests:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {path.key_interests.slice(0, 3).map((interest, idx) => (
+                                        <Badge
+                                          key={idx}
+                                          className="bg-blue-500/10 text-blue-300 border-blue-500/20 text-xs"
+                                        >
+                                          {interest}
+                                        </Badge>
+                                      ))}
+                                      {path.key_interests.length > 3 && (
+                                        <Badge
+                                          className="bg-slate-700 text-slate-400 border-slate-600 text-xs"
+                                        >
+                                          +{path.key_interests.length - 3}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Action Button */}
+                                <Button
+                                  size="sm"
+                                  className="w-full bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/30 group-hover:bg-purple-500 group-hover:text-white transition-all"
+                                >
+                                  <Rocket className="w-4 h-4 mr-2" />
+                                  Load This Path
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      {/* Empty State */}
+                      {allPaths.length === 0 && (
+                        <div className="text-center py-12">
+                          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4">
+                            <History className="w-8 h-8 text-slate-600" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-slate-300 mb-2">No Learning Paths Yet</h3>
+                          <p className="text-sm text-slate-500 mb-6">
+                            Start a conversation to create your first personalized learning path!
+                          </p>
+                          <Button
+                            onClick={handleNewConversation}
+                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Create New Path
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          )}
+
           {/* Learning Path Section - Displayed Below Chat */}
           {conversationEnded && detailedPath && (
             <div className="animate-fadeIn">
@@ -1487,8 +1992,8 @@ Provide helpful, conversational response (3-5 sentences):`;
           </Card>
         </div>
       </div>
-
-      <style>{`
+      )}
+            <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -1497,6 +2002,17 @@ Provide helpful, conversational response (3-5 sentences):`;
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            max-height: 0;
+          }
+          to {
+            opacity: 1;
+            max-height: 2000px;
           }
         }
 
@@ -1511,6 +2027,10 @@ Provide helpful, conversational response (3-5 sentences):`;
 
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out;
+        }
+
+        .animate-slideDown {
+          animation: slideDown 0.5s ease-out;
         }
 
         .animate-blink {
