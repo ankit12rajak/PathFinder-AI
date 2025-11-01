@@ -22,7 +22,6 @@ const DecisionMakingDashboard = () => {
       icon: Target,
       color: "from-blue-500/20 to-purple-500/20",
       action: "Analyze Paths",
-      progress: 85,
       status: "Active",
       path: "/dashboard/decision-making/pathways"
     },
@@ -32,7 +31,6 @@ const DecisionMakingDashboard = () => {
       icon: BookOpen,
       color: "from-green-500/20 to-teal-500/20",
       action: "Start Prep",
-      progress: 60,
       status: "In Progress",
       path: "/dashboard/decision-making/exams"
     },
@@ -42,7 +40,6 @@ const DecisionMakingDashboard = () => {
       icon: Calculator,
       color: "from-purple-500/20 to-pink-500/20",
       action: "Explore Colleges",
-      progress: 70,
       status: "New",
       path: "/dashboard/decision-making/college-insights"
     },
@@ -52,7 +49,6 @@ const DecisionMakingDashboard = () => {
       icon: Brain,
       color: "from-indigo-500/20 to-blue-500/20",
       action: "Discover Paths",
-      progress: 45,
       status: "Trending",
       path: "/dashboard/decision-making/alternative-careers"
     },
@@ -62,7 +58,6 @@ const DecisionMakingDashboard = () => {
       icon: Users,
       color: "from-orange-500/20 to-red-500/20",
       action: "Find Mentors",
-      progress: 75,
       status: "Popular",
       path: "/dashboard/decision-making/mentors"
     },
@@ -72,7 +67,6 @@ const DecisionMakingDashboard = () => {
       icon: Trophy,
       color: "from-yellow-500/20 to-orange-500/20",
       action: "Take Tests",
-      progress: 88,
       status: "Active",
       path: "/dashboard/decision-making/mock-tests"
     },
@@ -82,7 +76,6 @@ const DecisionMakingDashboard = () => {
       icon: TrendingUp,
       color: "from-teal-500/20 to-green-500/20",
       action: "View Analytics",
-      progress: 92,
       status: "Updated",
       path: "/dashboard/decision-making/analytics"
     }
@@ -373,7 +366,6 @@ Important:
                             <span>Progress</span>
                             <span className="font-medium">{exam.progress}%</span>
                           </div>
-                          <Progress value={exam.progress} className="h-3" />
                           <div className="space-y-1 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Next Test:</span>
@@ -392,7 +384,7 @@ Important:
               </div>
             </motion.div>
 
-            {/* Main Features */}
+            {/* Main Features - UPDATED: Removed Progress Bars */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -427,19 +419,12 @@ Important:
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <div className="space-y-3">
-                            <div className="flex justify-between text-sm">
-                              <span>Completion</span>
-                              <span>{feature.progress}%</span>
-                            </div>
-                            <Progress value={feature.progress} className="h-2" />
-                            <Button 
-                              className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                              onClick={() => navigate(feature.path)}
-                            >
-                              {feature.action}
-                            </Button>
-                          </div>
+                          <Button 
+                            className="w-full btn-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                            onClick={() => navigate(feature.path)}
+                          >
+                            {feature.action}
+                          </Button>
                         </CardContent>
                       </Card>
                     </motion.div>

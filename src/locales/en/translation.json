@@ -215,6 +215,17 @@
       }
     }
   },
+  "calling": {
+    "badge": "AI-Powered",
+    "availability": "Available 24/7",
+    "mainHeading": "Free AI-Powered",
+    "highlightedText": "CALLING AGENT",
+    "description": "Our AI-powered calling agent is available 24/7 to assist you with your queries and provide expert guidance on your career journey.",
+    "phoneLabel": "Call Us Now",
+    "phoneNumber": "+13205372177",
+    "ctaText": "Get instant assistance with your career queries and guidance from our AI-powered agent.",
+    "button": "Call Now"
+  },
   "footer": {
     "brand": {
       "name": "PathfinderAI",

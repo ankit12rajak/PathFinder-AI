@@ -215,6 +215,19 @@
       }
     }
   },
+  
+  "calling": {
+    "badge": "Con IA",
+    "availability": "Disponible 24/7",
+    "mainHeading": "Agente de Llamadas",
+    "highlightedText": "CON IA GRATUITO",
+    "description": "Nuestro agente de llamadas con IA está disponible 24/7 para ayudarte con tus consultas y proporcionar orientación experta en tu trayectoria profesional.",
+    "phoneLabel": "Llámanos Ahora",
+    "phoneNumber": "+13205372177",
+    "ctaText": "Obtén asistencia instantánea con tus consultas profesionales y orientación de nuestro agente con IA.",
+    "button": "Llamar Ahora"
+  },
+
   "footer": {
     "brand": {
       "name": "PathfinderAI",

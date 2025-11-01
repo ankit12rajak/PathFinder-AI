@@ -104,7 +104,7 @@ const AppSidebar = () => {
         { title: "Alternative Careers", url: "/dashboard/decision-making/alternative-careers", icon: Lightbulb },
         { title: "Mentor Network", url: "/dashboard/decision-making/mentors", icon: Users },
         { title: "Mock Tests", url: "/dashboard/decision-making/mock-tests", icon: Trophy },
-        { title: "Progress Analytics", url: "/dashboard/decision-making/analytics", icon: BarChart3 },
+        // { title: "Progress Analytics", url: "/dashboard/decision-making/analytics", icon: BarChart3 },
       ];
     } else if (currentPath.includes('/dashboard/college-admission')) {
       return [
@@ -114,7 +114,7 @@ const AppSidebar = () => {
         { title: "ROI Calculator", url: "/dashboard/college-admission/roi", icon: Calculator },
         { title: "What-If Simulator", url: "/dashboard/college-admission/simulator", icon: Lightbulb },
         { title: "Scholarships", url: "/dashboard/college-admission/scholarships", icon: DollarSign },
-        { title: "Application Tracker", url: "/dashboard/college-admission/applications", icon: FileText },
+        // { title: "Application Tracker", url: "/dashboard/college-admission/applications", icon: FileText },
       ];
     } else if (currentPath.includes('/dashboard/skill-development')) {
       return [
