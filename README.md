@@ -2,7 +2,7 @@
 
 >A lightweight client-side resume builder focused on reliable PDF output, fast previews, and professional templates. Built as a React + TypeScript app with an emphasis on a simple data-first flow (Form → HTML → PDF) to avoid brittle LaTeX compilation on the client.
 
-## What it does
+
 
 PathfinderAI helps users build professional resumes from structured form data. Users fill the form, pick a template, preview the generated PDF instantly, and download or save resumes. The system generates clean HTML from the resume data and converts it to a high-quality PDF using html2canvas + jsPDF for client-side reliability.
 
