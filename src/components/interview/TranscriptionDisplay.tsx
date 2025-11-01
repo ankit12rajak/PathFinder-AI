@@ -26,6 +26,8 @@ export function TranscriptionDisplay({ className = "" }: TranscriptionDisplayPro
                 className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
                   message.speaker === "user"
                     ? "bg-gradient-to-r from-accent to-primary"
+                    : message.agentType === "behavioral"
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500"
                     : "bg-gradient-to-r from-primary to-accent"
                 }`}
               >
@@ -46,6 +48,13 @@ export function TranscriptionDisplay({ className = "" }: TranscriptionDisplayPro
               >
                 <p className="text-sm leading-relaxed">{message.text}</p>
                 {!message.isFinal && <span className="text-xs opacity-75 italic">Speaking...</span>}
+                {/* Show agent type if available for debugging */}
+                {message.agentType && message.speaker === "agent" && (
+                  <div className="text-xs opacity-50 mt-2 border-t border-current pt-2">
+                    {message.agentType === "behavioral" ? "🎯 Behavioral Agent" : "💻 Technical Agent"}
+                    {message.roomName && ` • Room: ${message.roomName}`}
+                  </div>
+                )}
               </div>
             </div>
           </div>

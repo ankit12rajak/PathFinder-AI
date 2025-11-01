@@ -20,7 +20,11 @@ const Message = ({ type, text }) => {
   </div>;
 };
 
-const AvatarVoiceAgent = () => {
+/**
+ * AvatarVoiceAgent Component
+ * Receives agentType and roomName to properly tag transcriptions
+ */
+const AvatarVoiceAgent = ({ agentType = "technical", roomName = "" }) => {
   const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
   const localParticipant = useLocalParticipant();
   const { segments: userTranscriptions } = useTrackTranscription({
@@ -40,6 +44,8 @@ const AvatarVoiceAgent = () => {
       speaker: "agent",
       firstReceivedTime: t.firstReceivedTime || Date.now(),
       isFinal: t.isFinal ?? false,
+      agentType: agentType,
+      roomName: roomName,
     }));
 
     const userMessages = (userTranscriptions || []).map((t, idx) => ({
@@ -48,6 +54,8 @@ const AvatarVoiceAgent = () => {
       speaker: "user",
       firstReceivedTime: t.firstReceivedTime || Date.now(),
       isFinal: t.isFinal ?? false,
+      agentType: agentType,
+      roomName: roomName,
     }));
 
     const allMessages = [...agentMessages, ...userMessages].sort(
@@ -58,7 +66,7 @@ const AvatarVoiceAgent = () => {
     
     // Update global transcriptions for the display component
     setGlobalTranscriptions(allMessages);
-  }, [agentTranscriptions, userTranscriptions]);
+  }, [agentTranscriptions, userTranscriptions, agentType, roomName]);
 
   return (
     <div className="voice-assistant-container">

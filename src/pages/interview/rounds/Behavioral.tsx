@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import LiveKitWidget from "@/components/ai_avatar/LiveKitWidget";
 import { TranscriptionDisplay } from "@/components/interview/TranscriptionDisplay";
 import { markRoundComplete, isRoundAccessible } from "@/services/interviewProgressService";
+import { AgentType } from "@/services/agentTokenService";
 
 const Behavioral = () => {
   const navigate = useNavigate();
@@ -132,6 +133,7 @@ const Behavioral = () => {
                     // Show LiveKit widget directly in the card
                     <div className="w-full h-full">
                       <LiveKitWidget 
+                        agentType={AgentType.BEHAVIORAL}
                         setShowSupport={setShowAvatar}
                         onDisconnected={() => setShowAvatar(false)}
                       />

@@ -6,6 +6,8 @@ export interface TranscriptionMessage {
   speaker: "user" | "agent";
   firstReceivedTime: number;
   isFinal: boolean;
+  agentType?: string;  // "technical" or "behavioral"
+  roomName?: string;   // The LiveKit room name
 }
 
 // Global transcription store to bridge between LiveKitWidget and TranscriptionDisplay

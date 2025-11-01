@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import LiveKitWidget from "@/components/ai_avatar/LiveKitWidget";
 import { TranscriptionDisplay } from "@/components/interview/TranscriptionDisplay";
 import { markRoundComplete, isRoundAccessible } from "@/services/interviewProgressService";
+import { AgentType } from "@/services/agentTokenService";
 
 const TechnicalDiscussion = () => {
   const navigate = useNavigate();
@@ -119,6 +120,7 @@ const TechnicalDiscussion = () => {
                     // Show LiveKit widget directly in the card
                     <div className="w-full h-full">
                       <LiveKitWidget 
+                        agentType={AgentType.TECHNICAL}
                         setShowSupport={setShowAvatar}
                         onDisconnected={() => setShowAvatar(false)}
                       />
