@@ -272,7 +272,7 @@ const InterviewSummary = () => {
         {/* Actions */}
         <div className="flex gap-4 justify-center pt-6 flex-wrap">
           <Button
-            onClick={() => navigate("/interview/setup")}
+            onClick={() => navigate("/dashboard/skill-development/interview-prep")}
             className="bg-gradient-to-r from-primary via-accent to-primary hover:opacity-90 transition-opacity shadow-lg px-8 py-6 text-lg"
           >
             <RotateCcw className="w-5 h-5 mr-2" />

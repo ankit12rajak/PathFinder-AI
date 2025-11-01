@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/DashboardLayout";
+import { resetInterviewProgress } from "@/services/interviewProgressService";
 
 const InterviewPrep = () => {
   const navigate = useNavigate();
@@ -96,6 +97,12 @@ const InterviewPrep = () => {
         ? prev.filter(id => id !== roundId)
         : [...prev, roundId]
     );
+  };
+
+  const handleStartInterview = () => {
+    // Reset interview progress when starting a new interview
+    resetInterviewProgress();
+    navigate("/interview/round/1");
   };
 
   return (
@@ -222,49 +229,44 @@ const InterviewPrep = () => {
                   <Layers className="w-5 h-5 text-blue-400" />
                   Interview Rounds
                 </CardTitle>
-                <CardDescription className="text-slate-400">Select rounds to practice</CardDescription>
+                <CardDescription className="text-slate-400">Complete all 4 rounds in sequential order</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {interviewRounds.map((round, index) => (
                   <div
                     key={round.id}
-                    onClick={() => toggleRound(round.id)}
-                    className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border ${selectedRounds.includes(round.id)
-                      ? 'bg-gradient-to-r ' + round.color + ' border-transparent shadow-lg scale-[1.02]'
-                      : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50'
-                      }`}
+                    className={`p-4 rounded-xl transition-all duration-300 border bg-gradient-to-r ${round.color} border-transparent shadow-lg`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${selectedRounds.includes(round.id)
-                        ? 'bg-white/20'
-                        : 'bg-slate-700/50'
-                        }`}>
-                        <round.icon className={`w-5 h-5 ${selectedRounds.includes(round.id)
-                          ? 'text-white'
-                          : 'text-slate-400'
-                          }`} />
+                      <div className="p-2 rounded-lg bg-white/20">
+                        <round.icon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className={`font-semibold text-sm ${selectedRounds.includes(round.id)
-                          ? 'text-white'
-                          : 'text-slate-300'
-                          }`}>
-                          {index + 1}. {round.name}
+                        <p className="font-semibold text-sm text-white">
+                          Round {index + 1}: {round.name}
                         </p>
                       </div>
-                      {selectedRounds.includes(round.id) && (
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      )}
+                      <div className="flex items-center gap-1">
+                        <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">{index + 1}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
+                <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <p className="text-xs text-blue-300 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Rounds must be completed in order (1 → 2 → 3 → 4)
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
             {/* Start Interview Button */}
             <Button
               className="w-full h-14 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              onClick={() => navigate("/interview/setup")}
+              onClick={handleStartInterview}
             >
               <Play className="w-5 h-5 mr-2" />
               Start Mock Interview
@@ -562,84 +564,7 @@ const InterviewPrep = () => {
                 </Card>
               </div>
 
-              {/* Recent Mock Interviews */}
-              <div>
-                <h2 className="text-xl font-semibold mb-4 text-white">Recent Interview Performance</h2>
-                <div className="space-y-4">
-                  {mockInterviews.map((interview) => (
-                    <Card key={interview.id} className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90 border-slate-700/50 shadow-xl hover:shadow-2xl transition-shadow">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-semibold text-lg text-white">{interview.company}</h3>
-                              <Badge variant="outline" className="border-slate-600 text-slate-300">{interview.type}</Badge>
-                              <Badge className={getDifficultyColor(interview.difficulty)}>
-                                {interview.difficulty}
-                              </Badge>
-                            </div>
-                            <p className="text-slate-400 mb-2">{interview.role}</p>
-                            <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
-                                {interview.duration}
-                              </span>
-                              <span>{interview.questions} questions</span>
-                            </div>
-
-                            {interview.completed && (
-                              <div className="space-y-2">
-                                <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
-                                  <p className="text-sm text-slate-300"><strong className="text-white">Feedback:</strong> {interview.feedback}</p>
-                                </div>
-                                <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 p-3 rounded-lg border border-purple-500/30">
-                                  <p className="text-sm flex items-center gap-2 text-slate-300">
-                                    <Brain className="w-4 h-4 text-purple-400" />
-                                    <strong className="text-white">AI Insights:</strong> {interview.aiInsights}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex flex-col items-end gap-3">
-                            {interview.completed ? (
-                              <div className="text-right">
-                                <p className={`text-2xl font-bold ${getScoreColor(interview.score!)}`}>
-                                  {interview.score}%
-                                </p>
-                                <p className="text-sm text-slate-400">Score</p>
-                              </div>
-                            ) : (
-                              <Badge variant="secondary" className="bg-amber-500/20 text-amber-300 border-amber-500/30">In Progress</Badge>
-                            )}
-
-                            <div className="flex gap-2">
-                              {interview.completed ? (
-                                <>
-                                  <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700/50">
-                                    <Download className="w-4 h-4 mr-1" />
-                                    Report
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700/50">
-                                    <RotateCcw className="w-4 h-4 mr-1" />
-                                    Retry
-                                  </Button>
-                                </>
-                              ) : (
-                                <Button size="sm" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 border-0">
-                                  <Play className="w-4 h-4 mr-1" />
-                                  Continue
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+              {/* Recent Mock Interviews removed */}
             </div>
           </TabsContent>
         </Tabs>
