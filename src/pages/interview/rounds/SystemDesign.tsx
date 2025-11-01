@@ -2,16 +2,20 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Layers, Sparkles, AlertCircle } from "lucide-react";
+import { Clock, Layers, Sparkles, AlertCircle, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { DrawingCanvas } from "@/components/DrawingCanvas";
 import { SystemDesignIconLibrary } from "@/components/SystemDesignIconLibrary";
 import { Badge } from "@/components/ui/badge";
 import { markRoundComplete, isRoundAccessible } from "@/services/interviewProgressService";
+import geminiSystemDesignService, { SystemDesignQuestion } from "@/services/geminiSystemDesignService";
 
 const SystemDesign = () => {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 minutes
+  const [question, setQuestion] = useState<SystemDesignQuestion | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -26,6 +30,27 @@ const SystemDesign = () => {
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Load system design question from Gemini
+  useEffect(() => {
+    const loadQuestion = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const generatedQuestion = await geminiSystemDesignService.generateSystemDesignQuestionWithCache();
+        setQuestion(generatedQuestion);
+        toast.success("System design question loaded!");
+      } catch (err) {
+        console.error('Failed to load question:', err);
+        setError('Failed to load system design question. Please try again.');
+        toast.error("Failed to load question");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadQuestion();
   }, []);
 
   const formatTime = (seconds: number) => {
@@ -89,112 +114,88 @@ const SystemDesign = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto space-y-3 p-3">
-                <div className="bg-gradient-to-br from-primary/20 to-accent/20 p-3 rounded-lg border-2 border-primary/40">
-                  <h3 className="font-bold mb-2 text-base text-primary">URL Shortener Service</h3>
-                  <p className="text-foreground/90 text-xs leading-relaxed">
-                    Design like <strong>bit.ly</strong> - shorten URLs with <strong>high availability</strong> & <strong>low latency</strong>.
-                  </p>
-                </div>
-
-                <div className="p-3 bg-gradient-to-br from-primary/15 to-primary/5 rounded-lg border border-primary/40">
-                  <h4 className="font-bold mb-2 text-primary flex items-center gap-1.5 text-xs">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Functional Requirements
-                  </h4>
-                  <ul className="space-y-1.5 ml-1">
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-primary font-bold">✓</span>
-                      <span className="text-foreground/90">Generate short URLs</span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-primary font-bold">✓</span>
-                      <span className="text-foreground/90">Redirect to original</span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-primary font-bold">✓</span>
-                      <span className="text-foreground/90">Custom URLs</span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-primary font-bold">✓</span>
-                      <span className="text-foreground/90">URL expiration</span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-primary font-bold">✓</span>
-                      <span className="text-foreground/90">Click analytics</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="p-3 bg-gradient-to-br from-accent/15 to-accent/5 rounded-lg border border-accent/40">
-                  <h4 className="font-bold mb-2 text-accent text-xs">Non-Functional</h4>
-                  <ul className="space-y-1.5 ml-1">
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-accent font-bold">⚡</span>
-                      <span className="text-foreground/90"><strong>100M URLs</strong></span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-accent font-bold">⚡</span>
-                      <span className="text-foreground/90"><strong>{"<"}100ms</strong> latency</span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-accent font-bold">⚡</span>
-                      <span className="text-foreground/90"><strong>99.9%</strong> uptime</span>
-                    </li>
-                    <li className="flex items-start gap-1.5 text-xs">
-                      <span className="text-accent font-bold">⚡</span>
-                      <span className="text-foreground/90">Scalable</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-bold mb-2 text-xs">Key Components</h4>
-                  <div className="space-y-1.5">
-                    <div className="p-2 bg-gradient-to-r from-blue-500/20 to-blue-500/10 rounded text-xs border border-blue-500/30">
-                      <p className="font-bold text-blue-400">API Gateway</p>
-                    </div>
-                    <div className="p-2 bg-gradient-to-r from-green-500/20 to-green-500/10 rounded text-xs border border-green-500/30">
-                      <p className="font-bold text-green-400">URL Service</p>
-                    </div>
-                    <div className="p-2 bg-gradient-to-r from-purple-500/20 to-purple-500/10 rounded text-xs border border-purple-500/30">
-                      <p className="font-bold text-purple-400">NoSQL DB</p>
-                    </div>
-                    <div className="p-2 bg-gradient-to-r from-orange-500/20 to-orange-500/10 rounded text-xs border border-orange-500/30">
-                      <p className="font-bold text-orange-400">Redis Cache</p>
-                    </div>
-                    <div className="p-2 bg-gradient-to-r from-pink-500/20 to-pink-500/10 rounded text-xs border border-pink-500/30">
-                      <p className="font-bold text-pink-400">Load Balancer</p>
-                    </div>
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 py-6">
+                    <Loader className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-sm text-muted-foreground">Generating your system design question...</p>
                   </div>
-                </div>
+                ) : error ? (
+                  <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
+                    <p className="text-sm text-red-400">{error}</p>
+                    <Button 
+                      onClick={() => {
+                        setLoading(true);
+                        geminiSystemDesignService.generateSystemDesignQuestionWithCache()
+                          .then(q => setQuestion(q))
+                          .catch(err => setError('Failed to reload'));
+                      }}
+                      className="mt-2"
+                      size="sm"
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                ) : question ? (
+                  <>
+                    <div className="bg-gradient-to-br from-primary/20 to-accent/20 p-3 rounded-lg border-2 border-primary/40">
+                      <h3 className="font-bold mb-2 text-base text-primary">{question.title}</h3>
+                      <p className="text-foreground/90 text-xs leading-relaxed">
+                        {question.description}
+                      </p>
+                    </div>
 
-                <div>
-                  <h4 className="font-bold mb-2 text-xs">Discussion Points</h4>
-                  <ul className="space-y-1.5">
-                    <li className="p-2 bg-gradient-to-r from-yellow-500/20 to-yellow-500/5 rounded border-l-2 border-yellow-500">
-                      <span className="text-xs text-foreground/90">Unique URL generation?</span>
-                    </li>
-                    <li className="p-2 bg-gradient-to-r from-yellow-500/20 to-yellow-500/5 rounded border-l-2 border-yellow-500">
-                      <span className="text-xs text-foreground/90">Hash collisions?</span>
-                    </li>
-                    <li className="p-2 bg-gradient-to-r from-yellow-500/20 to-yellow-500/5 rounded border-l-2 border-yellow-500">
-                      <span className="text-xs text-foreground/90">Database choice?</span>
-                    </li>
-                    <li className="p-2 bg-gradient-to-r from-yellow-500/20 to-yellow-500/5 rounded border-l-2 border-yellow-500">
-                      <span className="text-xs text-foreground/90">Scaling strategy?</span>
-                    </li>
-                  </ul>
-                </div>
+                    <div className="p-3 bg-gradient-to-br from-primary/15 to-primary/5 rounded-lg border border-primary/40">
+                      <h4 className="font-bold mb-2 text-primary flex items-center gap-1.5 text-xs">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Functional Requirements
+                      </h4>
+                      <ul className="space-y-1.5 ml-1">
+                        {question.functionalRequirements.map((req, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5 text-xs">
+                            <span className="text-primary font-bold">✓</span>
+                            <span className="text-foreground/90">{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                <div className="p-3 bg-gradient-to-br from-primary/20 via-accent/15 to-primary/10 rounded-lg border border-primary/50">
-                  <p className="text-xs font-bold mb-1.5 flex items-center gap-1.5 text-primary">
-                    <Sparkles className="w-3 h-3" />
-                    Pro Tip
-                  </p>
-                  <p className="text-xs text-foreground/90 leading-relaxed">
-                    Start with <strong>high-level arch</strong>, identify bottlenecks, discuss <strong>CAP theorem</strong> trade-offs.
-                  </p>
-                </div>
+                    <div className="p-3 bg-gradient-to-br from-accent/15 to-accent/5 rounded-lg border border-accent/40">
+                      <h4 className="font-bold mb-2 text-accent text-xs">Non-Functional Requirements</h4>
+                      <ul className="space-y-1.5 ml-1">
+                        {question.nonFunctionalRequirements.map((req, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5 text-xs">
+                            <span className="text-accent font-bold">⚡</span>
+                            <span className="text-foreground/90">{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {question.constraints && question.constraints.length > 0 && (
+                      <div className="p-3 bg-gradient-to-br from-yellow-500/15 to-yellow-500/5 rounded-lg border border-yellow-500/40">
+                        <h4 className="font-bold mb-2 text-yellow-600 dark:text-yellow-400 text-xs">Constraints</h4>
+                        <ul className="space-y-1.5 ml-1">
+                          {question.constraints.map((constraint, idx) => (
+                            <li key={idx} className="flex items-start gap-1.5 text-xs">
+                              <span className="text-yellow-600 dark:text-yellow-400 font-bold">•</span>
+                              <span className="text-foreground/90">{constraint}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="p-3 bg-gradient-to-br from-primary/20 via-accent/15 to-primary/10 rounded-lg border border-primary/50">
+                      <p className="text-xs font-bold mb-1.5 flex items-center gap-1.5 text-primary">
+                        <Sparkles className="w-3 h-3" />
+                        Pro Tip
+                      </p>
+                      <p className="text-xs text-foreground/90 leading-relaxed">
+                        Start with <strong>high-level architecture</strong>, identify <strong>bottlenecks</strong>, discuss <strong>trade-offs</strong> using the CAP theorem.
+                      </p>
+                    </div>
+                  </>
+                ) : null}
               </CardContent>
             </Card>
 
