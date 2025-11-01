@@ -44,6 +44,7 @@ import SkillGapAnalysis from "./pages/dashboards/skill-development/SkillGapAnaly
 import CareerAdvisor from "./pages/dashboards/skill-development/CareerAdvisor";
 import IndustryTrends from "./pages/dashboards/skill-development/IndustryTrends";
 import ProjectsInternships from "./pages/dashboards/skill-development/ProjectsInternships";
+import ProjectDetail from "./pages/dashboards/skill-development/ProjectDetail";
 import SkillTraining from "./pages/dashboards/skill-development/SkillTraining";
 import InterviewPrep from "./pages/dashboards/skill-development/InterviewPrep";
 import PlacementKit from "./pages/dashboards/skill-development/PlacementKit";
@@ -117,6 +118,7 @@ const App = () => (
           <Route path="/dashboard/skill-development/career-advisor" element={<CareerAdvisor />} />
           <Route path="/dashboard/skill-development/industry-trends" element={<IndustryTrends />} />
           <Route path="/dashboard/skill-development/projects-internships" element={<ProjectsInternships />} />
+          <Route path="/dashboard/skill-development/projects-internships/:projectId" element={<ProjectDetail />} />
           <Route path="/dashboard/skill-development/skill-training" element={<SkillTraining />} />
           <Route path="/dashboard/skill-development/interview-prep" element={<InterviewPrep />} />
           <Route path="/dashboard/skill-development/placement-kit" element={<PlacementKit />} />

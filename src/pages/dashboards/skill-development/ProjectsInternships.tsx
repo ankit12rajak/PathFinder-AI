@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Code, Search, Filter, Download, ExternalLink, CheckCircle2, ArrowRight, Rocket, Star, Clock, Users, Building, Sparkles, Brain, Target, Award, FileText, BookOpen, Layers, Activity, Calendar, MapPin, DollarSign, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,13 +11,12 @@ import { Progress } from "@/components/ui/progress";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const ProjectsInternships = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedTheme, setSelectedTheme] = useState<string>("all");
   const [selectedDomain, setSelectedDomain] = useState<string>("all");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [showProjectDetails, setShowProjectDetails] = useState(false);
 
   const projects = [
     {
@@ -28,28 +28,7 @@ const ProjectsInternships = () => {
       domains: ["Sports"],
       themes: ["Entrepreneurship", "Education"],
       duration: "3-4 months",
-      stipend: "₹15,000 - ₹25,000",
-      applicants: 147,
-      rating: 4.8,
-      logo: "⚽",
       featured: true,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Complete product requirements and specifications for the sports event management system"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "System architecture and high-level component design"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Detailed technical implementation and database schemas"
-        }
-      }
     },
     {
       id: 2,
@@ -60,28 +39,7 @@ const ProjectsInternships = () => {
       domains: ["Real-Estate"],
       themes: ["Startup", "Open-Source"],
       duration: "3-4 months",
-      stipend: "₹18,000 - ₹28,000",
-      applicants: 203,
-      rating: 4.7,
-      logo: "🏠",
       featured: true,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Product requirements for real estate platform"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Architecture design for property management system"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Implementation details and API specifications"
-        }
-      }
     },
     {
       id: 3,
@@ -92,28 +50,7 @@ const ProjectsInternships = () => {
       domains: ["Energy"],
       themes: ["Research", "Futuristic"],
       duration: "4-5 months",
-      stipend: "₹20,000 - ₹30,000",
-      applicants: 89,
-      rating: 4.9,
-      logo: "⚡",
       featured: true,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Requirements for energy analytics platform"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Microservices architecture for data processing"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Data models and analytics algorithms"
-        }
-      }
     },
     {
       id: 4,
@@ -124,28 +61,7 @@ const ProjectsInternships = () => {
       domains: ["Cloud", "Agriculture"],
       themes: ["Startup", "Education"],
       duration: "5-6 months",
-      stipend: "₹25,000 - ₹40,000",
-      applicants: 156,
-      rating: 4.8,
-      logo: "☁️",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Multi-cloud platform requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Cloud-native architecture design"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Infrastructure as code implementation"
-        }
-      }
     },
     {
       id: 5,
@@ -156,28 +72,7 @@ const ProjectsInternships = () => {
       domains: ["Healthcare"],
       themes: ["Open-Source", "Education"],
       duration: "2-3 months",
-      stipend: "₹12,000 - ₹20,000",
-      applicants: 312,
-      rating: 4.6,
-      logo: "🏥",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Healthcare appointment system requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "System design for appointment management"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Database schema and API endpoints"
-        }
-      }
     },
     {
       id: 6,
@@ -188,28 +83,7 @@ const ProjectsInternships = () => {
       domains: ["Education"],
       themes: ["Education", "Startup"],
       duration: "4-5 months",
-      stipend: "₹18,000 - ₹28,000",
-      applicants: 245,
-      rating: 4.7,
-      logo: "📚",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "E-learning platform specifications"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Platform architecture and components"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Implementation details and integrations"
-        }
-      }
     },
     {
       id: 7,
@@ -220,28 +94,7 @@ const ProjectsInternships = () => {
       domains: ["Agriculture"],
       themes: ["Research", "Futuristic"],
       duration: "5-6 months",
-      stipend: "₹22,000 - ₹35,000",
-      applicants: 98,
-      rating: 4.9,
-      logo: "🌾",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Smart farming platform requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "IoT architecture and data pipeline"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Sensor integration and automation logic"
-        }
-      }
     },
     {
       id: 8,
@@ -252,28 +105,7 @@ const ProjectsInternships = () => {
       domains: ["Legal"],
       themes: ["Entrepreneurship", "Startup"],
       duration: "3-4 months",
-      stipend: "₹20,000 - ₹30,000",
-      applicants: 134,
-      rating: 4.8,
-      logo: "⚖️",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Legal automation platform requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Document processing architecture"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "AI integration and template engine"
-        }
-      }
     },
     {
       id: 9,
@@ -284,28 +116,7 @@ const ProjectsInternships = () => {
       domains: ["Transportation"],
       themes: ["Startup", "Open-Source"],
       duration: "2-3 months",
-      stipend: "₹15,000 - ₹22,000",
-      applicants: 187,
-      rating: 4.5,
-      logo: "🚚",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Fleet management system requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Real-time tracking architecture"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Route optimization algorithms"
-        }
-      }
     },
     {
       id: 10,
@@ -316,28 +127,7 @@ const ProjectsInternships = () => {
       domains: ["Government"],
       themes: ["Open-Source", "Research"],
       duration: "4-5 months",
-      stipend: "₹18,000 - ₹28,000",
-      applicants: 165,
-      rating: 4.7,
-      logo: "🏛️",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Government portal requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Secure portal architecture"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Authentication and workflow implementation"
-        }
-      }
     },
     {
       id: 11,
@@ -348,28 +138,7 @@ const ProjectsInternships = () => {
       domains: ["Non-Profit"],
       themes: ["Open-Source", "Education"],
       duration: "2-3 months",
-      stipend: "₹12,000 - ₹18,000",
-      applicants: 221,
-      rating: 4.6,
-      logo: "❤️",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "Donation platform requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "Payment processing architecture"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Campaign and donor management"
-        }
-      }
     },
     {
       id: 12,
@@ -380,28 +149,7 @@ const ProjectsInternships = () => {
       domains: ["Human-Resources"],
       themes: ["Startup", "Business"],
       duration: "4-5 months",
-      stipend: "₹20,000 - ₹30,000",
-      applicants: 178,
-      rating: 4.8,
-      logo: "👥",
       featured: false,
-      documents: {
-        prd: {
-          title: "PRD Document",
-          subtitle: "Product Requirements",
-          description: "HR management system requirements"
-        },
-        hld: {
-          title: "HLD Document",
-          subtitle: "High Level Design",
-          description: "HRMS architecture and modules"
-        },
-        lld: {
-          title: "LLD Document",
-          subtitle: "Low Level Design",
-          description: "Payroll calculation and workflows"
-        }
-      }
     }
   ];
 
@@ -436,200 +184,12 @@ const ProjectsInternships = () => {
     setActiveFilters([]);
   };
 
-  const handleViewDetails = (project: any) => {
-    setSelectedProject(project);
-    setShowProjectDetails(true);
-  };
-
-  const handleCloseDetails = () => {
-    setShowProjectDetails(false);
-    setSelectedProject(null);
+  const handleApplyNow = (projectId: number) => {
+    navigate(`/dashboard/skill-development/projects-internships/${projectId}`);
   };
 
   return (
     <DashboardLayout>
-      {/* Project Details Modal */}
-      {showProjectDetails && selectedProject && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 overflow-y-auto">
-          <div className="relative w-full max-w-5xl bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 rounded-2xl border border-purple-500/30 shadow-2xl max-h-[90vh] overflow-y-auto">
-            {/* Close Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCloseDetails}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-white/10 z-10"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-
-            {/* Header */}
-            <div className="p-8 border-b border-slate-700/50">
-              <div className="flex items-start gap-4">
-                <div className="text-5xl">{selectedProject.logo}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-3xl font-bold text-white">{selectedProject.title}</h2>
-                    <Badge className={`${getDifficultyColor(selectedProject.difficulty)} border px-3 py-1`}>
-                      {selectedProject.difficulty} Difficulty
-                    </Badge>
-                  </div>
-                  <p className="text-slate-300 text-lg leading-relaxed mb-4">{selectedProject.description}</p>
-                  
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
-                      <Clock className="w-4 h-4 text-cyan-400" />
-                      <span className="text-slate-200 text-sm">{selectedProject.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-900/30 to-teal-900/30 px-3 py-1.5 rounded-lg border border-emerald-500/30">
-                      <DollarSign className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-400 text-sm font-semibold">{selectedProject.stipend}</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
-                      <Users className="w-4 h-4 text-purple-400" />
-                      <span className="text-slate-200 text-sm">{selectedProject.applicants} applied</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <span className="text-slate-200 text-sm font-semibold">{selectedProject.rating}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Project Details */}
-            <div className="p-8 space-y-6">
-              {/* Technologies */}
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                  <Code className="w-5 h-5 text-cyan-400" />
-                  Technologies
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedProject.technologies.map((tech: string, index: number) => (
-                    <Badge key={index} className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 px-3 py-1">
-                      {tech}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Domains & Themes */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <Building className="w-5 h-5 text-blue-400" />
-                    Domains
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProject.domains.map((domain: string, index: number) => (
-                      <Badge key={index} className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                        {domain}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-purple-400" />
-                    Themes
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProject.themes.map((theme: string, index: number) => (
-                      <Badge key={index} className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                        {theme}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Documentation */}
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                  <FileText className="w-6 h-6 text-emerald-400" />
-                  Documentation
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* PRD Document */}
-                  <Card className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border-blue-500/30 hover:border-blue-400/50 transition-all">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg">
-                          <FileText className="w-5 h-5 text-blue-400" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">{selectedProject.documents.prd.title}</h4>
-                          <p className="text-xs text-blue-300">{selectedProject.documents.prd.subtitle}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-400 mb-4">{selectedProject.documents.prd.description}</p>
-                      <Button size="sm" variant="outline" className="w-full bg-blue-500/10 border-blue-500/30 text-blue-300 hover:bg-blue-500/20">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  {/* HLD Document */}
-                  <Card className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border-purple-500/30 hover:border-purple-400/50 transition-all">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-purple-500/20 rounded-lg">
-                          <Layers className="w-5 h-5 text-purple-400" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">{selectedProject.documents.hld.title}</h4>
-                          <p className="text-xs text-purple-300">{selectedProject.documents.hld.subtitle}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-400 mb-4">{selectedProject.documents.hld.description}</p>
-                      <Button size="sm" variant="outline" className="w-full bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  {/* LLD Document */}
-                  <Card className="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border-emerald-500/30 hover:border-emerald-400/50 transition-all">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-emerald-500/20 rounded-lg">
-                          <Code className="w-5 h-5 text-emerald-400" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-white">{selectedProject.documents.lld.title}</h4>
-                          <p className="text-xs text-emerald-300">{selectedProject.documents.lld.subtitle}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-400 mb-4">{selectedProject.documents.lld.description}</p>
-                      <Button size="sm" variant="outline" className="w-full bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Start Your Learning Journey */}
-              <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-600 p-6 rounded-xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
-                    <p className="text-purple-100">Apply now and receive your official offer letter to begin this internship</p>
-                  </div>
-                  <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-100 font-semibold">
-                    <Rocket className="w-5 h-5 mr-2" />
-                    Enroll Now
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="space-y-6">
         {/* Premium Dark Header */}
@@ -857,7 +417,6 @@ const ProjectsInternships = () => {
             >
               <CardHeader className="pb-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="text-3xl">{project.logo}</div>
                   <Badge className={`${getDifficultyColor(project.difficulty)} border px-2 py-1 text-xs`}>
                     {project.difficulty}
                   </Badge>
@@ -887,36 +446,23 @@ const ProjectsInternships = () => {
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 text-center">
-                    <div className="text-xs text-slate-400 mb-1">Duration</div>
-                    <div className="text-sm font-semibold text-slate-200">{project.duration}</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 p-2 rounded-lg border border-emerald-500/30 text-center">
-                    <div className="text-xs text-emerald-400 mb-1">Stipend</div>
-                    <div className="text-sm font-semibold text-emerald-400">{project.stipend.split(' - ')[0]}</div>
-                  </div>
-                </div>
-
-                {/* Rating and Applicants */}
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-slate-200 font-medium">{project.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-slate-400">
-                    <Users className="w-4 h-4" />
-                    <span>{project.applicants} applied</span>
+                {/* Duration */}
+                <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-cyan-400" />
+                    <div className="flex-1">
+                      <div className="text-xs text-slate-400">Duration</div>
+                      <div className="text-sm font-semibold text-slate-200">{project.duration}</div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Action Button */}
                 <Button
-                  onClick={() => handleViewDetails(project)}
+                  onClick={() => handleApplyNow(project.id)}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
-                  View Details
+                  Apply Now
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>
