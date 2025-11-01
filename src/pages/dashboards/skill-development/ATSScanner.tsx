@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Bot, TrendingUp, AlertCircle, CheckCircle, AlertTriangle, Zap, Download, RefreshCw, FileText, Briefcase, Lightbulb, MessageCircle } from "lucide-react";
+import { Upload, Bot, TrendingUp, AlertCircle, CheckCircle, AlertTriangle, Zap, Download, RefreshCw, FileText, Briefcase, Lightbulb, MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,12 +7,14 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ResumeEditor from "@/components/ResumeEditor";
 import { atsService, ATSAnalysisResult, JobDescriptionMatch, OptimizationSuggestion } from "@/services/atsService";
 import { parseFile, isSupportedFormat } from "@/services/fileParserService";
+import { useNavigate } from "react-router-dom";
 
 interface TabState {
   step: 'upload' | 'analysis' | 'matching' | 'editor';
 }
 
 const ATSScanner = () => {
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [resumeText, setResumeText] = useState<string>("");
   const [fileName, setFileName] = useState<string | null>(null);
@@ -338,13 +340,20 @@ const ATSScanner = () => {
   };
 
   return (
-    <DashboardLayout
-      title="ATS Resume Scanner"
-      description="Analyze and optimize your resume for ATS compatibility"
-    >
-      <div className="p-6 space-y-8 bg-slate-950">
-        {/* ============ Header Section ============ */}
-        <div className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl border border-transparent">
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Back Button */}
+        <Button
+          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
+          variant="ghost"
+          className="text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Placement Kit
+        </Button>
+
+        {/* Existing Header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-8 shadow-2xl border border-slate-700/50">
           {/* Premium Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-indigo-600/5 rounded-3xl"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 rounded-3xl"></div>
