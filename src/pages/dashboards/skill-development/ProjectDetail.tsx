@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { ArrowLeft, Download, Code, Building, Sparkles, FileText, Clock, X, CheckCircle2, AlertCircle, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Download, Code, Building, Sparkles, FileText, Clock, X, CheckCircle2, AlertCircle, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/DashboardLayout";
 import { getProjectDocuments } from "@/data/projectDocuments";
+import { supabase } from "@/lib/supabase";
 import jsPDF from "jspdf";
 
 interface Project {
@@ -38,6 +39,9 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [applicationSubmitted, setApplicationSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState<ApplicationFormData>({
     fullName: "",
     email: "",
@@ -48,6 +52,17 @@ const ProjectDetail = () => {
     linkedinProfile: "",
     experience: "",
   });
+
+  // Get user ID on mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUserId();
+  }, []);
 
   const projects: Project[] = [
     { id: 1, title: "SportifyHub - Sports Event Management Backend", slug: "sportifyhub", difficulty: "Medium", description: "Develop a Spring Boot API for managing sports events, teams, and registrations. Implement role-based access, event scheduling, and notification features. Use PostgreSQL for persistence, Docker for deployment, and Maven for project management.", technologies: ["Java", "Springboot", "PostgreSQL", "Docker", "Maven"], domains: ["Sports"], themes: ["Entrepreneurship", "Education"], duration: "3-4 months", featured: true },
@@ -76,19 +91,13 @@ const ProjectDetail = () => {
     }
   };
 
-
-
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setSubmitError(null);
   };
 
-  const generateOfferLetter = () => {
-    if (!formData.fullName || !formData.email || !formData.phone || !formData.college) {
-      alert('Please fill all required fields');
-      return;
-    }
-
+  const generateOfferLetterPDF = (): Blob => {
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -168,12 +177,133 @@ Pathfinder.AI Team`;
     doc.text('Pathfinder.AI | Internship & Project Management Platform', pageWidth / 2, yPosition, { align: 'center' });
     doc.text('This is an official offer letter generated from Pathfinder.AI', pageWidth / 2, yPosition + 5, { align: 'center' });
 
-    doc.save(`Offer_Letter_${formData.fullName.replace(/\s+/g, '_')}.pdf`);
-    setApplicationSubmitted(true);
-    setTimeout(() => {
-      setShowApplicationForm(false);
-      setApplicationSubmitted(false);
-    }, 2000);
+    return doc.output('blob');
+  };
+
+  const submitApplication = async () => {
+    // Validation
+    if (!formData.fullName || !formData.email || !formData.phone || !formData.college) {
+      setSubmitError('Please fill all required fields (Name, Email, Phone, College)');
+      return;
+    }
+
+    if (!userId) {
+      setSubmitError('You must be logged in to apply');
+      return;
+    }
+
+    if (!project) {
+      setSubmitError('Project information not found');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      console.log('🚀 Starting application submission...');
+
+      // Step 1: Generate PDF
+      console.log('📄 Generating PDF...');
+      const pdfBlob = generateOfferLetterPDF();
+      
+      // Step 2: Upload to Supabase Storage
+      const fileName = `${userId}/${project.id}_${Date.now()}.pdf`;
+      const filePath = `offer-letters/${fileName}`;
+      
+      console.log('☁️ Uploading to Supabase Storage:', filePath);
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('offer-letters')
+        .upload(fileName, pdfBlob, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
+        throw new Error(`Failed to upload offer letter: ${uploadError.message}`);
+      }
+
+      console.log('✅ Upload successful:', uploadData);
+
+      // Step 3: Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('offer-letters')
+        .getPublicUrl(fileName);
+
+      console.log('🔗 Public URL:', publicUrl);
+
+      // Step 4: Save to database
+      console.log('💾 Saving to database...');
+      
+      const { data: dbData, error: dbError } = await supabase
+        .from('project_applications')
+        .insert({
+          user_id: userId,
+          project_id: project.id,
+          project_title: project.title,
+          project_slug: project.slug,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          college: formData.college,
+          year: formData.year || null,
+          cgpa: formData.cgpa || null,
+          linkedin_profile: formData.linkedinProfile || null,
+          experience: formData.experience || null,
+          difficulty: project.difficulty,
+          technologies: project.technologies,
+          domains: project.domains,
+          themes: project.themes,
+          duration: project.duration,
+          status: 'pending',
+          offer_letter_url: publicUrl,
+          offer_letter_path: filePath
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('❌ Database error:', dbError);
+        
+        // If database insert fails, try to delete the uploaded file
+        await supabase.storage.from('offer-letters').remove([fileName]);
+        
+        if (dbError.code === '23505') {
+          throw new Error('You have already applied for this project');
+        }
+        throw new Error(`Failed to save application: ${dbError.message}`);
+      }
+
+      console.log('✅ Application saved:', dbData);
+
+      // Step 5: Download PDF for user
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(pdfBlob);
+      link.download = `Offer_Letter_${formData.fullName.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      console.log('✅ Application process completed successfully');
+
+      // Show success message
+      setApplicationSubmitted(true);
+      setTimeout(() => {
+        setShowApplicationForm(false);
+        setApplicationSubmitted(false);
+        // Redirect to projects page
+        navigate('/dashboard/skill-development/projects-internships');
+      }, 3000);
+
+    } catch (error: any) {
+      console.error('❌ Application submission error:', error);
+      setSubmitError(error.message || 'Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!project) {
@@ -463,8 +593,12 @@ Pathfinder.AI Team`;
                   <p className="text-slate-400 text-sm mt-1">Fill in your details to submit your application</p>
                 </div>
                 <button
-                  onClick={() => setShowApplicationForm(false)}
+                  onClick={() => {
+                    setShowApplicationForm(false);
+                    setSubmitError(null);
+                  }}
                   className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700 rounded-lg"
+                  disabled={isSubmitting}
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -473,6 +607,16 @@ Pathfinder.AI Team`;
               <CardContent className="pt-8 pb-8 space-y-5">
                 {!applicationSubmitted ? (
                   <>
+                    {submitError && (
+                      <div className="p-4 bg-red-900/20 rounded-lg border border-red-500/30 flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-red-200 text-sm font-semibold">Error</p>
+                          <p className="text-red-300 text-xs">{submitError}</p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-200">Full Name *</label>
@@ -481,6 +625,7 @@ Pathfinder.AI Team`;
                           placeholder="John Doe"
                           value={formData.fullName}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                         />
                       </div>
@@ -493,6 +638,7 @@ Pathfinder.AI Team`;
                           placeholder="john@example.com"
                           value={formData.email}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                         />
                       </div>
@@ -505,6 +651,7 @@ Pathfinder.AI Team`;
                           placeholder="+91 9876543210"
                           value={formData.phone}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                         />
                       </div>
@@ -516,6 +663,7 @@ Pathfinder.AI Team`;
                           placeholder="Your University"
                           value={formData.college}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                         />
                       </div>
@@ -527,6 +675,7 @@ Pathfinder.AI Team`;
                           placeholder="3rd Year / Final Year"
                           value={formData.year}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                         />
                       </div>
@@ -538,6 +687,7 @@ Pathfinder.AI Team`;
                           placeholder="3.8"
                           value={formData.cgpa}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                         />
                       </div>
@@ -549,6 +699,7 @@ Pathfinder.AI Team`;
                           placeholder="https://linkedin.com/in/yourprofile"
                           value={formData.linkedinProfile}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-purple-500"
                         />
                       </div>
@@ -560,6 +711,7 @@ Pathfinder.AI Team`;
                           placeholder="Tell us about your experience and why you're interested in this project..."
                           value={formData.experience}
                           onChange={handleFormChange}
+                          disabled={isSubmitting}
                           rows={4}
                           className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:border-purple-500 focus:outline-none resize-none"
                         />
@@ -567,11 +719,21 @@ Pathfinder.AI Team`;
                     </div>
 
                     <Button
-                      onClick={generateOfferLetter}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105"
+                      onClick={submitApplication}
+                      disabled={isSubmitting}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      Submit & Generate Offer Letter
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Submitting Application...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Submit & Generate Offer Letter
+                        </>
+                      )}
                     </Button>
                   </>
                 ) : (
@@ -586,7 +748,7 @@ Pathfinder.AI Team`;
                       Your offer letter has been generated and downloaded. Check your downloads folder.
                     </p>
                     <p className="text-slate-400 text-sm">
-                      We'll be in touch soon with more details.
+                      You can view your application in the "My Applications" tab.
                     </p>
                   </div>
                 )}

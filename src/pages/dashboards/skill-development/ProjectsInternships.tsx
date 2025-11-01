@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Code, Search, Filter, Download, ExternalLink, CheckCircle2, ArrowRight, Rocket, Star, Clock, Users, Building, Sparkles, Brain, Target, Award, FileText, BookOpen, Layers, Activity, Calendar, MapPin, DollarSign, X } from "lucide-react";
+import { Code, Search, Filter, Download, ExternalLink, CheckCircle2, ArrowRight, Rocket, Star, Clock, Users, Building, Sparkles, Brain, Target, Award, FileText, BookOpen, Layers, Activity, Calendar, MapPin, DollarSign, X, Eye, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,19 +9,129 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import DashboardLayout from "@/components/DashboardLayout";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+
+interface AppliedProject {
+  id: string;
+  project_id: number;
+  project_title: string;
+  full_name: string;
+  email: string;
+  college: string;
+  applied_at: string;
+  status: 'pending' | 'reviewing' | 'accepted' | 'rejected';
+  difficulty: string;
+  technologies: string[];
+  duration: string;
+  offer_letter_url: string | null;
+  offer_letter_path: string | null;
+}
 
 const ProjectsInternships = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedTheme, setSelectedTheme] = useState<string>("all");
   const [selectedDomain, setSelectedDomain] = useState<string>("all");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("available");
+  const [appliedProjects, setAppliedProjects] = useState<AppliedProject[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoadingApplied, setIsLoadingApplied] = useState(true);
+  const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+
+  // Get user ID on mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        loadAppliedProjects(user.id);
+      } else {
+        setIsLoadingApplied(false);
+      }
+    };
+    getUserId();
+  }, []);
+
+  // Load applied projects from Supabase
+  const loadAppliedProjects = async (uid: string) => {
+    setIsLoadingApplied(true);
+    try {
+      const { data, error } = await supabase
+        .from('project_applications')
+        .select('*')
+        .eq('user_id', uid)
+        .order('applied_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        setAppliedProjects(data as AppliedProject[]);
+      }
+    } catch (error) {
+      console.error('Error loading applied projects:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your applications. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingApplied(false);
+    }
+  };
+
+  // Download offer letter
+  const handleDownloadOfferLetter = async (application: AppliedProject) => {
+    if (!application.offer_letter_url || !application.offer_letter_path) {
+      toast({
+        title: "Offer Letter Not Available",
+        description: "The offer letter for this application is not available yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDownloadingIds(prev => new Set(prev).add(application.id));
+
+    try {
+      // Option 1: Direct download from public URL
+      const link = document.createElement('a');
+      link.href = application.offer_letter_url;
+      link.download = `Offer_Letter_${application.full_name.replace(/\s+/g, '_')}_${application.project_title.substring(0, 30).replace(/\s+/g, '_')}.pdf`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Download Started",
+        description: "Your offer letter is being downloaded.",
+      });
+
+    } catch (error: any) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the offer letter. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(application.id);
+        return newSet;
+      });
+    }
+  };
 
   const projects = [
     {
       id: 1,
       title: "SportifyHub - Sports Event Management Backend",
+      slug: "sportifyhub",
       difficulty: "Medium",
       description: "Develop a Spring Boot API for managing sports events, teams, and registrations. Implement role-based access, event scheduling, and notification features. Use PostgreSQL for persistence, Docker for deployment, and Maven for project management.",
       technologies: ["Java", "Springboot", "PostgreSQL", "Docker", "Maven"],
@@ -33,6 +143,7 @@ const ProjectsInternships = () => {
     {
       id: 2,
       title: "PropEase - Real Estate Listings & Booking API",
+      slug: "propease",
       difficulty: "Medium",
       description: "Build a Spring Boot backend for managing real estate property listings, bookings, and user profiles. Implement search functionality, booking system, and payment integration.",
       technologies: ["Java", "Springboot", "MySQL", "Docker", "Maven"],
@@ -44,6 +155,7 @@ const ProjectsInternships = () => {
     {
       id: 3,
       title: "Enerlytics - Energy Consumption Analytics Service",
+      slug: "enerlytics",
       difficulty: "Medium",
       description: "Create a Spring Boot microservice for collecting and analyzing energy consumption data from smart meters. Build interactive dashboards and generate insights.",
       technologies: ["Java", "Springboot", "PostgreSQL", "Docker", "Maven"],
@@ -55,6 +167,7 @@ const ProjectsInternships = () => {
     {
       id: 4,
       title: "CloudScale - Multi-Cloud Infrastructure Manager",
+      slug: "cloudscale",
       difficulty: "Hard",
       description: "Build a comprehensive cloud infrastructure management platform supporting AWS, Azure, and GCP. Implement resource provisioning, monitoring, and cost optimization.",
       technologies: ["Python", "FastAPI", "Terraform", "Kubernetes", "PostgreSQL"],
@@ -66,6 +179,7 @@ const ProjectsInternships = () => {
     {
       id: 5,
       title: "MediConnect - Healthcare Appointment System",
+      slug: "mediconnect",
       difficulty: "Easy",
       description: "Develop a patient-doctor appointment booking system with real-time availability, notifications, and medical records management.",
       technologies: ["Node.js", "Express", "MongoDB", "React", "Socket.io"],
@@ -77,6 +191,7 @@ const ProjectsInternships = () => {
     {
       id: 6,
       title: "EduLearn - Online Learning Platform",
+      slug: "edulearn",
       difficulty: "Medium",
       description: "Create an interactive online learning platform with course management, video streaming, quizzes, and progress tracking.",
       technologies: ["React", "Node.js", "MongoDB", "AWS", "Redis"],
@@ -88,6 +203,7 @@ const ProjectsInternships = () => {
     {
       id: 7,
       title: "FarmTech - Agricultural IoT Platform",
+      slug: "farmtech",
       difficulty: "Hard",
       description: "Build an IoT platform for smart farming with sensor data collection, weather integration, crop monitoring, and automated irrigation control.",
       technologies: ["Python", "Django", "PostgreSQL", "MQTT", "React"],
@@ -99,6 +215,7 @@ const ProjectsInternships = () => {
     {
       id: 8,
       title: "LegalEase - Legal Document Automation",
+      slug: "legalease",
       difficulty: "Medium",
       description: "Develop a platform for automating legal document generation, contract management, and compliance tracking with AI-powered suggestions.",
       technologies: ["Python", "FastAPI", "PostgreSQL", "React", "OpenAI"],
@@ -110,6 +227,7 @@ const ProjectsInternships = () => {
     {
       id: 9,
       title: "TransitTrack - Transportation Management System",
+      slug: "transittrack",
       difficulty: "Easy",
       description: "Build a fleet management system for tracking vehicles, optimizing routes, and managing deliveries with real-time GPS integration.",
       technologies: ["Node.js", "Express", "MongoDB", "React", "Google Maps API"],
@@ -121,6 +239,7 @@ const ProjectsInternships = () => {
     {
       id: 10,
       title: "GovConnect - Government Services Portal",
+      slug: "govconnect",
       difficulty: "Medium",
       description: "Create a citizen services portal for government applications, document verification, and service request tracking with secure authentication.",
       technologies: ["Java", "Spring Boot", "PostgreSQL", "React", "OAuth2"],
@@ -132,6 +251,7 @@ const ProjectsInternships = () => {
     {
       id: 11,
       title: "CharityChain - Non-Profit Donation Platform",
+      slug: "charitychain",
       difficulty: "Easy",
       description: "Build a transparent donation platform for non-profits with campaign management, donor tracking, and impact reporting.",
       technologies: ["React", "Node.js", "MongoDB", "Stripe", "AWS"],
@@ -143,6 +263,7 @@ const ProjectsInternships = () => {
     {
       id: 12,
       title: "HRPro - Human Resources Management System",
+      slug: "hrpro",
       difficulty: "Medium",
       description: "Develop a comprehensive HR management system with employee onboarding, attendance tracking, payroll, and performance reviews.",
       technologies: ["Python", "Django", "PostgreSQL", "React", "Celery"],
@@ -176,6 +297,16 @@ const ProjectsInternships = () => {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      case "reviewing": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "accepted": return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "rejected": return "bg-red-500/20 text-red-400 border-red-500/30";
+      default: return "bg-slate-500/20 text-slate-400 border-slate-500/30";
+    }
+  };
+
   const clearAllFilters = () => {
     setSelectedDifficulty("all");
     setSelectedTheme("all");
@@ -188,9 +319,12 @@ const ProjectsInternships = () => {
     navigate(`/dashboard/skill-development/projects-internships/${projectId}`);
   };
 
+  const handleViewDetails = (projectId: number) => {
+    navigate(`/dashboard/skill-development/projects-internships/${projectId}`);
+  };
+
   return (
     <DashboardLayout>
-
       <div className="space-y-6">
         {/* Premium Dark Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 p-8 shadow-2xl border border-purple-500/20">
@@ -221,6 +355,10 @@ const ProjectsInternships = () => {
                     <span className="text-slate-200 text-sm font-medium">Found: {filteredProjects.length} projects</span>
                   </div>
                   <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
+                    <Briefcase className="w-4 h-4 text-purple-400" />
+                    <span className="text-slate-200 text-sm font-medium">Applied: {appliedProjects.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700/50">
                     <Award className="w-4 h-4 text-yellow-400" />
                     <span className="text-slate-200 text-sm font-medium">Official Offer Letters</span>
                   </div>
@@ -234,255 +372,404 @@ const ProjectsInternships = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <Card className="border border-slate-700/50 shadow-xl bg-slate-900/50 backdrop-blur-sm">
-          <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <Input
-                placeholder="Search for your next adventure..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-14 text-base bg-slate-800/50 border-slate-700 text-slate-200 placeholder:text-slate-500 focus:border-purple-500 focus:ring-purple-500/20"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Tabs for Available vs Applied Projects */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 bg-slate-900/50 border border-slate-700/50">
+            <TabsTrigger value="available" className="data-[state=active]:bg-purple-600">
+              <Rocket className="w-4 h-4 mr-2" />
+              Available Projects ({filteredProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="applied" className="data-[state=active]:bg-purple-600">
+              <Briefcase className="w-4 h-4 mr-2" />
+              My Applications ({appliedProjects.length})
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Filters Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Side - Filter Options */}
-          <Card className="border border-slate-700/50 shadow-xl bg-slate-900/50 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-b border-slate-700/50">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-slate-100 flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-purple-400" />
-                  Filters
-                </CardTitle>
-                {(selectedDifficulty !== "all" || selectedTheme !== "all" || selectedDomain !== "all") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearAllFilters}
-                    className="text-slate-400 hover:text-white hover:bg-white/10"
-                  >
-                    Clear All
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              {/* Difficulty Levels */}
-              <div>
-                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-400" />
-                  Difficulty Levels
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={selectedDifficulty === "all" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedDifficulty("all")}
-                    className={selectedDifficulty === "all" 
-                      ? "bg-purple-600 hover:bg-purple-700" 
-                      : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"}
-                  >
-                    All
-                  </Button>
-                  {difficultyLevels.map((level) => (
-                    <Button
-                      key={level}
-                      variant={selectedDifficulty === level.toLowerCase() ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedDifficulty(level.toLowerCase())}
-                      className={selectedDifficulty === level.toLowerCase()
-                        ? "bg-purple-600 hover:bg-purple-700"
-                        : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"}
-                    >
-                      {level}
-                    </Button>
-                  ))}
+          {/* Available Projects Tab */}
+          <TabsContent value="available" className="space-y-6 mt-6">
+            {/* Search Bar */}
+            <Card className="border border-slate-700/50 shadow-xl bg-slate-900/50 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <Input
+                    placeholder="Search for your next adventure..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-14 text-base bg-slate-800/50 border-slate-700 text-slate-200 placeholder:text-slate-500 focus:border-purple-500 focus:ring-purple-500/20"
+                  />
                 </div>
-              </div>
-
-              {/* Themes */}
-              <div>
-                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-400" />
-                  Themes
-                </h3>
-                <Select value={selectedTheme} onValueChange={setSelectedTheme}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-200">
-                    <SelectValue placeholder="Select theme" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Themes</SelectItem>
-                    {themes.map((theme) => (
-                      <SelectItem key={theme} value={theme.toLowerCase()}>{theme}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Domains */}
-              <div>
-                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                  <Building className="w-4 h-4 text-blue-400" />
-                  Domains
-                </h3>
-                <Select value={selectedDomain} onValueChange={setSelectedDomain}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-200">
-                    <SelectValue placeholder="Select domain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Domains</SelectItem>
-                    {domains.map((domain) => (
-                      <SelectItem key={domain} value={domain.toLowerCase()}>{domain}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Right Side - Active Filters Display */}
-          <Card className="border border-slate-700/50 shadow-xl bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-sm border-purple-500/30">
-            <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-b border-purple-500/30">
-              <CardTitle className="text-slate-100">Active Filters</CardTitle>
-              <CardDescription className="text-slate-400">
-                {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all"
-                  ? "No filters applied"
-                  : "Currently filtering by:"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all" ? (
-                <div className="text-center py-8">
-                  <Filter className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400">Select filters to narrow down your search</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {selectedDifficulty !== "all" && (
-                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                      <span className="text-sm text-slate-300">Difficulty: <span className="font-semibold text-white capitalize">{selectedDifficulty}</span></span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedDifficulty("all")}
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                  {selectedTheme !== "all" && (
-                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                      <span className="text-sm text-slate-300">Theme: <span className="font-semibold text-white capitalize">{selectedTheme}</span></span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedTheme("all")}
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                  {selectedDomain !== "all" && (
-                    <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                      <span className="text-sm text-slate-300">Domain: <span className="font-semibold text-white capitalize">{selectedDomain}</span></span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedDomain("all")}
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
-            <Card
-              key={project.id}
-              className="group hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 border border-slate-700/50 hover:border-purple-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm"
-            >
-              <CardHeader className="pb-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
-                <div className="flex items-start justify-between mb-3">
-                  <Badge className={`${getDifficultyColor(project.difficulty)} border px-2 py-1 text-xs`}>
-                    {project.difficulty}
-                  </Badge>
-                </div>
-                <CardTitle className="text-lg text-slate-100 group-hover:text-purple-400 transition-colors leading-tight">
-                  {project.title}
-                </CardTitle>
-                <CardDescription className="text-sm text-slate-400 leading-relaxed mt-2">
-                  {project.description.substring(0, 120)}...
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Technologies */}
-                <div>
-                  <p className="text-xs font-medium mb-2 text-slate-400">Technologies:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {project.technologies.slice(0, 3).map((tech, index) => (
-                      <Badge key={index} variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
-                        {tech}
-                      </Badge>
-                    ))}
-                    {project.technologies.length > 3 && (
-                      <Badge variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
-                        +{project.technologies.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Duration */}
-                <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-cyan-400" />
-                    <div className="flex-1">
-                      <div className="text-xs text-slate-400">Duration</div>
-                      <div className="text-sm font-semibold text-slate-200">{project.duration}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <Button
-                  onClick={() => handleApplyNow(project.id)}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                >
-                  Apply Now
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
               </CardContent>
             </Card>
-          ))}
-        </div>
 
-        {/* No Results */}
-        {filteredProjects.length === 0 && (
-          <Card className="border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
-            <CardContent className="py-16 text-center">
-              <Search className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-300 mb-2">No projects found</h3>
-              <p className="text-slate-400 mb-6">Try adjusting your filters or search terms</p>
-              <Button onClick={clearAllFilters} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                Clear All Filters
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+            {/* Filters Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Side - Filter Options */}
+              <Card className="border border-slate-700/50 shadow-xl bg-slate-900/50 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-b border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-slate-100 flex items-center gap-2">
+                      <Filter className="w-5 h-5 text-purple-400" />
+                      Filters
+                    </CardTitle>
+                    {(selectedDifficulty !== "all" || selectedTheme !== "all" || selectedDomain !== "all") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearAllFilters}
+                        className="text-slate-400 hover:text-white hover:bg-white/10"
+                      >
+                        Clear All
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-6">
+                  {/* Difficulty Levels */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-amber-400" />
+                      Difficulty Levels
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant={selectedDifficulty === "all" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedDifficulty("all")}
+                        className={selectedDifficulty === "all" 
+                          ? "bg-purple-600 hover:bg-purple-700" 
+                          : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"}
+                      >
+                        All
+                      </Button>
+                      {difficultyLevels.map((level) => (
+                        <Button
+                          key={level}
+                          variant={selectedDifficulty === level.toLowerCase() ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setSelectedDifficulty(level.toLowerCase())}
+                          className={selectedDifficulty === level.toLowerCase()
+                            ? "bg-purple-600 hover:bg-purple-700"
+                            : "bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"}
+                        >
+                          {level}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Themes */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      Themes
+                    </h3>
+                    <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-200">
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Themes</SelectItem>
+                        {themes.map((theme) => (
+                          <SelectItem key={theme} value={theme.toLowerCase()}>{theme}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Domains */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                      <Building className="w-4 h-4 text-blue-400" />
+                      Domains
+                    </h3>
+                    <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-slate-200">
+                        <SelectValue placeholder="Select domain" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Domains</SelectItem>
+                        {domains.map((domain) => (
+                          <SelectItem key={domain} value={domain.toLowerCase()}>{domain}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right Side - Active Filters Display */}
+              <Card className="border border-slate-700/50 shadow-xl bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-sm border-purple-500/30">
+                <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-b border-purple-500/30">
+                  <CardTitle className="text-slate-100">Active Filters</CardTitle>
+                  <CardDescription className="text-slate-400">
+                    {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all"
+                      ? "No filters applied"
+                      : "Currently filtering by:"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all" ? (
+                    <div className="text-center py-8">
+                      <Filter className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                      <p className="text-slate-400">Select filters to narrow down your search</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedDifficulty !== "all" && (
+                        <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                          <span className="text-sm text-slate-300">Difficulty: <span className="font-semibold text-white capitalize">{selectedDifficulty}</span></span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedDifficulty("all")}
+                            className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                      {selectedTheme !== "all" && (
+                        <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                          <span className="text-sm text-slate-300">Theme: <span className="font-semibold text-white capitalize">{selectedTheme}</span></span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedTheme("all")}
+                            className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                      {selectedDomain !== "all" && (
+                        <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                          <span className="text-sm text-slate-300">Domain: <span className="font-semibold text-white capitalize">{selectedDomain}</span></span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedDomain("all")}
+                            className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Projects Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredProjects.map((project) => (
+                <Card
+                  key={project.id}
+                  className="group hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 border border-slate-700/50 hover:border-purple-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm"
+                >
+                  <CardHeader className="pb-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge className={`${getDifficultyColor(project.difficulty)} border px-2 py-1 text-xs`}>
+                        {project.difficulty}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-lg text-slate-100 group-hover:text-purple-400 transition-colors leading-tight">
+                      {project.title}
+                    </CardTitle>
+                    <CardDescription className="text-sm text-slate-400 leading-relaxed mt-2">
+                      {project.description.substring(0, 120)}...
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Technologies */}
+                    <div>
+                      <p className="text-xs font-medium mb-2 text-slate-400">Technologies:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {project.technologies.slice(0, 3).map((tech, index) => (
+                          <Badge key={index} variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
+                            {tech}
+                          </Badge>
+                        ))}
+                        {project.technologies.length > 3 && (
+                          <Badge variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
+                            +{project.technologies.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Duration */}
+                    <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-cyan-400" />
+                        <div className="flex-1">
+                          <div className="text-xs text-slate-400">Duration</div>
+                          <div className="text-sm font-semibold text-slate-200">{project.duration}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <Button
+                      onClick={() => handleApplyNow(project.id)}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    >
+                      Apply Now
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* No Results */}
+            {filteredProjects.length === 0 && (
+              <Card className="border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+                <CardContent className="py-16 text-center">
+                  <Search className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-slate-300 mb-2">No projects found</h3>
+                  <p className="text-slate-400 mb-6">Try adjusting your filters or search terms</p>
+                  <Button onClick={clearAllFilters} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                    Clear All Filters
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Applied Projects Tab */}
+          <TabsContent value="applied" className="space-y-6 mt-6">
+            {isLoadingApplied ? (
+              <Card className="border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+                <CardContent className="py-16 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                  <p className="text-slate-400">Loading your applications...</p>
+                </CardContent>
+              </Card>
+            ) : appliedProjects.length === 0 ? (
+              <Card className="border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+                <CardContent className="py-16 text-center">
+                  <Briefcase className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-slate-300 mb-2">No applications yet</h3>
+                  <p className="text-slate-400 mb-6">Start applying to projects to see them here</p>
+                  <Button 
+                    onClick={() => setActiveTab("available")} 
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  >
+                    Browse Projects
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {appliedProjects.map((application) => (
+                  <Card
+                    key={application.id}
+                    className="group hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 border border-slate-700/50 hover:border-purple-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm"
+                  >
+                    <CardHeader className="pb-3 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                      <div className="flex items-start justify-between mb-3">
+                        <Badge className={`${getDifficultyColor(application.difficulty)} border px-2 py-1 text-xs`}>
+                          {application.difficulty}
+                        </Badge>
+                        <Badge className={`${getStatusColor(application.status)} border px-2 py-1 text-xs capitalize`}>
+                          {application.status}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg text-slate-100 group-hover:text-purple-400 transition-colors leading-tight">
+                        {application.project_title}
+                      </CardTitle>
+                      <CardDescription className="text-sm text-slate-400 leading-relaxed mt-2">
+                        Applied on {new Date(application.applied_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Application Details */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="w-4 h-4 text-slate-400" />
+                          <span className="text-slate-300">{application.full_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Building className="w-4 h-4 text-slate-400" />
+                          <span className="text-slate-300">{application.college}</span>
+                        </div>
+                      </div>
+
+                      {/* Technologies */}
+                      {application.technologies && application.technologies.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium mb-2 text-slate-400">Technologies:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {application.technologies.slice(0, 3).map((tech, index) => (
+                              <Badge key={index} variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
+                                {tech}
+                              </Badge>
+                            ))}
+                            {application.technologies.length > 3 && (
+                              <Badge variant="outline" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700">
+                                +{application.technologies.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Duration */}
+                      <div className="bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-cyan-400" />
+                          <div className="flex-1">
+                            <div className="text-xs text-slate-400">Duration</div>
+                            <div className="text-sm font-semibold text-slate-200">{application.duration}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons - Grid Layout */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* View Details Button */}
+                        <Button
+                          onClick={() => handleViewDetails(application.project_id)}
+                          variant="outline"
+                          className="w-full border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+
+                        {/* Download Offer Letter Button */}
+                        <Button
+                          onClick={() => handleDownloadOfferLetter(application)}
+                          disabled={downloadingIds.has(application.id) || !application.offer_letter_url}
+                          className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {downloadingIds.has(application.id) ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Downloading...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-2" />
+                              Offer Letter
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

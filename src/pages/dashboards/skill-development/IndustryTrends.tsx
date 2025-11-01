@@ -10,8 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DashboardLayout from "@/components/DashboardLayout";
 import geminiService from "@/services/geminiService";
 import youtubeService from "@/services/youtubeService";
-import industryReportsService from "@/services/industryReportsService";
-import techUpdatesService from "@/services/techUpdatesService";
 import CodeEditorNotebook from "@/components/CodeEditorNotebook";
 
 interface YouTubeVideo {
@@ -27,21 +25,12 @@ const IndustryTrends = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [timeframe, setTimeframe] = useState<string>("2024");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [aiInsights, setAiInsights] = useState<any>(null);
-  const [emergingTechInsights, setEmergingTechInsights] = useState<any>(null);
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleString());
-  
-  // Industry Reports State
-  const [industryReports, setIndustryReports] = useState<any[]>([]);
-  const [isLoadingReports, setIsLoadingReports] = useState(false);
-  const [reportsLastUpdated, setReportsLastUpdated] = useState<string | null>(null);
+ // DELETE THESE:
 
-  // Tech Updates State
-  const [techUpdates, setTechUpdates] = useState<any[]>([]);
-  const [isLoadingTechUpdates, setIsLoadingTechUpdates] = useState(false);
-  const [techUpdatesLastUpdated, setTechUpdatesLastUpdated] = useState<string | null>(null);
-  const [techUpdatesNextUpdate, setTechUpdatesNextUpdate] = useState<string | null>(null);
+const [emergingTechInsights, setEmergingTechInsights] = useState<any>(null);
+
+  
+  
 
   // Learning Path State
   const [selectedSkill, setSelectedSkill] = useState<any>(null);
@@ -358,80 +347,7 @@ const IndustryTrends = () => {
     }
   ];
 
-  // Fetch industry reports on component mount
-  useEffect(() => {
-    const loadIndustryReports = async () => {
-      setIsLoadingReports(true);
-      try {
-        const reports = await industryReportsService.getIndustryReports();
-        setIndustryReports(reports);
-        
-        const cacheInfo = industryReportsService.getCacheInfo();
-        setReportsLastUpdated(cacheInfo.lastUpdated);
-      } catch (error) {
-        console.error('Error loading industry reports:', error);
-      } finally {
-        setIsLoadingReports(false);
-      }
-    };
-
-    loadIndustryReports();
-  }, []);
-
-  // Function to refresh industry reports
-  const handleRefreshReports = async () => {
-    setIsLoadingReports(true);
-    try {
-      const reports = await industryReportsService.getIndustryReports(true);
-      setIndustryReports(reports);
-      
-      const cacheInfo = industryReportsService.getCacheInfo();
-      setReportsLastUpdated(cacheInfo.lastUpdated);
-    } catch (error) {
-      console.error('Error refreshing industry reports:', error);
-    } finally {
-      setIsLoadingReports(false);
-    }
-  };
-
-  // Fetch tech updates on component mount
-  useEffect(() => {
-    const loadTechUpdates = async () => {
-      setIsLoadingTechUpdates(true);
-      try {
-        const updates = await techUpdatesService.getTechUpdates();
-        setTechUpdates(updates);
-        
-        const cacheInfo = techUpdatesService.getCacheInfo();
-        setTechUpdatesLastUpdated(cacheInfo.lastUpdated);
-        setTechUpdatesNextUpdate(cacheInfo.nextUpdate);
-      } catch (error) {
-        console.error('Error loading tech updates:', error);
-      } finally {
-        setIsLoadingTechUpdates(false);
-      }
-    };
-
-    loadTechUpdates();
-  }, []);
-
-  // Function to refresh tech updates
-  const handleRefreshTechUpdates = async () => {
-    setIsLoadingTechUpdates(true);
-    try {
-      const updates = await techUpdatesService.getTechUpdates(true);
-      setTechUpdates(updates);
-      
-      const cacheInfo = techUpdatesService.getCacheInfo();
-      setTechUpdatesLastUpdated(cacheInfo.lastUpdated);
-      setTechUpdatesNextUpdate(cacheInfo.nextUpdate);
-    } catch (error) {
-      console.error('Error refreshing tech updates:', error);
-    } finally {
-      setIsLoadingTechUpdates(false);
-    }
-  };
-
+  
   const emergingTechnologies = [
     {
       technology: "Quantum Computing",
@@ -531,83 +447,7 @@ const IndustryTrends = () => {
     }
   ];
 
-  const fetchAIInsights = async () => {
-    setIsLoadingAI(true);
-    try {
-      const marketTrends = await geminiService.getMarketTrends("Software Developer");
-      const aiAnalysis = await geminiService.getMarketTrends("AI Engineer");
-
-      setAiInsights({
-        marketTrends: [...marketTrends, ...aiAnalysis],
-        predictions: [
-          "AI/ML roles expected to grow by 85% in next 12 months",
-          "Cloud security positions increasing by 55%",
-          "Web3 developer demand stabilizing at premium levels",
-          "Data science roles shifting towards AI integration",
-          "DevOps engineers seeing 45% salary premium",
-          "Full-stack developers with AI skills commanding 60% higher salaries"
-        ],
-        salaryAnalysis: [
-          "AI specialists: +40% average increase expected",
-          "Cloud architects: +32% growth projected",
-          "Full-stack developers: +18% steady rise",
-          "DevOps engineers: +28% demand premium",
-          "Cybersecurity experts: +35% salary surge"
-        ]
-      });
-    } catch (error) {
-      console.error("Error fetching AI insights:", error);
-      // Fallback data
-      setAiInsights({
-        marketTrends: [
-          {
-            skill: "AI/ML Engineering",
-            demand: "very-high",
-            growth: "+85%",
-            salaryRange: "₹15-40L",
-            futureOutlook: "Explosive growth expected through 2027"
-          }
-        ],
-        predictions: [
-          "AI/ML roles expected to grow by 85% in next 12 months",
-          "Cloud security positions increasing by 55%",
-          "Web3 developer demand stabilizing at premium levels"
-        ],
-        salaryAnalysis: [
-          "AI specialists: +40% average increase expected",
-          "Cloud architects: +32% growth projected",
-          "Full-stack developers: +18% steady rise"
-        ]
-      });
-    } finally {
-      setIsLoadingAI(false);
-      setLastUpdated(new Date().toLocaleString());
-    }
-  };
-
-  const fetchEmergingTechInsights = async () => {
-    try {
-      const aiTrends = await geminiService.getMarketTrends("Emerging Technologies");
-      setEmergingTechInsights({
-        trends: aiTrends,
-        insights: [
-          "Quantum computing expected to reach production readiness by 2027",
-          "Extended Reality (XR) market projected to reach $57B by 2027",
-          "Edge computing adoption growing at 300% annually",
-          "Neuromorphic computing showing 400% R&D investment increase",
-          "Sustainable tech investments up 250% globally"
-        ]
-      });
-    } catch (error) {
-      console.error("Error fetching emerging tech insights:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchAIInsights();
-    fetchEmergingTechInsights();
-  }, []);
-
+  
   const filteredSkills = trendingSkills.filter(skill => {
     const matchesCategory = selectedCategory === "all" || skill.category.toLowerCase() === selectedCategory.toLowerCase();
     const matchesSearch = skill.skill.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -930,25 +770,7 @@ const IndustryTrends = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white shadow-xl shadow-purple-500/25"
-                  onClick={fetchAIInsights}
-                  disabled={isLoadingAI}
-                >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingAI ? 'animate-spin' : ''}`} />
-                  Refresh Insights
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-slate-800/50 backdrop-blur-sm border-slate-700 text-slate-200 hover:bg-slate-700/50 hover:text-white"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Report
-                </Button>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -1001,44 +823,16 @@ const IndustryTrends = () => {
 
         {/* Premium Dark Tabs */}
         <Tabs defaultValue="trending" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-14 bg-slate-900/50 border border-slate-700/50 p-1 rounded-xl">
-            <TabsTrigger
-              value="trending"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
-            >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Trending Skills
-            </TabsTrigger>
-            <TabsTrigger
-              value="updates"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-teal-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
-            >
-              <Newspaper className="w-4 h-4 mr-2" />
-              Today's Updates
-            </TabsTrigger>
-            <TabsTrigger
-              value="reports"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-cyan-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Industry Reports
-            </TabsTrigger>
-            <TabsTrigger
-              value="emerging"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              Emerging Tech
-            </TabsTrigger>
-            <TabsTrigger
-              value="insights"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all"
-            >
-              <Brain className="w-4 h-4 mr-2" />
-              AI Insights
-            </TabsTrigger>
-          </TabsList>
-
+         <TabsList className="grid w-full grid-cols-2 h-14 bg-slate-900/50 border border-slate-700/50 p-1 rounded-xl">
+  <TabsTrigger value="trending" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all">
+    <TrendingUp className="w-4 h-4 mr-2" />
+    Trending Skills
+  </TabsTrigger>
+  <TabsTrigger value="emerging" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-600 data-[state=active]:to-red-600 data-[state=active]:text-white text-slate-400 rounded-lg font-semibold transition-all">
+    <Zap className="w-4 h-4 mr-2" />
+    Emerging Tech
+  </TabsTrigger>
+</TabsList>
           <TabsContent value="trending" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredSkills.map((skill) => (
@@ -1143,280 +937,34 @@ const IndustryTrends = () => {
                     </div>
 
                     {/* Premium Dark Actions */}
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <Button
-                          size="lg"
-                          className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 text-white transition-all duration-300 transform hover:scale-105 shadow-xl shadow-purple-500/25 font-semibold"
-                          onClick={() => handleStartLearning(skill)}
-                          title={youtubePlaylists[skill.skill as keyof typeof youtubePlaylists]
-                            ? `Learn ${skill.skill} from ${youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}`
-                            : `Search for ${skill.skill} tutorials`}
-                        >
-                          <Play className="w-5 h-5 mr-2" />
-                          Start Learning
-                        </Button>
-                        {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists] && (
-                          <p className="text-xs text-slate-500 mt-2 text-center font-medium">
-                            via {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}
-                          </p>
-                        )}
-                      </div>
-                      <Button size="lg" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50">
-                        <Bookmark className="w-5 h-5" />
-                      </Button>
-                      <Button size="lg" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-purple-500/50">
-                        <Share2 className="w-5 h-5" />
-                      </Button>
-                    </div>
+                    {/* Premium Dark Actions */}
+<div>
+  <Button
+    size="lg"
+    className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 text-white transition-all duration-300 transform hover:scale-105 shadow-xl shadow-purple-500/25 font-semibold"
+    onClick={() => handleStartLearning(skill)}
+    title={youtubePlaylists[skill.skill as keyof typeof youtubePlaylists]
+      ? `Learn ${skill.skill} from ${youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}`
+      : `Search for ${skill.skill} tutorials`}
+  >
+    <Play className="w-5 h-5 mr-2" />
+    Start Learning
+  </Button>
+  {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists] && (
+    <p className="text-xs text-slate-500 mt-2 text-center font-medium">
+      via {youtubePlaylists[skill.skill as keyof typeof youtubePlaylists].channel}
+    </p>
+  )}
+</div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </TabsContent>
 
-          <TabsContent value="updates" className="mt-6">
-            <div className="mb-6 flex items-center justify-between bg-gradient-to-r from-green-900/30 to-teal-900/30 p-4 rounded-xl border border-green-500/30">
-              <div>
-                <h3 className="text-lg font-bold text-slate-100 mb-1 flex items-center gap-2">
-                  <Newspaper className="w-5 h-5 text-green-400" />
-                  Today's Tech Updates
-                  {techUpdatesService.shouldShowRefreshNotification() && (
-                    <Badge className="bg-green-500 text-white animate-pulse">
-                      <Bell className="w-3 h-3 mr-1" />
-                      New Updates Available
-                    </Badge>
-                  )}
-                </h3>
-                <p className="text-sm text-slate-400">
-                  {techUpdatesLastUpdated ? (
-                    <>
-                      Last updated: {techUpdatesLastUpdated} • Next update: {techUpdatesNextUpdate}
-                    </>
-                  ) : (
-                    <>Loading latest tech updates...</>
-                  )}
-                </p>
-              </div>
-              <Button
-                onClick={handleRefreshTechUpdates}
-                disabled={isLoadingTechUpdates}
-                className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg shadow-green-500/25"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingTechUpdates ? 'animate-spin' : ''}`} />
-                {isLoadingTechUpdates ? 'Updating...' : 'Refresh Updates'}
-              </Button>
-            </div>
+          
 
-            {isLoadingTechUpdates && techUpdates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <RefreshCw className="w-16 h-16 text-green-500 animate-spin mb-4" />
-                <h3 className="text-xl font-bold text-slate-200 mb-2">Fetching Latest Tech Updates</h3>
-                <p className="text-slate-400">Getting today's technology news and announcements...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {techUpdates.map((update) => (
-                  <Card key={update.id} className="group hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-300 border border-slate-700/50 hover:border-green-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="bg-gradient-to-r from-green-500/20 to-teal-500/20 border-green-500/50 text-green-400 text-xs">
-                              {update.category}
-                            </Badge>
-                            <Badge variant="outline" className={`text-xs ${getImpactColor(update.impact)}`}>
-                              {getImpactIcon(update.impact)}
-                              <span className="ml-1 capitalize">{update.impact}</span>
-                            </Badge>
-                          </div>
-                          <CardTitle className="text-lg mb-2 text-slate-100 group-hover:text-green-400 transition-colors line-clamp-2">
-                            {update.title}
-                          </CardTitle>
-                          <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
-                            <Badge variant="outline" className="border-teal-500/30 text-teal-400 bg-teal-500/10">
-                              {update.source}
-                            </Badge>
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {new Date(update.timestamp).toLocaleTimeString('en-US', { 
-                                hour: 'numeric', 
-                                minute: '2-digit',
-                                hour12: true 
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <CardDescription className="text-sm leading-relaxed text-slate-400 line-clamp-3">
-                        {update.summary}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-1">
-                          {update.tags.map((tag: string, idx: number) => (
-                            <Badge key={idx} variant="secondary" className="text-xs bg-slate-800/50 text-slate-300 border-slate-700 hover:bg-green-500/20 hover:border-green-500/50 cursor-pointer">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        
-                        {/* Actions */}
-                        <div className="flex gap-2 pt-2">
-                          <Button 
-                            size="sm" 
-                            className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 shadow-lg shadow-green-500/25"
-                            onClick={() => window.open(update.url, '_blank')}
-                          >
-                            <ExternalLink className="w-3 h-3 mr-1" />
-                            Read More
-                          </Button>
-                          <Button size="sm" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-green-500/50">
-                            <Bookmark className="w-3 h-3" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-green-500/50">
-                            <Share2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="reports" className="mt-6">
-            <div className="mb-6 flex items-center justify-between bg-gradient-to-r from-cyan-900/30 to-blue-900/30 p-4 rounded-xl border border-cyan-500/30">
-              <div>
-                <h3 className="text-lg font-bold text-slate-100 mb-1">Latest Industry Reports</h3>
-                <p className="text-sm text-slate-400">
-                  {reportsLastUpdated ? (
-                    <>Last updated: {reportsLastUpdated}</>
-                  ) : (
-                    <>Loading latest reports...</>
-                  )}
-                </p>
-              </div>
-              <Button
-                onClick={handleRefreshReports}
-                disabled={isLoadingReports}
-                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg shadow-cyan-500/25"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingReports ? 'animate-spin' : ''}`} />
-                {isLoadingReports ? 'Updating...' : 'Refresh Reports'}
-              </Button>
-            </div>
-
-            {isLoadingReports && industryReports.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <RefreshCw className="w-16 h-16 text-cyan-500 animate-spin mb-4" />
-                <h3 className="text-xl font-bold text-slate-200 mb-2">Fetching Latest Reports</h3>
-                <p className="text-slate-400">Getting the most recent industry insights from AI...</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {industryReports.map((report, index) => (
-                <Card key={index} className="group hover:shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 border border-slate-700/50 hover:border-cyan-500/50 hover:-translate-y-1 bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="p-2 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/20">
-                            <BarChart3 className="w-5 h-5 text-white" />
-                          </div>
-                          <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-0">
-                            Industry Report
-                          </Badge>
-                        </div>
-                        <CardTitle className="text-2xl mb-3 text-slate-100 group-hover:text-cyan-400 transition-colors">{report.title}</CardTitle>
-                        <div className="flex items-center gap-4 text-sm mb-2">
-                          <Badge variant="outline" className="border border-cyan-500/30 text-cyan-400 bg-cyan-500/10 font-semibold">
-                            {report.source}
-                          </Badge>
-                          <div className="flex items-center gap-1 text-slate-400">
-                            <Calendar className="w-4 h-4" />
-                            <span className="font-medium">{report.date}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="lg" variant="outline" className="border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-cyan-500/50">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
-                        <Button size="lg" className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg shadow-cyan-500/25">
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Report
-                        </Button>
-                      </div>
-                    </div>
-                    <CardDescription className="text-base leading-relaxed text-slate-400">{report.summary}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2 text-slate-200">
-                          <BarChart3 className="w-4 h-4 text-cyan-400" />
-                          Key Findings:
-                        </h4>
-                        <ul className="space-y-2">
-                          {report.keyFindings.map((finding, findingIndex) => (
-                            <li key={findingIndex} className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <span className="text-sm text-slate-300">{finding}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2 text-slate-200">
-                          <Target className="w-4 h-4 text-emerald-400" />
-                          Relevant Skills:
-                        </h4>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {report.relevantSkills.map((skill, skillIndex) => (
-                            <Badge key={skillIndex} variant="outline" className="bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-emerald-500/20 hover:border-emerald-500/50 cursor-pointer">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-
-                        {/* Article Links */}
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <ExternalLink className="w-4 h-4 text-purple-600" />
-                          Related Articles:
-                        </h4>
-                        <div className="space-y-2">
-                          {report.articleLinks?.map((article, articleIndex) => (
-                            <a
-                              key={articleIndex}
-                              href={article.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-start gap-2 p-2 rounded-lg hover:bg-purple-50 transition-colors group"
-                            >
-                              <ExternalLink className="w-4 h-4 text-purple-500 mt-0.5 group-hover:text-purple-700" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-purple-900 group-hover:text-purple-800">
-                                  {article.title}
-                                </p>
-                                <p className="text-xs text-purple-600">{article.source}</p>
-                              </div>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              </div>
-            )}
-          </TabsContent>
-
+          
           <TabsContent value="emerging" className="mt-6">
             <div className="space-y-6">
               {/* Premium Dark Section Header */}
@@ -1557,238 +1105,7 @@ const IndustryTrends = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="insights" className="mt-6">
-            <div className="space-y-6">
-              {/* Premium Dark AI Insights Header */}
-              <Card className="border border-slate-700/50 bg-gradient-to-br from-slate-900/50 via-emerald-900/20 to-slate-900/50 backdrop-blur-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/20">
-                        <Brain className="w-8 h-8 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-100">AI-Powered Market Intelligence</h3>
-                        <p className="text-slate-400 mt-1">Real-time analysis powered by Gemini AI</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg px-3 py-2 border border-slate-700/50">
-                        <span className="text-xs text-slate-400 font-medium">Last updated: {lastUpdated}</span>
-                      </div>
-                      <Button
-                        size="lg"
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25"
-                        onClick={fetchAIInsights}
-                        disabled={isLoadingAI}
-                      >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingAI ? 'animate-spin' : ''}`} />
-                        Refresh
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="border border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl shadow-lg shadow-purple-500/20">
-                        <Brain className="w-5 h-5 text-white" />
-                      </div>
-                      <CardTitle className="text-xl text-slate-100">AI Market Predictions</CardTitle>
-                    </div>
-                    <CardDescription className="text-base text-slate-400">Gemini AI analysis of job market trends</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pt-6">
-                    <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-500 to-blue-600 p-5 rounded-xl shadow-xl shadow-purple-500/20">
-                      <div className="absolute inset-0 bg-black/20"></div>
-                      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3">
-                          <TrendingUp className="w-5 h-5 text-white" />
-                          <h4 className="font-bold text-white text-lg">Next 6 Months Forecast</h4>
-                        </div>
-                        <ul className="space-y-2.5 text-sm text-white/95">
-                          {aiInsights?.predictions?.slice(0, 4).map((prediction: string, index: number) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                              <span>{prediction}</span>
-                            </li>
-                          )) || (
-                              <>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>AI/ML roles expected to grow by 85% in next 12 months</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>Cloud security positions increasing by 55%</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>Web3 developer demand stabilizing at premium levels</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>Data science roles shifting towards AI integration</span>
-                                </li>
-                              </>
-                            )}
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 p-5 rounded-xl shadow-xl shadow-emerald-500/20">
-                      <div className="absolute inset-0 bg-black/20"></div>
-                      <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Award className="w-5 h-5 text-white" />
-                          <h4 className="font-bold text-white text-lg">Salary Trend Analysis</h4>
-                        </div>
-                        <ul className="space-y-2.5 text-sm text-white/95">
-                          {aiInsights?.salaryAnalysis?.slice(0, 4).map((analysis: string, index: number) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                              <span>{analysis}</span>
-                            </li>
-                          )) || (
-                              <>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>AI specialists: +40% average increase expected</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>Cloud architects: +32% growth projected</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>Full-stack developers: +18% steady rise</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                  <span>DevOps engineers: +28% demand premium</span>
-                                </li>
-                              </>
-                            )}
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-slate-700/50 hover:shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/20">
-                        <BarChart3 className="w-5 h-5 text-white" />
-                      </div>
-                      <CardTitle className="text-xl text-slate-100">Skill Correlation Analysis</CardTitle>
-                    </div>
-                    <CardDescription className="text-base text-slate-400">AI-identified skill combinations for career success</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pt-6">
-                    <div className="space-y-4">
-                      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-600 p-5 rounded-xl shadow-xl shadow-emerald-500/20">
-                        <div className="absolute inset-0 bg-black/20"></div>
-                        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-                        <div className="relative z-10">
-                          <div className="flex items-center gap-2 mb-4">
-                            <CheckCircle2 className="w-5 h-5 text-white" />
-                            <h4 className="font-bold text-white text-lg">High-Impact Combinations</h4>
-                          </div>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
-                              <span className="text-white font-medium">AI + Cloud Computing</span>
-                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">98% Success</Badge>
-                            </div>
-                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
-                              <span className="text-white font-medium">Data Science + Domain Expertise</span>
-                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">95% Success</Badge>
-                            </div>
-                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
-                              <span className="text-white font-medium">Full-Stack + DevOps</span>
-                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">92% Success</Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="relative overflow-hidden bg-gradient-to-br from-amber-600 via-orange-600 to-red-600 p-5 rounded-xl shadow-xl shadow-orange-500/20">
-                        <div className="absolute inset-0 bg-black/20"></div>
-                        <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
-                        <div className="relative z-10">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Zap className="w-5 h-5 text-white" />
-                            <h4 className="font-bold text-white text-lg">Emerging Combinations</h4>
-                          </div>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
-                              <span className="text-white font-medium">Cybersecurity + AI</span>
-                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">Growing 89%</Badge>
-                            </div>
-                            <div className="flex justify-between items-center bg-white/10 backdrop-blur-sm p-3 rounded-lg border border-white/20">
-                              <span className="text-white font-medium">Design + No-Code Development</span>
-                              <Badge className="bg-white/20 backdrop-blur-sm border-white/30 text-white font-bold">Growing 76%</Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Premium Dark Market Trends from Gemini */}
-              {aiInsights?.marketTrends && (
-                <Card className="border border-slate-700/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 bg-slate-900/50 backdrop-blur-sm">
-                  <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl shadow-lg shadow-purple-500/20">
-                        <TrendingUp className="w-5 h-5 text-white" />
-                      </div>
-                      <CardTitle className="text-xl text-slate-100">Live Market Trends</CardTitle>
-                    </div>
-                    <CardDescription className="text-base text-slate-400">Real-time market intelligence from Gemini AI</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {aiInsights.marketTrends.slice(0, 6).map((trend: any, index: number) => (
-                        <div key={index} className="group relative overflow-hidden p-5 border border-slate-700/50 rounded-xl bg-gradient-to-br from-slate-800/50 via-purple-900/20 to-slate-800/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/50">
-                          <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 blur-2xl"></div>
-                          <div className="relative z-10">
-                            <h4 className="font-bold text-slate-100 mb-3 text-lg group-hover:text-purple-400 transition-colors">{trend.skill}</h4>
-                            <div className="space-y-2.5">
-                              <div className="flex justify-between items-center bg-slate-900/50 backdrop-blur-sm p-2 rounded-lg border border-slate-700/50">
-                                <span className="text-slate-400 font-medium text-sm">Demand:</span>
-                                <Badge className={trend.demand === 'very-high'
-                                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0'
-                                  : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white border-0'}>
-                                  {trend.demand}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between items-center bg-slate-900/50 backdrop-blur-sm p-2 rounded-lg border border-slate-700/50">
-                                <span className="text-slate-400 font-medium text-sm">Growth:</span>
-                                <span className="font-bold text-emerald-400">{trend.growth}</span>
-                              </div>
-                              <div className="flex justify-between items-center bg-slate-900/50 backdrop-blur-sm p-2 rounded-lg border border-slate-700/50">
-                                <span className="text-slate-400 font-medium text-sm">Salary:</span>
-                                <span className="font-bold text-purple-400">{trend.salaryRange}</span>
-                              </div>
-                            </div>
-                            <p className="text-xs text-slate-400 mt-3 leading-relaxed bg-slate-900/50 p-2 rounded-lg border border-slate-700/50">{trend.futureOutlook}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
+        
         </Tabs>
       </div>
     </DashboardLayout>
