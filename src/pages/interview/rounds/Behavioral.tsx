@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Users, CheckCircle2, Bot, User, Send, Sparkles, MessageCircle, AlertCircle, Video, VideoOff, Loader2 } from "lucide-react";
+import { Clock, Users, CheckCircle2, Bot, User, Sparkles, MessageCircle, AlertCircle, Video, VideoOff, Loader2, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import LiveKitWidget from "@/components/ai_avatar/LiveKitWidget";
+import { TranscriptionDisplay } from "@/components/interview/TranscriptionDisplay";
 import { markRoundComplete, isRoundAccessible } from "@/services/interviewProgressService";
 
 const Behavioral = () => {
@@ -16,16 +17,6 @@ const Behavioral = () => {
   
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [messages, setMessages] = useState([
-    {
-      role: "ai",
-      content: "Welcome to the behavioral interview round! I'll be asking you questions about your past experiences and how you handle different situations. Remember to use the STAR method (Situation, Task, Action, Result) when answering. Let's start with: Tell me about a time when you had to work with a difficult team member.",
-      timestamp: new Date(),
-    },
-  ]);
-  const [currentMessage, setCurrentMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isTyping, setIsTyping] = useState(false);
   const [showAvatar, setShowAvatar] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,10 +43,6 @@ const Behavioral = () => {
 
     return () => clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -87,60 +74,9 @@ const Behavioral = () => {
     }
   }, [navigate]);
 
-  const sendMessage = () => {
-    if (!currentMessage.trim()) return;
+  // sendMessage removed (input disabled for behavioral round)
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content: currentMessage,
-        timestamp: new Date(),
-      },
-    ]);
-
-    setCurrentMessage("");
-    setIsTyping(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const followUps = [
-        "That's a great example! Can you tell me more about how you resolved that situation and what specific actions you took?",
-        "Interesting approach. What was the outcome, and how did you measure success?",
-        "How did that experience change the way you work in teams? What did you learn from it?",
-        "What would you do differently if you faced a similar situation again? Have you applied these learnings?",
-        "Excellent! Can you elaborate on the challenges you faced and how you overcame them?",
-      ];
-      
-      let response;
-      const progress = messages.filter(m => m.role === "user").length;
-      
-      if (progress >= 2 && currentQuestion < questions.length - 1) {
-        // Move to next question after 2 user responses
-        setCurrentQuestion((prev) => prev + 1);
-        response = "Thank you for sharing that. Let's move on to the next question: " + questions[currentQuestion + 1];
-      } else {
-        response = followUps[Math.floor(Math.random() * followUps.length)];
-      }
-      
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          content: response,
-          timestamp: new Date(),
-        },
-      ]);
-      setIsTyping(false);
-    }, 1500);
-  };
-
-  const quickResponses = [
-    "I used the STAR method to approach this...",
-    "The situation was challenging because...",
-    "I took responsibility and...",
-    "The key learning was...",
-  ];
+  // quickResponses removed
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
@@ -189,25 +125,39 @@ const Behavioral = () => {
                   Behavioral AI
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {/* Avatar Area with Animation or Static Display */}
                 <div className="aspect-square bg-gradient-to-br from-green-500/20 via-emerald-500/20 to-green-500/20 rounded-lg flex items-center justify-center relative overflow-hidden border border-green-500/30">
-                  <div className="relative z-10 text-center">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-2 shadow-lg">
-                      <Users className="w-8 h-8 text-white" />
+                  {showAvatar ? (
+                    // Show LiveKit widget directly in the card
+                    <div className="w-full h-full">
+                      <LiveKitWidget 
+                        setShowSupport={setShowAvatar}
+                        onDisconnected={() => setShowAvatar(false)}
+                      />
                     </div>
-                    <p className="text-sm font-semibold">HR Specialist</p>
-                    <p className="text-xs text-muted-foreground">AI Agent</p>
-                  </div>
+                  ) : (
+                    // Show static avatar
+                    <div className="relative z-10 text-center">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-2 shadow-lg">
+                        <Users className="w-8 h-8 text-white" />
+                      </div>
+                      <p className="text-sm font-semibold">HR Specialist</p>
+                      <p className="text-xs text-muted-foreground">AI Agent</p>
+                    </div>
+                  )}
                 </div>
+
+                {/* Start/End Interview Button */}
                 <Button
                   onClick={() => setShowAvatar(!showAvatar)}
-                  className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500"
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500"
                   size="sm"
                 >
                   {showAvatar ? (
                     <>
                       <VideoOff className="w-4 h-4 mr-2" />
-                      End Video Call
+                      End Interview
                     </>
                   ) : (
                     <>
@@ -216,76 +166,28 @@ const Behavioral = () => {
                     </>
                   )}
                 </Button>
-              </CardContent>
-            </Card>
 
-            {/* Progress Card */}
-            <Card className="bg-card/50 backdrop-blur-sm border-border shadow-xl">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">Question Progress</CardTitle>
-                  <Badge variant="secondary">{currentQuestion + 1}/{questions.length}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Progress value={progress} className="h-2" />
-                <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {questions.map((question, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex items-start gap-2 p-2.5 rounded-lg transition-all ${
-                        idx === currentQuestion
-                          ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30"
-                          : idx < currentQuestion
-                          ? "bg-muted/50 text-muted-foreground"
-                          : "bg-muted/30 text-muted-foreground"
-                      }`}
+                {/* Interview Control Panel - Only visible when active */}
+                {showAvatar && (
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <Button
+                      onClick={() => {
+                        setShowAvatar(false);
+                        toast.info("Interview ended");
+                      }}
+                      variant="outline"
+                      className="w-full border-red-500/50 text-red-500 hover:bg-red-500/10"
+                      size="sm"
                     >
-                      <div className="mt-0.5">
-                        {idx < currentQuestion ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-400" />
-                        ) : (
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center text-xs font-semibold ${
-                            idx === currentQuestion ? "border-green-400 text-green-400" : "border-muted-foreground"
-                          }`}>
-                            {idx + 1}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs flex-1 leading-relaxed">{question}</p>
-                    </div>
-                  ))}
-                </div>
+                      <PhoneOff className="w-4 h-4 mr-2" />
+                      End Conversation
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* STAR Method Guide */}
-            <Card className="bg-card/50 backdrop-blur-sm border-border shadow-xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-accent" />
-                  STAR Method Guide
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-xs">
-                <div className="p-2 bg-primary/10 rounded border border-primary/30">
-                  <p className="font-semibold text-primary">S - Situation</p>
-                  <p className="text-muted-foreground">Set the context</p>
-                </div>
-                <div className="p-2 bg-accent/10 rounded border border-accent/30">
-                  <p className="font-semibold text-accent">T - Task</p>
-                  <p className="text-muted-foreground">Describe your role</p>
-                </div>
-                <div className="p-2 bg-green-500/10 rounded border border-green-500/30">
-                  <p className="font-semibold text-green-400">A - Action</p>
-                  <p className="text-muted-foreground">What did you do?</p>
-                </div>
-                <div className="p-2 bg-blue-500/10 rounded border border-blue-500/30">
-                  <p className="font-semibold text-blue-400">R - Result</p>
-                  <p className="text-muted-foreground">What was the outcome?</p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Question Progress and STAR Method Guide removed per request */}
           </div>
 
           {/* Right Panel - Chat Interface */}
@@ -294,150 +196,20 @@ const Behavioral = () => {
               <CardTitle className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-primary" />
                 Interview Conversation
-                <Badge variant="outline" className="ml-2">Question {currentQuestion + 1} of {questions.length}</Badge>
+                {/* <Badge variant="outline" className="ml-2">Question {currentQuestion + 1} of {questions.length}</Badge> */}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {messages.map((message, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className={`flex gap-3 max-w-[85%] ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                      {/* Avatar */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        message.role === "user" 
-                          ? "bg-gradient-to-r from-accent to-primary" 
-                          : "bg-gradient-to-r from-green-500 to-emerald-500"
-                      }`}>
-                        {message.role === "user" ? (
-                          <User className="w-5 h-5 text-white" />
-                        ) : (
-                          <Users className="w-5 h-5 text-white" />
-                        )}
-                      </div>
-                      
-                      {/* Message bubble */}
-                      <div
-                        className={`rounded-2xl p-4 ${
-                          message.role === "user"
-                            ? "bg-gradient-to-r from-accent to-primary text-white"
-                            : "bg-muted/50 border border-border"
-                        }`}
-                      >
-                        <p className="text-sm leading-relaxed">{message.content}</p>
-                        <p className={`text-xs mt-2 ${
-                          message.role === "user" ? "opacity-80" : "text-muted-foreground"
-                        }`}>
-                          {message.timestamp.toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Typing indicator */}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="flex gap-3 max-w-[85%]">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="bg-muted/50 border border-border rounded-2xl p-4">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+              {/* Live Transcriptions */}
+              <TranscriptionDisplay />
 
-              {/* Quick Responses */}
-              <div className="px-6 py-3 border-t border-border bg-muted/30">
-                <p className="text-xs text-muted-foreground mb-2">Quick response starters:</p>
-                <div className="flex flex-wrap gap-2">
-                  {quickResponses.map((response, idx) => (
-                    <Button
-                      key={idx}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setCurrentMessage(response)}
-                      className="text-xs border-border hover:border-primary hover:bg-primary/10"
-                    >
-                      {response}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              {/* Quick responses removed */}
 
-              {/* Input */}
-              <div className="p-6 border-t border-border bg-muted/50">
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    value={currentMessage}
-                    onChange={(e) => setCurrentMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                    placeholder="Share your experience using the STAR method..."
-                    className="flex-1 px-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                  />
-                  <Button
-                    onClick={sendMessage}
-                    disabled={!currentMessage.trim() || isTyping}
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:opacity-90 px-6"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Send
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
-                  <AlertCircle className="w-3 h-3" />
-                  Tip: Be specific, use the STAR method, and focus on your personal contributions and learnings
-                </p>
-              </div>
+              {/* Chat input removed per request */}
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Avatar Modal */}
-      {showAvatar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-card rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">AI HR Specialist</h3>
-                  <p className="text-xs text-muted-foreground">Behavioral Interview Session</p>
-                </div>
-              </div>
-              <Button
-                onClick={() => setShowAvatar(false)}
-                variant="outline"
-                size="sm"
-              >
-                <VideoOff className="w-4 h-4 mr-2" />
-                End Call
-              </Button>
-            </div>
-            <div className="p-6">
-              <LiveKitWidget 
-                setShowAvatar={setShowAvatar}
-                onDisconnected={() => setShowAvatar(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

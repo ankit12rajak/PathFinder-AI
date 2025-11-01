@@ -8,6 +8,7 @@ import {
 import { Track } from "livekit-client";
 import { useEffect, useState } from "react";
 import { useTracks, VideoTrack } from '@livekit/components-react';
+import { setGlobalTranscriptions } from "@/hooks/useTranscriptions";
 import "./AvatarVoiceAgent.css";
 
 const Message = ({ type, text }) => {
@@ -33,11 +34,30 @@ const AvatarVoiceAgent = () => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    const allMessages = [
-      ...(agentTranscriptions?.map((t) => ({ ...t, type: "agent" })) ?? []),
-      ...(userTranscriptions?.map((t) => ({ ...t, type: "user" })) ?? []),
-    ].sort((a, b) => a.firstReceivedTime - b.firstReceivedTime);
+    const agentMessages = (agentTranscriptions || []).map((t, idx) => ({
+      id: `agent-${t.firstReceivedTime}-${idx}`,
+      text: t.text || "",
+      speaker: "agent",
+      firstReceivedTime: t.firstReceivedTime || Date.now(),
+      isFinal: t.isFinal ?? false,
+    }));
+
+    const userMessages = (userTranscriptions || []).map((t, idx) => ({
+      id: `user-${t.firstReceivedTime}-${idx}`,
+      text: t.text || "",
+      speaker: "user",
+      firstReceivedTime: t.firstReceivedTime || Date.now(),
+      isFinal: t.isFinal ?? false,
+    }));
+
+    const allMessages = [...agentMessages, ...userMessages].sort(
+      (a, b) => a.firstReceivedTime - b.firstReceivedTime
+    );
+    
     setMessages(allMessages);
+    
+    // Update global transcriptions for the display component
+    setGlobalTranscriptions(allMessages);
   }, [agentTranscriptions, userTranscriptions]);
 
   return (
