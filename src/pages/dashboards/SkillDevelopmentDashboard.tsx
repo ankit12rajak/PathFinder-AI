@@ -54,15 +54,15 @@ const SkillDevelopmentDashboard = () => {
 
   const coreFeatures = [
     {
-      title: "Learning Paths",
-      description: "AI-curated learning journeys with industry-relevant curricula and hands-on projects",
-      icon: BookOpen,
+      title: "Career Advisor",
+      description: "AI-curated career advice and learning journeys with industry-relevant curricula and hands-on projects",
+      icon: Bot,
       color: "from-blue-500/20 to-purple-500/20",
       action: "Start Learning",
       progress: 75,
       status: "Active",
-      path: "/dashboard/skill-development/learning-paths",
-      features: ["Adaptive Learning", "AI Mentor", "Real Projects", "Certifications"]
+      path: "/dashboard/skill-development/career-advisor",
+      features: ["Adaptive Learning Paths", "AI Mentor", "Real Projects", "Resources"]
     },
     {
       title: "Industry Trends",
@@ -85,18 +85,8 @@ const SkillDevelopmentDashboard = () => {
       status: "Popular",
       path: "/dashboard/skill-development/projects-internships",
       features: ["Live Projects", "Mentorship", "Industry Connect", "Portfolio Building"]
-    },
-    {
-      title: "Skill Training",
-      description: "Comprehensive training programs with AI-powered practice environments",
-      icon: Monitor,
-      color: "from-purple-500/20 to-pink-500/20",
-      action: "Start Training",
-      progress: 60,
-      status: "Enhanced",
-      path: "/dashboard/skill-development/skill-training",
-      features: ["Interactive Labs", "AI Feedback", "Practice Tests", "Skill Badges"]
     }
+    
   ];
 
   const trendingSkills = [
@@ -319,7 +309,7 @@ const SkillDevelopmentDashboard = () => {
                       <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
                       <p className="text-purple-200 text-sm mb-4 leading-relaxed">{feature.description}</p>
 
-                      {/* Score Display */}
+                      {/* Score Display
                       {feature.score && (
                         <div className="mb-4">
                           <div className="flex justify-between text-sm text-purple-200 mb-2">
@@ -328,7 +318,7 @@ const SkillDevelopmentDashboard = () => {
                           </div>
                           <Progress value={feature.score} className="h-2 bg-white/20" />
                         </div>
-                      )}
+                      )} */}
 
                       {/* Highlights */}
                       <div className="grid grid-cols-2 gap-2 mb-4">
@@ -354,7 +344,7 @@ const SkillDevelopmentDashboard = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
                 <div className="text-2xl font-bold text-white mb-1">12</div>
                 <div className="text-xs text-purple-200">Skills Mastered</div>
@@ -371,7 +361,7 @@ const SkillDevelopmentDashboard = () => {
                 <div className="text-2xl font-bold text-white mb-1">₹8.5L</div>
                 <div className="text-xs text-purple-200">Expected Package</div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -624,19 +614,19 @@ const SkillDevelopmentDashboard = () => {
         </div>
 
         {/* Enhanced Development Tools Section */}
-        <div className="mb-8">
-          <div className="text-center mb-8">
-            <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 px-4 py-2 mb-4">
+        <div className="mb-6">
+          <div className="text-center mb-6">
+            <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 px-4 py-2 mb-3">
               <Rocket className="w-4 h-4 mr-2" />
               Complete Career Toolkit
             </Badge>
-            <h2 className="text-3xl font-bold mb-3">Accelerate Your Career Growth</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-2">Accelerate Your Career Growth</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               Comprehensive tools and resources designed to help you master skills, land opportunities, and achieve your career goals
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {coreFeatures.map((feature, index) => {
               const IconComponent = feature.icon;
               return (
@@ -648,30 +638,30 @@ const SkillDevelopmentDashboard = () => {
                   {/* Gradient Background Effect */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
 
-                  <CardContent className="relative z-10 p-6">
+                  <CardContent className="relative z-10 p-5">
                     {/* Icon and Status */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
-                        <IconComponent className="w-8 h-8 text-white" />
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}>
+                        <IconComponent className="w-7 h-7 text-white" />
                       </div>
                       <Badge
                         variant={feature.status === "Active" ? "default" : feature.status === "Popular" ? "secondary" : "outline"}
-                        className="px-3 py-1 font-semibold"
+                        className="px-2.5 py-0.5 text-xs font-semibold"
                       >
                         {feature.status}
                       </Badge>
                     </div>
 
                     {/* Title and Description */}
-                    <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
+                    <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed min-h-[60px]">
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed min-h-[48px]">
                       {feature.description}
                     </p>
 
                     {/* Feature Highlights */}
-                    <div className="space-y-2 mb-4">
+                    <div className="space-y-1.5 mb-3">
                       {feature.features.slice(0, 3).map((feat, idx) => (
                         <div key={idx} className="flex items-center text-xs">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary mr-2"></div>
@@ -680,24 +670,11 @@ const SkillDevelopmentDashboard = () => {
                       ))}
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="mb-4">
-                      <div className="flex justify-between text-xs mb-2">
-                        <span className="text-muted-foreground font-medium">Completion</span>
-                        <span className="font-bold text-primary">{feature.progress}%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 group-hover:animate-pulse"
-                          style={{ width: `${feature.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
                     {/* Action Button */}
                     <Button
                       className="w-full group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-lg"
                       variant="outline"
+                      size="sm"
                     >
                       <Sparkles className="w-4 h-4 mr-2 group-hover:animate-spin" />
                       {feature.action}
@@ -754,7 +731,9 @@ const SkillDevelopmentDashboard = () => {
                       {skill.jobs} active positions
                     </div>
 
-                    <Button size="sm" className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-0 shadow-lg">
+                    <Button size="sm" 
+                    onClick={() => navigate('/dashboard/skill-development/industry-trends')}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-0 shadow-lg">
                       <Rocket className="w-3 h-3 mr-1" />
                       Start Learning
                     </Button>
@@ -819,7 +798,9 @@ const SkillDevelopmentDashboard = () => {
                     </div>
 
                     <div className="flex space-x-2">
-                      <Button size="sm" className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white border-0 shadow-lg">
+                      <Button size="sm" 
+                      onClick={() => navigate('/dashboard/skill-development/projects-internships')}
+                      className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white border-0 shadow-lg">
                         <Target className="w-3 h-3 mr-1" />
                         Apply Now
                       </Button>
@@ -858,7 +839,7 @@ const SkillDevelopmentDashboard = () => {
                       key={index}
                       className={`p-3 rounded-xl border-2 text-center transition-all duration-300 hover:scale-105 ${achievement.earned
                         ? "bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-500/40 shadow-lg"
-                        : "bg-white/5 border-purple-500/20 hover:border-purple-500/40"
+                        : "bg-white/10 border-purple-500/20 hover:border-purple-500/40"
                         }`}
                     >
                       <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${achievement.earned
