@@ -115,7 +115,7 @@ class CareerAdvisorService {
    */
   async generateAIResponse(userMessage: string, conversationHistory: Message[]): Promise<string> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const conversationContext = conversationHistory
         .slice(-6) // Keep last 3 exchanges for context
