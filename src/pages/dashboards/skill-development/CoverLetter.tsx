@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
 import { coverLetterService, GeneratedCoverLetter, CoverLetterTemplate } from "@/services/coverLetterService";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 interface ViewState {
@@ -13,11 +15,14 @@ interface ViewState {
 
 const CoverLetter = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Core state
   const [coverLetters, setCoverLetters] = useState<GeneratedCoverLetter[]>([]);
   const [viewState, setViewState] = useState<ViewState>({ type: 'list' });
   const [selectedLetter, setSelectedLetter] = useState<GeneratedCoverLetter | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoadingLetters, setIsLoadingLetters] = useState(true);
   
   // Form states
   const [company, setCompany] = useState("");
@@ -31,6 +36,7 @@ const CoverLetter = () => {
   const [editedContent, setEditedContent] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   
@@ -41,17 +47,75 @@ const CoverLetter = () => {
   const [templates, setTemplates] = useState<CoverLetterTemplate[]>([]);
   const [refinementFeedback, setRefinementFeedback] = useState("");
 
-  // Load data on mount
+  // Load user and fetch cover letters from Supabase
   useEffect(() => {
-    try {
-      const saved = coverLetterService.loadFromLocalStorage();
-      setCoverLetters(saved);
-      const loadedTemplates = coverLetterService.getTemplates();
-      setTemplates(loadedTemplates);
-    } catch (err) {
-      console.error("Error loading data:", err);
-    }
+    const loadUserAndLetters = async () => {
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          setUserId(user.id);
+          await fetchCoverLetters(user.id);
+        } else {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to access cover letters",
+            variant: "destructive",
+          });
+        }
+
+        // Load templates from service
+        const loadedTemplates = coverLetterService.getTemplates();
+        setTemplates(loadedTemplates);
+      } catch (err) {
+        console.error("Error loading data:", err);
+        toast({
+          title: "Error",
+          description: "Failed to load data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingLetters(false);
+      }
+    };
+
+    loadUserAndLetters();
   }, []);
+
+  // Fetch cover letters from Supabase
+  const fetchCoverLetters = async (uid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('cover_letters')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Map Supabase data to component format
+      const mapped: GeneratedCoverLetter[] = data.map(letter => ({
+        id: letter.id,
+        company: letter.company,
+        position: letter.position,
+        content: letter.content,
+        template: letter.template || 'Professional',
+        lastModified: new Date(letter.updated_at).toLocaleDateString(),
+        createdAt: letter.created_at,
+      }));
+
+      setCoverLetters(mapped);
+      console.log(`✅ Loaded ${mapped.length} cover letters from database`);
+    } catch (error: any) {
+      console.error('Error fetching cover letters:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load cover letters",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Clear messages after 5 seconds
   useEffect(() => {
@@ -92,46 +156,183 @@ const CoverLetter = () => {
     }
   };
 
-  const handleSaveCoverLetter = () => {
+  // Save cover letter to Supabase database
+  const handleSaveCoverLetter = async () => {
     if (!editedContent.trim()) {
       setError("Cover letter cannot be empty");
       return;
     }
 
-    const newLetter: GeneratedCoverLetter = {
-      id: coverLetterService.generateId(),
-      company: company || "Unnamed",
-      position: position || "Position",
-      content: editedContent,
-      template: selectedTemplate,
-      lastModified: coverLetterService.getFormattedDate(),
-      createdAt: new Date().toISOString(),
-    };
+    if (!userId) {
+      setError("Please log in to save cover letters");
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save cover letters",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const updated = [...coverLetters, newLetter];
-    setCoverLetters(updated);
-    coverLetterService.saveToLocalStorage(updated);
-    
-    setCompany("");
-    setPosition("");
-    setJobDescription("");
-    setUserBackground("");
-    setGeneratedContent("");
-    setEditedContent("");
-    setRefinementFeedback("");
-    
-    setViewState({ type: 'list' });
-    setSuccess("Cover letter saved successfully!");
+    setIsSaving(true);
+    setError("");
+
+    try {
+      const newLetter = {
+        user_id: userId,
+        company: company || "Unnamed Company",
+        position: position || "Position",
+        content: editedContent,
+        template: selectedTemplate,
+        job_description: jobDescription || null,
+        user_background: userBackground || null,
+        status: 'final',
+      };
+
+      const { data, error } = await supabase
+        .from('cover_letters')
+        .insert([newLetter])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add to local state
+      const mapped: GeneratedCoverLetter = {
+        id: data.id,
+        company: data.company,
+        position: data.position,
+        content: data.content,
+        template: data.template,
+        lastModified: new Date(data.updated_at).toLocaleDateString(),
+        createdAt: data.created_at,
+      };
+
+      setCoverLetters([mapped, ...coverLetters]);
+      
+      // Reset form
+      setCompany("");
+      setPosition("");
+      setJobDescription("");
+      setUserBackground("");
+      setGeneratedContent("");
+      setEditedContent("");
+      setRefinementFeedback("");
+      
+      setViewState({ type: 'list' });
+      setSuccess("Cover letter saved successfully!");
+      
+      toast({
+        title: "Success",
+        description: "Cover letter saved to database",
+      });
+
+      console.log(`✅ Cover letter saved: ${data.company} - ${data.position}`);
+    } catch (err: any) {
+      console.error('Error saving cover letter:', err);
+      setError("Failed to save cover letter");
+      toast({
+        title: "Error",
+        description: err.message || "Failed to save to database",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteCoverLetter = (id: string) => {
-    const updated = coverLetters.filter(letter => letter.id !== id);
-    setCoverLetters(updated);
-    coverLetterService.saveToLocalStorage(updated);
-    setSuccess("Cover letter deleted successfully!");
-    if (selectedLetter?.id === id) {
-      setSelectedLetter(null);
-      setViewState({ type: 'list' });
+  // Delete cover letter from Supabase
+  const handleDeleteCoverLetter = async (id: string) => {
+    if (!userId) {
+      setError("Please log in to delete cover letters");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('cover_letters')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      const updated = coverLetters.filter(letter => letter.id !== id);
+      setCoverLetters(updated);
+      setSuccess("Cover letter deleted successfully!");
+      
+      if (selectedLetter?.id === id) {
+        setSelectedLetter(null);
+        setViewState({ type: 'list' });
+      }
+
+      toast({
+        title: "Deleted",
+        description: "Cover letter removed successfully",
+      });
+
+      console.log(`✅ Cover letter deleted: ${id}`);
+    } catch (err: any) {
+      console.error('Error deleting cover letter:', err);
+      setError("Failed to delete cover letter");
+      toast({
+        title: "Error",
+        description: "Failed to delete from database",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Update cover letter in Supabase
+  const handleUpdateCoverLetter = async () => {
+    if (!selectedLetter || !userId) {
+      setError("Unable to update cover letter");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('cover_letters')
+        .update({ 
+          content: editedContent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedLetter.id)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state
+      const updated = coverLetters.map(letter =>
+        letter.id === selectedLetter.id
+          ? { 
+              ...letter, 
+              content: editedContent, 
+              lastModified: new Date(data.updated_at).toLocaleDateString() 
+            }
+          : letter
+      );
+      setCoverLetters(updated);
+      setSelectedLetter(updated.find(l => l.id === selectedLetter.id) || null);
+      setSuccess("Changes saved!");
+      setViewState({ type: 'view-detail' });
+
+      toast({
+        title: "Updated",
+        description: "Cover letter updated successfully",
+      });
+
+      console.log(`✅ Cover letter updated: ${selectedLetter.id}`);
+    } catch (err: any) {
+      console.error('Error updating cover letter:', err);
+      setError("Failed to update cover letter");
+      toast({
+        title: "Error",
+        description: "Failed to update in database",
+        variant: "destructive",
+      });
     }
   };
 
@@ -247,10 +448,6 @@ const CoverLetter = () => {
     setSuccess("Copied to clipboard!");
   };
 
-  const handleBackToPlacementKit = () => {
-    navigate('/dashboards/placement-kit');
-  };
-
   // ==== RENDER SECTIONS ====
 
   if (viewState.type === 'generate') {
@@ -286,10 +483,11 @@ const CoverLetter = () => {
             variant="outline"
             className="border-slate-600 text-slate-300 hover:bg-slate-700/50"
           >
-            ← Back to Letters
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Letters
           </Button>
 
-          {/* Form - Keep all existing form code */}
+          {/* Form */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Input Section */}
             <div className="space-y-4">
@@ -417,7 +615,439 @@ const CoverLetter = () => {
     );
   }
 
-  // ... Keep all other view states (preview, analyze, edit, view-detail) exactly as they are ...
+  if (viewState.type === 'preview') {
+    return (
+      <DashboardLayout
+        title="Preview & Edit"
+        description="Review and customize your cover letter"
+      >
+        <div className="p-6 space-y-6 bg-slate-950">
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="rounded-lg p-4 bg-red-500/10 border border-red-500/40 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <span className="text-red-300 text-sm">{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="rounded-lg p-4 bg-green-500/10 border border-green-500/40 flex items-center gap-3">
+              <Check className="w-5 h-5 text-green-400" />
+              <span className="text-green-300 text-sm">{success}</span>
+            </div>
+          )}
+
+          {/* Header with Actions */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white">{company} - {position}</h2>
+              <p className="text-slate-400 mt-1">Template: {selectedTemplate}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setViewState({ type: 'generate' })}
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700/50"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+              <Button
+                onClick={handleGetSuggestions}
+                disabled={isAnalyzing}
+                variant="outline"
+                className="border-orange-500/40 text-orange-300 hover:bg-orange-500/20"
+              >
+                <Lightbulb className="w-4 h-4 mr-2" />
+                {isAnalyzing ? "Analyzing..." : "Get Suggestions"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Content Editor */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="rounded-2xl p-6 border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                <textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-orange-500/40 focus:outline-none transition-all h-96 resize-none font-mono text-sm"
+                  placeholder="Your cover letter will appear here..."
+                />
+              </div>
+
+              {/* Refinement Feedback */}
+              <div className="rounded-2xl p-6 border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 space-y-4">
+                <h3 className="font-semibold text-white flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-orange-400" />
+                  Refine Content
+                </h3>
+                <textarea
+                  value={refinementFeedback}
+                  onChange={(e) => setRefinementFeedback(e.target.value)}
+                  placeholder="Tell AI how to improve this letter (e.g., 'Make it more enthusiastic', 'Add more technical details')"
+                  className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-orange-500/40 focus:outline-none transition-all h-20 resize-none text-sm"
+                />
+                <Button
+                  onClick={handleRefineContent}
+                  disabled={isRefining || !refinementFeedback.trim()}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isRefining ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Refining...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Refine with AI
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Quick Actions Panel */}
+            <div className="space-y-4">
+              <div className="rounded-2xl p-6 border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 space-y-3">
+                <h3 className="font-semibold text-white mb-4">Quick Actions</h3>
+                
+                <Button
+                  onClick={handleCopyToClipboard}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy to Clipboard
+                </Button>
+
+                <Button
+                  onClick={handleDownloadPDF}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+
+                <Button
+                  onClick={handleSaveCoverLetter}
+                  disabled={isSaving}
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+                >
+                  {isSaving ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+
+                {jobDescription && (
+                  <Button
+                    onClick={handleAnalyzeAlignment}
+                    disabled={isAnalyzing}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Target className="w-4 h-4 mr-2" />
+                        Analyze Alignment
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+
+              {alignmentAnalysis && (
+                <div className="rounded-2xl p-6 border border-blue-500/40 bg-blue-500/5 space-y-3">
+                  <h3 className="font-semibold text-white">Alignment Analysis</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300">Match Score:</span>
+                      <Badge className="bg-blue-600">{alignmentAnalysis.alignmentScore}%</Badge>
+                    </div>
+                    {alignmentAnalysis.matchedSkills?.length > 0 && (
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">Matched Skills:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {alignmentAnalysis.matchedSkills.map((skill: string, i: number) => (
+                            <Badge key={i} className="bg-green-600/50 text-green-200 text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {alignmentAnalysis.missingSkills?.length > 0 && (
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">Missing Skills:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {alignmentAnalysis.missingSkills.map((skill: string, i: number) => (
+                            <Badge key={i} className="bg-red-600/50 text-red-200 text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Improvement Suggestions */}
+              {suggestions.length > 0 && (
+                <div className="rounded-2xl p-6 border border-orange-500/40 bg-orange-500/5 space-y-3">
+                  <h3 className="font-semibold text-white flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-orange-400" />
+                    Improvement Suggestions
+                  </h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {suggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        className="rounded-lg p-3 border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/15 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full bg-orange-500/40 flex items-center justify-center text-orange-300 text-xs font-bold flex-shrink-0 mt-0.5">
+                            {index + 1}
+                          </div>
+                          <p className="text-slate-300 text-sm">{suggestion}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={() => setViewState({ type: 'analyze' })}
+                    variant="outline"
+                    className="w-full border-orange-500/40 text-orange-300 hover:bg-orange-500/10 text-sm"
+                  >
+                    View All Suggestions
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (viewState.type === 'analyze') {
+    return (
+      <DashboardLayout
+        title="AI Suggestions"
+        description="Recommendations to improve your cover letter"
+      >
+        <div className="p-6 space-y-6 bg-slate-950">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">Improvement Suggestions</h2>
+            <Button
+              onClick={() => setViewState({ type: 'preview' })}
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:bg-slate-700/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Editor
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {suggestions.map((suggestion, index) => (
+              <div
+                key={index}
+                className="rounded-xl p-4 border border-orange-500/40 bg-orange-500/5"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-orange-500/30 flex items-center justify-center text-orange-300 text-sm font-bold flex-shrink-0 mt-0.5">
+                    {index + 1}
+                  </div>
+                  <p className="text-slate-300">{suggestion}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (viewState.type === 'edit' && selectedLetter) {
+    return (
+      <DashboardLayout
+        title="Edit Cover Letter"
+        description="Modify your saved cover letter"
+      >
+        <div className="p-6 space-y-6 bg-slate-950">
+          {error && (
+            <div className="rounded-lg p-4 bg-red-500/10 border border-red-500/40 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <span className="text-red-300 text-sm">{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="rounded-lg p-4 bg-green-500/10 border border-green-500/40 flex items-center gap-3">
+              <Check className="w-5 h-5 text-green-400" />
+              <span className="text-green-300 text-sm">{success}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white">{selectedLetter.company}</h2>
+              <p className="text-slate-400 mt-1">{selectedLetter.position}</p>
+            </div>
+            <Button
+              onClick={() => setViewState({ type: 'view-detail' })}
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:bg-slate-700/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="rounded-2xl p-6 border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+                <textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-orange-500/40 focus:outline-none transition-all h-96 resize-none font-mono text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                onClick={handleUpdateCoverLetter}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+
+              <Button
+                onClick={() => setViewState({ type: 'view-detail' })}
+                variant="outline"
+                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700/50"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Discard
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (viewState.type === 'view-detail' && selectedLetter) {
+    return (
+      <DashboardLayout
+        title="View Cover Letter"
+        description="Review your saved cover letter"
+      >
+        <div className="p-6 space-y-6 bg-slate-950">
+          {success && (
+            <div className="rounded-lg p-4 bg-green-500/10 border border-green-500/40 flex items-center gap-3">
+              <Check className="w-5 h-5 text-green-400" />
+              <span className="text-green-300 text-sm">{success}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white">{selectedLetter.company}</h2>
+              <p className="text-slate-400 mt-1">
+                {selectedLetter.position} • Template: {selectedLetter.template}
+              </p>
+              <p className="text-xs text-slate-500 mt-2">
+                Modified: {selectedLetter.lastModified}
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setViewState({ type: 'list' });
+                setSelectedLetter(null);
+              }}
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:bg-slate-700/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Content */}
+            <div className="lg:col-span-2 rounded-2xl p-8 border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50">
+              <div className="prose prose-invert prose-sm max-w-none">
+                <p className="text-slate-300 whitespace-pre-wrap leading-relaxed text-sm">
+                  {selectedLetter.content}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <div className="rounded-2xl p-6 border border-slate-700/50 bg-gradient-to-br from-slate-800/50 to-slate-900/50 space-y-3">
+                <h3 className="font-semibold text-white">Actions</h3>
+
+                <Button
+                  onClick={() => handleEditLetter()}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+
+                <Button
+                  onClick={() => handleDuplicateLetter(selectedLetter)}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Duplicate
+                </Button>
+
+                <Button
+                  onClick={() => handleCopyToClipboard()}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Text
+                </Button>
+
+                <Button
+                  onClick={() => handleDownloadPDF()}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+
+                <Button
+                  onClick={() => handleDeleteCoverLetter(selectedLetter.id)}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Default - LIST VIEW
   return (
@@ -426,16 +1056,14 @@ const CoverLetter = () => {
       description="Create personalized cover letters tailored to specific jobs"
     >
       <div className="p-6 space-y-8 bg-slate-950">
-        {/* Back to Placement Kit Button */}
         <Button
-          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
-          variant="outline"
-          className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Placement Kit
-        </Button>
-
+                  onClick={() => navigate('/dashboard/skill-development/placement-kit')}
+                  variant="outline"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Placement Kit
+                </Button>
         {/* Header Section */}
         <div className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl border border-transparent">
           <div className="absolute inset-0 bg-gradient-to-r from-orange-600/5 via-red-600/5 to-pink-600/5 rounded-3xl"></div>
@@ -484,8 +1112,15 @@ const CoverLetter = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoadingLetters && (
+          <div className="flex items-center justify-center p-12">
+            <RefreshCw className="w-8 h-8 text-orange-400 animate-spin" />
+          </div>
+        )}
+
         {/* Your Cover Letters */}
-        {coverLetters.length > 0 && (
+        {!isLoadingLetters && coverLetters.length > 0 && (
           <div className="space-y-4">
             <div>
               <h2 className="text-2xl font-bold text-white">Your Cover Letters ({coverLetters.length})</h2>
@@ -551,7 +1186,7 @@ const CoverLetter = () => {
         )}
 
         {/* Empty State */}
-        {coverLetters.length === 0 && (
+        {!isLoadingLetters && coverLetters.length === 0 && (
           <div className="rounded-2xl p-12 border border-dashed border-slate-700 bg-slate-900/30 flex flex-col items-center justify-center text-center">
             <FileText className="w-16 h-16 text-slate-500 mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">No Cover Letters Yet</h3>

@@ -1,14 +1,169 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Upload, Bot, Target, Briefcase, Sparkles, Award, Edit, Code, MessageSquare, Rocket, Eye, FolderOpen } from "lucide-react";
+import { FileText, Upload, Bot, Target, Briefcase, Sparkles, Award, Edit, Code, MessageSquare, Rocket, Eye, FolderOpen, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 const PlacementKit = () => {
   const navigate = useNavigate();
-  const [atsScore] = useState<number>(78);
+  const { toast } = useToast();
+  const [atsScore, setAtsScore] = useState<number | null>(null);
+  const [isLoadingScore, setIsLoadingScore] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  
+  // State for all counts
+  const [resumeCount, setResumeCount] = useState<number>(0);
+  const [isLoadingResumeCount, setIsLoadingResumeCount] = useState(true);
+  const [coverLetterCount, setCoverLetterCount] = useState<number>(0);
+  const [isLoadingCoverLetterCount, setIsLoadingCoverLetterCount] = useState(true);
+  const [portfolioCount, setPortfolioCount] = useState<number>(0);
+  const [isLoadingPortfolioCount, setIsLoadingPortfolioCount] = useState(true);
+
+  // Load user and fetch all stats on mount
+  useEffect(() => {
+    const loadUserAndStats = async () => {
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          setUserId(user.id);
+          await Promise.all([
+            fetchLatestATSScore(user.id),
+            fetchResumeCount(user.id),
+            fetchCoverLetterCount(user.id),
+            fetchPortfolioCount(user.id)
+          ]);
+        } else {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to view your stats",
+            variant: "destructive",
+          });
+          setIsLoadingScore(false);
+          setIsLoadingResumeCount(false);
+          setIsLoadingCoverLetterCount(false);
+          setIsLoadingPortfolioCount(false);
+        }
+      } catch (error) {
+        console.error("Error loading user:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load user data",
+          variant: "destructive",
+        });
+        setIsLoadingScore(false);
+        setIsLoadingResumeCount(false);
+        setIsLoadingCoverLetterCount(false);
+        setIsLoadingPortfolioCount(false);
+      }
+    };
+
+    loadUserAndStats();
+  }, []);
+
+  // Fetch latest ATS score from Supabase (using overall_score column)
+  const fetchLatestATSScore = async (uid: string) => {
+    setIsLoadingScore(true);
+    try {
+      const { data, error } = await supabase
+        .from('ats_scans')
+        .select('overall_score, created_at')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log("No ATS scans found for user");
+          setAtsScore(null);
+        } else {
+          throw error;
+        }
+      } else if (data) {
+        setAtsScore(data.overall_score);
+        console.log(`✅ Loaded ATS score: ${data.overall_score}%`);
+      }
+    } catch (error: any) {
+      console.error('Error fetching ATS score:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load ATS score. Please try again.",
+        variant: "destructive",
+      });
+      setAtsScore(null);
+    } finally {
+      setIsLoadingScore(false);
+    }
+  };
+
+  // Fetch resume count from Supabase
+  const fetchResumeCount = async (uid: string) => {
+    setIsLoadingResumeCount(true);
+    try {
+      const { count, error } = await supabase
+        .from('resumes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', uid);
+
+      if (error) throw error;
+
+      setResumeCount(count || 0);
+      console.log(`✅ Loaded resume count: ${count || 0}`);
+    } catch (error: any) {
+      console.error('Error fetching resume count:', error);
+      setResumeCount(0);
+    } finally {
+      setIsLoadingResumeCount(false);
+    }
+  };
+
+  // Fetch cover letter count from Supabase
+  const fetchCoverLetterCount = async (uid: string) => {
+    setIsLoadingCoverLetterCount(true);
+    try {
+      const { count, error } = await supabase
+        .from('cover_letters')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', uid);
+
+      if (error) throw error;
+
+      setCoverLetterCount(count || 0);
+      console.log(`✅ Loaded cover letter count: ${count || 0}`);
+    } catch (error: any) {
+      console.error('Error fetching cover letter count:', error);
+      setCoverLetterCount(0);
+    } finally {
+      setIsLoadingCoverLetterCount(false);
+    }
+  };
+
+  // Fetch portfolio count from Supabase
+  const fetchPortfolioCount = async (uid: string) => {
+    setIsLoadingPortfolioCount(true);
+    try {
+      const { count, error } = await supabase
+        .from('portfolios')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', uid);
+
+      if (error) throw error;
+
+      setPortfolioCount(count || 0);
+      console.log(`✅ Loaded portfolio count: ${count || 0}`);
+    } catch (error: any) {
+      console.error('Error fetching portfolio count:', error);
+      setPortfolioCount(0);
+    } finally {
+      setIsLoadingPortfolioCount(false);
+    }
+  };
 
   const placementTools = [
     {
@@ -21,7 +176,7 @@ const PlacementKit = () => {
       iconBg: "from-blue-500/30 to-purple-500/20",
       iconColor: "text-blue-300",
       features: ["ATS Score Analysis", "Keyword Optimization", "Format Validation", "Industry Matching"],
-      stats: { score: 78, label: "Current Score" },
+      stats: { score: atsScore || 0, label: "Current Score" },
       badge: "Active",
       badgeColor: "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
     },
@@ -35,7 +190,7 @@ const PlacementKit = () => {
       iconBg: "from-emerald-500/30 to-teal-500/20",
       iconColor: "text-emerald-300",
       features: ["Smart Templates", "AI Content Suggestions", "Real-time Preview", "Multi-format Export"],
-      stats: { score: 12, label: "Templates" },
+      stats: { score: resumeCount, label: "Saved Resumes" },
       badge: "Available",
       badgeColor: "bg-blue-500/20 border-blue-500/40 text-blue-300"
     },
@@ -49,7 +204,7 @@ const PlacementKit = () => {
       iconBg: "from-orange-500/30 to-red-500/20",
       iconColor: "text-orange-300",
       features: ["Job Matching", "Company Research", "Tone Adjustment", "Multiple Versions"],
-      stats: { score: 5, label: "Generated" },
+      stats: { score: coverLetterCount, label: "Generated Letters" },
       badge: "Premium",
       badgeColor: "bg-purple-500/20 border-purple-500/40 text-purple-300"
     },
@@ -63,7 +218,7 @@ const PlacementKit = () => {
       iconBg: "from-purple-500/30 to-pink-500/20",
       iconColor: "text-purple-300",
       features: ["Responsive Design", "Project Showcase", "Skills Display", "Contact Integration"],
-      stats: { score: 8, label: "Themes" },
+      stats: { score: portfolioCount, label: "My Portfolios" },
       badge: "Available",
       badgeColor: "bg-blue-500/20 border-blue-500/40 text-blue-300"
     },
@@ -157,17 +312,68 @@ const PlacementKit = () => {
             {/* Quick Stats Overview */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { label: 'ATS Score', value: `${atsScore}%`, icon: Bot, color: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/40', text: 'text-blue-300' },
-                { label: 'Resume Templates', value: '12', icon: FileText, color: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/40', text: 'text-emerald-300' },
-                { label: 'Cover Letters', value: '5', icon: Edit, color: 'bg-gradient-to-br from-orange-500/20 to-orange-600/10 border-orange-500/40', text: 'text-orange-300' },
-                { label: 'Portfolio Themes', value: '8', icon: Eye, color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/40', text: 'text-purple-300' }
+                { 
+                  label: 'ATS Score', 
+                  value: isLoadingScore ? (
+                    <Loader className="w-6 h-6 animate-spin" />
+                  ) : atsScore !== null ? (
+                    `${atsScore}%`
+                  ) : (
+                    <span className="text-base">--</span>
+                  ),
+                  icon: Bot, 
+                  color: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/40', 
+                  text: 'text-blue-300',
+                  helperText: !isLoadingScore && atsScore === null ? 'No scan yet' : null
+                },
+                { 
+                  label: 'My Resumes', 
+                  value: isLoadingResumeCount ? (
+                    <Loader className="w-6 h-6 animate-spin" />
+                  ) : (
+                    resumeCount.toString()
+                  ),
+                  icon: FileText, 
+                  color: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/40', 
+                  text: 'text-emerald-300',
+                  helperText: null
+                },
+                { 
+                  label: 'Cover Letters', 
+                  value: isLoadingCoverLetterCount ? (
+                    <Loader className="w-6 h-6 animate-spin" />
+                  ) : (
+                    coverLetterCount.toString()
+                  ),
+                  icon: Edit, 
+                  color: 'bg-gradient-to-br from-orange-500/20 to-orange-600/10 border-orange-500/40', 
+                  text: 'text-orange-300',
+                  helperText: null
+                },
+                { 
+                  label: 'My Portfolios', 
+                  value: isLoadingPortfolioCount ? (
+                    <Loader className="w-6 h-6 animate-spin" />
+                  ) : (
+                    portfolioCount.toString()
+                  ),
+                  icon: Eye, 
+                  color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/40', 
+                  text: 'text-purple-300',
+                  helperText: null
+                }
               ].map((stat, index) => (
                 <div key={index} className={`${stat.color} border rounded-xl p-4 backdrop-blur-sm hover:scale-105 transition-transform duration-300`}>
                   <div className="flex items-center justify-between mb-2">
                     <stat.icon className={`w-5 h-5 ${stat.text}`} />
-                    <span className={`text-2xl font-bold ${stat.text}`}>{stat.value}</span>
+                    <span className={`text-2xl font-bold ${stat.text} flex items-center justify-center min-h-[32px]`}>
+                      {stat.value}
+                    </span>
                   </div>
                   <p className="text-sm text-slate-300">{stat.label}</p>
+                  {stat.helperText && (
+                    <p className="text-xs text-slate-400 mt-1">{stat.helperText}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -228,16 +434,6 @@ const PlacementKit = () => {
                         <span>{feature}</span>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Stats Bar */}
-                  <div className="pt-4 border-t border-slate-700/50">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400 uppercase tracking-wider">{tool.stats.label}</span>
-                      <span className={`text-2xl font-bold ${tool.iconColor}`}>
-                        {tool.stats.score}{tool.id === 'ats-scanner' ? '%' : ''}
-                      </span>
-                    </div>
                   </div>
 
                   {/* Action Button */}

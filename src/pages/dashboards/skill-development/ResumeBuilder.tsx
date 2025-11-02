@@ -595,7 +595,7 @@ const ResumeBuilder = () => {
       <div className="p-6 space-y-8 bg-slate-950">
          {/* Back to Placement Kit Button */}
         <Button
-          onClick={() => navigate('/dashboards/placement-kit')}
+          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
           variant="outline"
           className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
         >

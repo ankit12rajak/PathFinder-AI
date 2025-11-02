@@ -593,13 +593,13 @@ const ATSScanner = () => {
       <div className="space-y-6">
         {/* Back Button */}
         <Button
-          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
-          variant="ghost"
-          className="text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Placement Kit
-        </Button>
+            onClick={() => navigate('/dashboard/skill-development/placement-kit')}
+            variant="outline"
+            className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Placement Kit
+          </Button>
 
         {/* Existing Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-8 shadow-2xl border border-slate-700/50">
