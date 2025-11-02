@@ -3,7 +3,7 @@ import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
 import "@livekit/components-styles";
 import AvatarVoiceAgent from "./AvatarVoiceAgent";
 import "./LiveKitWidget.css";
-import { getAgentConfig, AgentType, getLiveKitUrl } from "@/services/agentTokenService";
+import { getAgentConfig, AgentType } from "@/services/agentTokenService";
 
 /**
  * LiveKitWidget Component
@@ -15,11 +15,12 @@ import { getAgentConfig, AgentType, getLiveKitUrl } from "@/services/agentTokenS
 const LiveKitWidget = ({ agentType = AgentType.TECHNICAL, setShowSupport, onDisconnected }) => {
   const [token, setToken] = useState("");
   const [roomName, setRoomName] = useState("");
+  const [serverUrl, setServerUrl] = useState("");
   const [isConnecting, setIsConnecting] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Get the correct token and room based on agent type
+    // Get the correct token, URL, and room based on agent type
     try {
       const config = getAgentConfig(agentType);
       
@@ -30,9 +31,17 @@ const LiveKitWidget = ({ agentType = AgentType.TECHNICAL, setShowSupport, onDisc
         return;
       }
 
+      if (!config.url) {
+        setError(`URL not configured for ${agentType} agent. Check your .env file.`);
+        console.error(`LiveKit ${agentType} URL not found in .env file`);
+        setIsConnecting(false);
+        return;
+      }
+
       setToken(config.token);
       setRoomName(config.room);
-      console.log(`Connected to ${agentType} agent with room: ${config.room}`);
+      setServerUrl(config.url);
+      console.log(`Connected to ${agentType} agent with room: ${config.room} and URL: ${config.url}`);
       setIsConnecting(false);
     } catch (err) {
       setError(err.message);
@@ -73,9 +82,9 @@ const LiveKitWidget = ({ agentType = AgentType.TECHNICAL, setShowSupport, onDisc
               Close
             </button>
           </div>
-        ) : token ? (
+        ) : token && serverUrl ? (
           <LiveKitRoom
-            serverUrl={getLiveKitUrl()}
+            serverUrl={serverUrl}
             token={token}
             connect={true}
             video={false}
