@@ -55,6 +55,8 @@ import ResumeBuilder from "./pages/dashboards/skill-development/ResumeBuilder";
 import CoverLetter from "./pages/dashboards/skill-development/CoverLetter";
 import Portfolio from "./pages/dashboards/skill-development/Portfolio";
 import InterviewQuestions from "./pages/dashboards/skill-development/InterviewQuestions";
+import ATSHistory from './pages/dashboards/skill-development/ATSHistory';
+import AvailableDocuments from './pages/dashboards/skill-development/AvailableDocuments';
 
 // Interview Preparation Flow
 import MachineCoding from "./pages/interview/rounds/MachineCoding";
@@ -129,6 +131,8 @@ const App = () => (
           <Route path="/dashboard/skill-development/placement-kit/coverletter" element={<CoverLetter />} />
           <Route path="/dashboard/skill-development/placement-kit/portfolio" element={<Portfolio />} />
           <Route path="/dashboard/skill-development/placement-kit/interviewquestion" element={<InterviewQuestions />} />
+          <Route path="/dashboard/skill-development/ats-history" element={<ATSHistory />} />
+          <Route path="/dashboard/skill-development/available-documents" element={<AvailableDocuments />} />
           
           {/* Interview Preparation Flow Routes */}
           <Route path="/interview/round/1" element={<MachineCoding />} />

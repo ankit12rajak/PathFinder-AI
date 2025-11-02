@@ -51,7 +51,7 @@ export interface OptimizationSuggestion {
   priority: 'high' | 'medium' | 'low';
 }
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_KEY = import.meta.env.VITE_ATS_SCANNER_API_KEY;
 
 class ATSService {
   private genAI: GoogleGenerativeAI;

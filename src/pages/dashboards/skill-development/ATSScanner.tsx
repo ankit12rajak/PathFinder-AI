@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, Bot, TrendingUp, AlertCircle, CheckCircle, AlertTriangle, Zap, Download, RefreshCw, FileText, Briefcase, Lightbulb, MessageCircle, ArrowLeft } from "lucide-react";
+import { Upload, Bot, TrendingUp, AlertCircle, CheckCircle, AlertTriangle, Zap, Download, RefreshCw, FileText, Briefcase, Lightbulb, MessageCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +7,10 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ResumeEditor from "@/components/ResumeEditor";
 import { atsService, ATSAnalysisResult, JobDescriptionMatch, OptimizationSuggestion } from "@/services/atsService";
 import { parseFile, isSupportedFormat } from "@/services/fileParserService";
+import { atsScanStorageService } from "@/services/atsScanStorageService";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 interface TabState {
   step: 'upload' | 'analysis' | 'matching' | 'editor';
@@ -16,6 +19,7 @@ interface TabState {
 const ATSScanner = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   const [resumeText, setResumeText] = useState<string>("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<'upload' | 'analysis' | 'matching' | 'suggestions' | 'editor'>('upload');
@@ -26,6 +30,9 @@ const ATSScanner = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isMatching, setIsMatching] = useState(false);
   const [scanResults, setScanResults] = useState(false);
+  const [currentScanId, setCurrentScanId] = useState<string | null>(null);
+  const [loadingStage, setLoadingStage] = useState<string>("");
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
 
 
   const demoScanResults = atsAnalysis || {
@@ -41,6 +48,7 @@ const ATSScanner = () => {
     improvementAreas: []
   };
 
+  // Update the handleFileUpload function with loading stages
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -49,78 +57,155 @@ const ATSScanner = () => {
 
     // Validate file format
     if (!isSupportedFormat(file.name)) {
-      alert('Unsupported file format. Please upload a PDF, DOCX, or TXT file.');
+      toast({
+        title: "Invalid File Format",
+        description: "Please upload a PDF, DOCX, or TXT file.",
+        variant: "destructive",
+      });
       return;
     }
 
     // Validate file size (max 50MB)
     if (file.size > 50 * 1024 * 1024) {
-      alert('File size must be less than 50MB. Please try a smaller file.');
+      toast({
+        title: "File Too Large",
+        description: "File size must be less than 50MB.",
+        variant: "destructive",
+      });
       return;
     }
 
+    // ✅ Start loading immediately
     setIsAnalyzing(true);
+    setLoadingProgress(5);
+    setLoadingStage("Uploading file...");
 
     try {
-      // Parse the file using the appropriate parser
+      // Stage 1: Parse the file
+      setLoadingStage("Parsing document...");
+      setLoadingProgress(15);
+      
+      // Add artificial delay to show loading
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const text = await parseFile(file);
 
       if (!text || text.trim().length === 0) {
-        alert('The file appears to be empty or could not be parsed. Please try a different file.');
+        toast({
+          title: "Empty File",
+          description: "The file appears to be empty or could not be parsed.",
+          variant: "destructive",
+        });
         setIsAnalyzing(false);
+        setLoadingProgress(0);
+        setLoadingStage("");
         return;
       }
 
-      // Validate that we have at least some readable content
       if (text.length < 50) {
-        alert('The file content is too short. Please upload a complete resume.');
+        toast({
+          title: "Content Too Short",
+          description: "Please upload a complete resume.",
+          variant: "destructive",
+        });
         setIsAnalyzing(false);
+        setLoadingProgress(0);
+        setLoadingStage("");
         return;
       }
 
       setResumeText(text);
+      setLoadingProgress(30);
 
-      // Perform real ATS analysis
+      // Stage 2: Perform ATS analysis
+      setLoadingStage("Analyzing resume with AI...");
+      setLoadingProgress(40);
       const analysis = await atsService.analyzeResume(text);
       setAtsAnalysis(analysis);
+      setLoadingProgress(60);
 
-      // Also get optimization suggestions
+      // Stage 3: Get optimization suggestions
+      setLoadingStage("Generating optimization suggestions...");
+      setLoadingProgress(70);
       const opts = await atsService.getOptimizationSuggestions(text);
       setSuggestions(opts);
+      setLoadingProgress(80);
+
+      // Stage 4: Save analysis to Supabase
+      setLoadingStage("Saving analysis results...");
+      setLoadingProgress(85);
+      const saveResult = await atsScanStorageService.saveAnalysis(
+        file.name,
+        text,
+        analysis,
+        opts,
+        undefined,
+        undefined,
+        file.size,
+        file.type
+      );
+
+      if (saveResult.success && saveResult.scanId) {
+        setCurrentScanId(saveResult.scanId);
+
+        // Stage 5: Upload original resume file
+        setLoadingStage("Uploading original resume...");
+        setLoadingProgress(90);
+        const fileUploadResult = await atsScanStorageService.uploadResumeFile(
+          saveResult.scanId,
+          file
+        );
+
+        if (!fileUploadResult.success) {
+          console.error('Failed to upload original file');
+        }
+
+        // Stage 6: Generate and upload PDF report
+        setLoadingStage("Generating PDF report...");
+        setLoadingProgress(95);
+        await generateAndUploadPDFReport(saveResult.scanId, analysis, null, file.name);
+        setLoadingProgress(100);
+
+        // Show completion
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        toast({
+          title: "Success",
+          description: "Resume analyzed and report generated successfully!",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Save Warning",
+          description: "Analysis completed but couldn't save to history.",
+          variant: "destructive",
+        });
+      }
 
       setScanResults(true);
       setCurrentTab('analysis');
     } catch (error) {
       console.error('Error processing file:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Error processing file: ${errorMessage}`);
+      toast({
+        title: "Processing Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsAnalyzing(false);
+      setLoadingProgress(0);
+      setLoadingStage("");
     }
   };
 
-  const handleJobMatching = async () => {
-    if (!resumeText || !jobDescription) {
-      alert('Please enter both resume and job description');
-      return;
-    }
-
-    setIsMatching(true);
-    try {
-      const match = await atsService.matchJobDescription(resumeText, jobDescription);
-      setJobMatch(match);
-      setCurrentTab('matching');
-    } catch (error) {
-      console.error('Error matching job:', error);
-      alert('Error matching job description. Please try again.');
-    } finally {
-      setIsMatching(false);
-    }
-  };
-
-  const downloadATSReport = async () => {
-    if (!atsAnalysis) return;
-
+  // ✅ **Separate function to generate and upload PDF**
+  const generateAndUploadPDFReport = async (
+    scanId: string,
+    analysis: ATSAnalysisResult,
+    jobMatchData: JobDescriptionMatch | null,
+    originalFileName: string
+  ) => {
     try {
       // Dynamically import jsPDF
       const jsPDFModule = await import('jspdf');
@@ -161,108 +246,272 @@ const ATSScanner = () => {
       yPosition = 50;
       doc.setTextColor(0, 0, 0);
 
+      // File Information
+      addText('RESUME INFORMATION', 16, true);
+      addText(`File Name: ${originalFileName}`);
+      yPosition += 5;
+
       // Overall Score
       addText('OVERALL ATS SCORE', 16, true);
       doc.setFillColor(59, 130, 246);
-      doc.rect(margin, yPosition, (atsAnalysis.overallScore / 100) * (pageWidth - margin * 2), 8, 'F');
+      doc.rect(margin, yPosition, (analysis.overallScore / 100) * (pageWidth - margin * 2), 8, 'F');
       doc.setFontSize(14);
-      doc.text(`${atsAnalysis.overallScore}%`, pageWidth - margin - 20, yPosition + 6);
+      doc.text(`${analysis.overallScore}%`, pageWidth - margin - 20, yPosition + 6);
       yPosition += 15;
 
       // Score Breakdown
       addText('Score Breakdown', 14, true);
-      addText(`Parseability: ${atsAnalysis.parseability}%`);
-      addText(`Keyword Match: ${atsAnalysis.keywordMatch}%`);
-      addText(`Formatting: ${atsAnalysis.formatting}%`);
-      addText(`Readability: ${atsAnalysis.readability}%`);
+      addText(`Parseability: ${analysis.parseability}%`);
+      addText(`Keyword Match: ${analysis.keywordMatch}%`);
+      addText(`Formatting: ${analysis.formatting}%`);
+      addText(`Readability: ${analysis.readability}%`);
       yPosition += 5;
 
       // Sections Analysis
-      if (atsAnalysis.sections && atsAnalysis.sections.length > 0) {
+      if (analysis.sections && analysis.sections.length > 0) {
         addText('Section Analysis', 14, true);
-        atsAnalysis.sections.forEach(section => {
+        analysis.sections.forEach(section => {
           addText(`${section.name}: ${section.score}% - ${section.status.toUpperCase()}`);
+          if (section.feedback) {
+            addText(`  ${section.feedback}`, 10);
+          }
         });
         yPosition += 5;
       }
 
       // Recommendations
-      if (atsAnalysis.recommendations && atsAnalysis.recommendations.length > 0) {
+      if (analysis.recommendations && analysis.recommendations.length > 0) {
         addText('Recommendations', 14, true);
-        atsAnalysis.recommendations.forEach((rec, index) => {
+        analysis.recommendations.forEach((rec, index) => {
           addText(`${index + 1}. [${rec.priority.toUpperCase()}] ${rec.text}`);
+          if (rec.section) {
+            addText(`   Section: ${rec.section}`, 10);
+          }
         });
         yPosition += 5;
       }
 
       // Missing Keywords
-      if (atsAnalysis.missingKeywords && atsAnalysis.missingKeywords.length > 0) {
+      if (analysis.missingKeywords && analysis.missingKeywords.length > 0) {
         addText('Missing Keywords', 14, true);
-        addText(atsAnalysis.missingKeywords.join(', '));
+        addText(analysis.missingKeywords.join(', '));
         yPosition += 5;
       }
 
       // Strength Areas
-      if (atsAnalysis.strengthAreas && atsAnalysis.strengthAreas.length > 0) {
+      if (analysis.strengthAreas && analysis.strengthAreas.length > 0) {
         addText('Strength Areas', 14, true);
-        atsAnalysis.strengthAreas.forEach((area, index) => {
+        analysis.strengthAreas.forEach((area, index) => {
           addText(`${index + 1}. ${area}`);
         });
         yPosition += 5;
       }
 
       // Improvement Areas
-      if (atsAnalysis.improvementAreas && atsAnalysis.improvementAreas.length > 0) {
+      if (analysis.improvementAreas && analysis.improvementAreas.length > 0) {
         addText('Areas for Improvement', 14, true);
-        atsAnalysis.improvementAreas.forEach((area, index) => {
+        analysis.improvementAreas.forEach((area, index) => {
           addText(`${index + 1}. ${area}`);
         });
       }
 
       // Job Match Section (if available)
-      if (jobMatch) {
+      if (jobMatchData) {
         doc.addPage();
         yPosition = margin;
         addText('JOB MATCH ANALYSIS', 16, true);
-        addText(`Overall Match Score: ${jobMatch.matchScore}%`, 14);
-        addText(`Experience Relevance: ${jobMatch.experienceRelevance}%`);
-        addText(`Education Relevance: ${jobMatch.educationRelevance}%`);
+        addText(`Overall Match Score: ${jobMatchData.matchScore}%`, 14);
+        addText(`Experience Relevance: ${jobMatchData.experienceRelevance}%`);
+        addText(`Education Relevance: ${jobMatchData.educationRelevance}%`);
         yPosition += 5;
 
-        if (jobMatch.matchedKeywords && jobMatch.matchedKeywords.length > 0) {
+        if (jobMatchData.matchedKeywords && jobMatchData.matchedKeywords.length > 0) {
           addText('Matched Keywords', 14, true);
-          addText(jobMatch.matchedKeywords.join(', '));
+          addText(jobMatchData.matchedKeywords.join(', '));
           yPosition += 5;
         }
 
-        if (jobMatch.missingKeywords && jobMatch.missingKeywords.length > 0) {
+        if (jobMatchData.missingKeywords && jobMatchData.missingKeywords.length > 0) {
           addText('Missing Keywords', 14, true);
-          addText(jobMatch.missingKeywords.join(', '));
+          addText(jobMatchData.missingKeywords.join(', '));
           yPosition += 5;
         }
 
-        if (jobMatch.skillsMatched && jobMatch.skillsMatched.length > 0) {
+        if (jobMatchData.skillsMatched && jobMatchData.skillsMatched.length > 0) {
           addText('Skills Matched', 14, true);
-          jobMatch.skillsMatched.forEach((skill, index) => {
+          jobMatchData.skillsMatched.forEach((skill, index) => {
             addText(`${index + 1}. ${skill.skill} (${skill.confidence}% confidence) - Found in: ${skill.foundIn}`);
           });
           yPosition += 5;
         }
 
-        if (jobMatch.recommendations && jobMatch.recommendations.length > 0) {
+        if (jobMatchData.recommendations && jobMatchData.recommendations.length > 0) {
           addText('Job Match Recommendations', 14, true);
-          jobMatch.recommendations.forEach((rec, index) => {
+          jobMatchData.recommendations.forEach((rec, index) => {
             addText(`${index + 1}. ${rec}`);
           });
         }
       }
 
-      // Save the PDF
-      const fileName = `ATS_Report_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
+      // Convert PDF to Blob
+      const pdfBlob = doc.output('blob');
+      const fileName = `ATS_Report_${new Date().toISOString().split('T')[0]}_${Date.now()}.pdf`;
+      
+      // Upload to Supabase
+      const uploadResult = await atsScanStorageService.uploadPDFReport(
+        scanId,
+        pdfBlob,
+        fileName
+      );
+
+      if (uploadResult.success) {
+        console.log('PDF report uploaded successfully');
+        return true;
+      } else {
+        console.error('Failed to upload PDF report:', uploadResult.error);
+        return false;
+      }
     } catch (error) {
       console.error('Error generating PDF report:', error);
-      alert('Failed to generate PDF report. Please try again.');
+      return false;
+    }
+  };
+
+  // ✅ **Update handleJobMatching to regenerate PDF with job match data**
+  const handleJobMatching = async () => {
+    if (!resumeText || !jobDescription) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both resume and job description",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsMatching(true);
+    try {
+      const match = await atsService.matchJobDescription(resumeText, jobDescription);
+      setJobMatch(match);
+
+      // Update existing scan with job match data
+      if (currentScanId) {
+        const { error } = await supabase
+          .from('ats_scans')
+          .update({
+            job_description: jobDescription,
+            job_match_data: match,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentScanId);
+
+        if (!error) {
+          // ✅ **Regenerate PDF with job match data**
+          if (atsAnalysis) {
+            await generateAndUploadPDFReport(currentScanId, atsAnalysis, match, fileName || 'resume.pdf');
+          }
+
+          toast({
+            title: "Job Match Saved",
+            description: "Job matching results saved and PDF updated!",
+            variant: "default",
+          });
+        }
+      }
+
+      setCurrentTab('matching');
+    } catch (error) {
+      console.error('Error matching job:', error);
+      toast({
+        title: "Matching Error",
+        description: "Error matching job description. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMatching(false);
+    }
+  };
+
+  // ✅ **Update downloadATSReport to just download the existing PDF from storage**
+  const downloadATSReport = async () => {
+    if (!currentScanId || !atsAnalysis) {
+      toast({
+        title: "No Report Available",
+        description: "Please scan a resume first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Get the scan record to find PDF path
+      const { data: scan, error } = await supabase
+        .from('ats_scans')
+        .select('pdf_path')
+        .eq('id', currentScanId)
+        .single();
+
+      if (error || !scan?.pdf_path) {
+        toast({
+          title: "Download Error",
+          description: "PDF report not found. Regenerating...",
+          variant: "destructive",
+        });
+        
+        // Regenerate if not found
+        const success = await generateAndUploadPDFReport(
+          currentScanId,
+          atsAnalysis,
+          jobMatch,
+          fileName || 'resume.pdf'
+        );
+
+        if (success) {
+          // Try downloading again
+          const { data: newScan } = await supabase
+            .from('ats_scans')
+            .select('pdf_path')
+            .eq('id', currentScanId)
+            .single();
+
+          if (newScan?.pdf_path) {
+            const signedUrl = await atsScanStorageService.getPDFSignedUrl(newScan.pdf_path);
+            if (signedUrl) {
+              window.open(signedUrl, '_blank');
+              toast({
+                title: "Download Started",
+                description: "Opening PDF report...",
+                variant: "default",
+              });
+            }
+          }
+        }
+        return;
+      }
+
+      // Get signed URL for download
+      const signedUrl = await atsScanStorageService.getPDFSignedUrl(scan.pdf_path);
+      
+      if (signedUrl) {
+        window.open(signedUrl, '_blank');
+        toast({
+          title: "Download Started",
+          description: "Opening PDF report...",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Download Error",
+          description: "Failed to generate download link.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error downloading PDF report:', error);
+      toast({
+        title: "Download Error",
+        description: "Failed to download PDF report.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -419,6 +668,102 @@ const ATSScanner = () => {
           </div>
         </div>
 
+        {/* ============ Loading Screen ============ */}
+        {isAnalyzing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-lg">
+            <div className="relative max-w-2xl w-full mx-4">
+              {/* Animated Background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-indigo-600/20 rounded-3xl blur-3xl animate-pulse"></div>
+              
+              {/* Loading Card */}
+              <div className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 rounded-3xl border border-slate-700/50 p-12 shadow-2xl">
+                <div className="space-y-8">
+                  {/* Header */}
+                  <div className="text-center space-y-4">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500/30 to-purple-500/20 rounded-2xl backdrop-blur-sm border border-blue-400/40 shadow-lg">
+                      <Bot className="w-10 h-10 text-blue-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-100 bg-clip-text text-transparent mb-2">
+                        Analyzing Your Resume
+                      </h2>
+                      <p className="text-slate-400 text-lg">
+                        AI is processing your document...
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-300 font-medium">{loadingStage}</span>
+                      <span className="text-blue-300 font-bold">{loadingProgress}%</span>
+                    </div>
+                    <div className="relative w-full h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${loadingProgress}%` }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 animate-shimmer"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Loading Animation */}
+                  <div className="flex justify-center">
+                    <div className="relative">
+                      <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                      <div className="absolute inset-0 w-16 h-16 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin-slow"></div>
+                    </div>
+                  </div>
+
+                  {/* Loading Steps */}
+                  <div className="grid grid-cols-3 gap-4 pt-4">
+                    {[
+                      { label: "Parsing", done: loadingProgress > 30, icon: FileText },
+                      { label: "Analyzing", done: loadingProgress > 60, icon: Bot },
+                      { label: "Saving", done: loadingProgress > 90, icon: CheckCircle }
+                    ].map((step, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-300 ${
+                          step.done
+                            ? 'bg-emerald-500/10 border-emerald-500/40'
+                            : 'bg-slate-800/30 border-slate-700/50'
+                        }`}
+                      >
+                        <step.icon
+                          className={`w-6 h-6 transition-all duration-300 ${
+                            step.done ? 'text-emerald-300' : 'text-slate-500'
+                          }`}
+                        />
+                        <span
+                          className={`text-xs font-medium transition-all duration-300 ${
+                            step.done ? 'text-emerald-200' : 'text-slate-400'
+                          }`}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Fun Facts */}
+                  <div className="text-center space-y-2 pt-4 border-t border-slate-700/50">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider">Did you know?</p>
+                    <p className="text-sm text-slate-400 italic">
+                      {loadingProgress < 30 && "75% of resumes never reach a human recruiter"}
+                      {loadingProgress >= 30 && loadingProgress < 60 && "ATS systems scan for keywords and formatting"}
+                      {loadingProgress >= 60 && loadingProgress < 90 && "Well-optimized resumes get 2x more interviews"}
+                      {loadingProgress >= 90 && "Your resume is being saved for future reference"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ============ Tabbed Interface for Complete Flow ============ */}
         {!scanResults ? (
           <div className="space-y-6">
@@ -454,9 +799,10 @@ const ATSScanner = () => {
                       accept=".pdf,.doc,.docx,.txt"
                       onChange={handleFileUpload}
                       className="hidden"
+                      disabled={isAnalyzing}
                     />
                   </label>
-                  <p className="text-sm text-slate-400 mt-2">Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)</p>
+                  <p className="text-sm text-slate-400 mt-2">Supported formats: PDF, DOC, DOCX, TXT (Max 50MB)</p>
                 </div>
               </div>
             </div>
@@ -849,6 +1195,27 @@ const ATSScanner = () => {
           </Tabs>
         )}
       </div>
+
+      {/* Add custom CSS for animations */}
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+        
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+      `}</style>
     </DashboardLayout>
   );
 };

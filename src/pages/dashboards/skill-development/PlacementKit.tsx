@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Download, Upload, Bot, Target, Briefcase, Sparkles, Award, TrendingUp, BarChart3, Edit, Code, MessageSquare, Rocket, Eye } from "lucide-react";
+import { FileText, Upload, Bot, Target, Briefcase, Sparkles, Award, Edit, Code, MessageSquare, Rocket, Eye, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -83,8 +83,6 @@ const PlacementKit = () => {
     }
   ];
 
-
-
   return (
     <DashboardLayout
       title="Placement Kit"
@@ -138,14 +136,20 @@ const PlacementKit = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
-                <Button className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 border-0 font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Report
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => navigate('/dashboard/skill-development/available-documents')}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all"
+                >
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Documents
                 </Button>
-                <Button variant="outline" className="border-purple-500/60 text-purple-300 hover:bg-purple-500/30 backdrop-blur-sm transition-all duration-300">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  View Analytics
+                <Button
+                  onClick={() => navigate('/dashboard/skill-development/ats-history')}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  View History
                 </Button>
               </div>
             </div>
@@ -283,8 +287,6 @@ const PlacementKit = () => {
             ))}
           </div>
         </div>
-
-
       </div>
     </DashboardLayout>
   );
