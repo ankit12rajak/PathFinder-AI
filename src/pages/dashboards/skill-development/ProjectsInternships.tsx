@@ -358,11 +358,11 @@ const ProjectsInternships = () => {
   };
 
   const handleApplyNow = (projectId: number) => {
-    navigate(`/dashboards/skill-development/projects-internships/${projectId}`);
+    navigate(`/dashboard/skill-development/projects-internships/${projectId}`);
   };
 
   const handleViewDetails = (projectId: number) => {
-    navigate(`/dashboards/skill-development/projects-internships/${projectId}`);
+    navigate(`/dashboard/skill-development/projects-internships/${projectId}`);
   };
 
   return (

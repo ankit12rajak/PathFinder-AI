@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FileText, Plus, Eye, Settings, Download, Trash2, Copy, Lock, X, Eye as EyeIcon, Loader, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { getTemplate, ResumeData, sampleResumeData } from "@/services/latexTempl
 import { generateResumeHtml } from "@/services/resumeHtmlGenerator";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 interface Resume {
   id: string;
@@ -22,26 +23,16 @@ interface Resume {
   data?: ResumeData;
   latexCode?: string;
   pdfBlob?: Blob;
+  pdf_url?: string;
+  user_id?: string;
+  created_at?: string;
 }
 
 const ResumeBuilder = () => {
   const navigate = useNavigate();
-  const [resumes, setResumes] = useState<Resume[]>([
-    {
-      id: "1",
-      name: "Software Engineer - TCS",
-      template: "Modern",
-      lastModified: "2 hours ago",
-      status: "completed"
-    },
-    {
-      id: "2",
-      name: "Full Stack Developer - Flipkart",
-      template: "Minimalist",
-      lastModified: "1 day ago",
-      status: "draft"
-    }
-  ]);
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoadingResumes, setIsLoadingResumes] = useState(true);
 
   // Editor state
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -52,10 +43,11 @@ const ResumeBuilder = () => {
   const [isCompiling, setIsCompiling] = useState(false);
   const [compilationError, setCompilationError] = useState<string | null>(null);
   const [activeEditorTab, setActiveEditorTab] = useState("form");
+  const [isSaving, setIsSaving] = useState(false);
   const downloadLinkRef = useRef<HTMLAnchorElement>(null);
 
   // Initialize compiler on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const initCompiler = async () => {
       try {
         await initializeLatexCompiler();
@@ -67,20 +59,120 @@ const ResumeBuilder = () => {
     initCompiler();
   }, []);
 
+  // Get user and load resumes on mount
+  useEffect(() => {
+    const getUserAndLoadResumes = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserId(user.id);
+          await loadUserResumes(user.id);
+        } else {
+          toast.error("Please log in to access your resumes");
+          setIsLoadingResumes(false);
+        }
+      } catch (error) {
+        console.error("Error getting user:", error);
+        toast.error("Failed to load user data");
+        setIsLoadingResumes(false);
+      }
+    };
+
+    getUserAndLoadResumes();
+  }, []);
+
+  // Load user's resumes from Supabase
+  const loadUserResumes = async (uid: string) => {
+    setIsLoadingResumes(true);
+    try {
+      const { data, error } = await supabase
+        .from('resumes')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        // Transform database records to Resume interface
+        const loadedResumes: Resume[] = data.map(record => ({
+          id: record.id,
+          name: record.name,
+          template: record.template,
+          lastModified: getTimeAgo(record.updated_at || record.created_at),
+          status: record.status as "draft" | "completed",
+          data: record.resume_data as ResumeData,
+          pdf_url: record.pdf_url,
+          user_id: record.user_id,
+          created_at: record.created_at
+        }));
+
+        setResumes(loadedResumes);
+        console.log(`✅ Loaded ${loadedResumes.length} resumes`);
+      }
+    } catch (error: any) {
+      console.error('Error loading resumes:', error);
+      toast.error("Failed to load your resumes. Please try again.");
+    } finally {
+      setIsLoadingResumes(false);
+    }
+  };
+
+  // Helper function to calculate time ago
+  const getTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMins = Math.floor(diffInMs / 60000);
+    const diffInHours = Math.floor(diffInMs / 3600000);
+    const diffInDays = Math.floor(diffInMs / 86400000);
+
+    if (diffInMins < 1) return "just now";
+    if (diffInMins < 60) return `${diffInMins} minute${diffInMins !== 1 ? 's' : ''} ago`;
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
+
   // ==================== HANDLERS ====================
 
-  const handleOpenEditor = (templateId: string) => {
+  const handleOpenEditor = (templateId: string, resume?: Resume) => {
     setEditorTemplate(templateId);
-    setResumeData(sampleResumeData);
-    setPdfBlob(null);
+    
+    if (resume && resume.data) {
+      // Editing existing resume
+      setEditingResume(resume);
+      setResumeData(resume.data);
+      // If PDF exists, fetch it
+      if (resume.pdf_url) {
+        fetchPdfFromUrl(resume.pdf_url);
+      }
+    } else {
+      // Creating new resume
+      setEditingResume(null);
+      setResumeData(sampleResumeData);
+      setPdfBlob(null);
+    }
+    
     setCompilationError(null);
     setActiveEditorTab("form");
     setIsEditorOpen(true);
   };
 
+  const fetchPdfFromUrl = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      setPdfBlob(blob);
+    } catch (error) {
+      console.error("Error fetching PDF:", error);
+    }
+  };
+
   const handleCloseEditor = () => {
     setIsEditorOpen(false);
     setPdfBlob(null);
+    setEditingResume(null);
   };
 
   const handleResumeDataChange = (newData: ResumeData) => {
@@ -92,11 +184,9 @@ const ResumeBuilder = () => {
     setCompilationError(null);
 
     try {
-      // Generate HTML directly from resume data
       const htmlContent = generateResumeHtml(resumeData, editorTemplate);
       console.log("Generated HTML content length:", htmlContent.length);
       
-      // Convert HTML to PDF
       const pdf = await compileLatexToPdf(htmlContent);
       setPdfBlob(pdf);
       setActiveEditorTab("preview");
@@ -127,41 +217,173 @@ const ResumeBuilder = () => {
     }
   };
 
-  const handleSaveResume = () => {
+  const handleSaveResume = async () => {
     if (!pdfBlob) {
       toast.error("Please compile your resume first");
       return;
     }
 
-    const newResume: Resume = {
-      id: Date.now().toString(),
-      name: resumeData.fullName || "Untitled Resume",
-      template: editorTemplate.charAt(0).toUpperCase() + editorTemplate.slice(1),
-      lastModified: "just now",
-      status: "completed",
-      data: resumeData,
-      pdfBlob: pdfBlob,
-    };
+    if (!userId) {
+      toast.error("You must be logged in to save resumes");
+      return;
+    }
 
-    setResumes([newResume, ...resumes]);
-    handleCloseEditor();
-    toast.success("Resume saved successfully!");
+    setIsSaving(true);
+
+    try {
+      // 1. Upload PDF to Supabase Storage
+      const fileName = `${userId}/${Date.now()}_${resumeData.fullName?.replace(/\s+/g, '_') || 'resume'}.pdf`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(fileName, pdfBlob, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get public URL for the uploaded PDF
+      const { data: urlData } = supabase.storage
+        .from('resumes')
+        .getPublicUrl(fileName);
+
+      const pdfUrl = urlData.publicUrl;
+
+      // 3. Save resume metadata to database
+      const resumeRecord = {
+        user_id: userId,
+        name: resumeData.fullName || "Untitled Resume",
+        template: editorTemplate.charAt(0).toUpperCase() + editorTemplate.slice(1),
+        status: "completed" as const,
+        resume_data: resumeData,
+        pdf_url: pdfUrl,
+        pdf_path: fileName,
+        updated_at: new Date().toISOString()
+      };
+
+      let savedResume;
+
+      if (editingResume) {
+        // Update existing resume
+        const { data, error } = await supabase
+          .from('resumes')
+          .update(resumeRecord)
+          .eq('id', editingResume.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        savedResume = data;
+        toast.success("Resume updated successfully!");
+      } else {
+        // Insert new resume
+        const { data, error } = await supabase
+          .from('resumes')
+          .insert([resumeRecord])
+          .select()
+          .single();
+
+        if (error) throw error;
+        savedResume = data;
+        toast.success("Resume saved successfully!");
+      }
+
+      // 4. Reload resumes from database
+      if (userId) {
+        await loadUserResumes(userId);
+      }
+
+      // 5. Close editor
+      handleCloseEditor();
+
+    } catch (error: any) {
+      console.error('Error saving resume:', error);
+      toast.error(`Failed to save resume: ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteResume = (id: string) => {
-    setResumes(resumes.filter((r) => r.id !== id));
-    toast.success("Resume deleted");
+  const handleDeleteResume = async (id: string) => {
+    if (!userId) {
+      toast.error("You must be logged in to delete resumes");
+      return;
+    }
+
+    try {
+      // Find the resume to get the PDF path
+      const resume = resumes.find(r => r.id === id);
+      
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('resumes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (dbError) throw dbError;
+
+      // Delete PDF from storage (if exists)
+      if (resume?.pdf_url) {
+        const fileName = resume.pdf_url.split('/resumes/')[1];
+        if (fileName) {
+          await supabase.storage
+            .from('resumes')
+            .remove([fileName]);
+        }
+      }
+
+      // Update local state
+      setResumes(resumes.filter(r => r.id !== id));
+      toast.success("Resume deleted successfully!");
+
+    } catch (error: any) {
+      console.error('Error deleting resume:', error);
+      toast.error(`Failed to delete resume: ${error.message}`);
+    }
   };
 
-  const handleDuplicateResume = (resume: Resume) => {
-    const newResume: Resume = {
-      ...resume,
-      id: Date.now().toString(),
-      name: `${resume.name} (Copy)`,
-      lastModified: "just now",
-    };
-    setResumes([newResume, ...resumes]);
-    toast.success("Resume duplicated");
+  const handleDuplicateResume = async (resume: Resume) => {
+    if (!userId) {
+      toast.error("You must be logged in to duplicate resumes");
+      return;
+    }
+
+    try {
+      // Create a copy of the resume data
+      const duplicateRecord = {
+        user_id: userId,
+        name: `${resume.name} (Copy)`,
+        template: resume.template,
+        status: "draft" as const,
+        resume_data: resume.data,
+        pdf_url: null, // Don't copy the PDF URL
+        pdf_path: null
+      };
+
+      const { data, error } = await supabase
+        .from('resumes')
+        .insert([duplicateRecord])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Reload resumes
+      if (userId) {
+        await loadUserResumes(userId);
+      }
+
+      toast.success("Resume duplicated successfully!");
+
+    } catch (error: any) {
+      console.error('Error duplicating resume:', error);
+      toast.error(`Failed to duplicate resume: ${error.message}`);
+    }
+  };
+
+  const handleEditResume = (resume: Resume) => {
+    handleOpenEditor(resume.template.toLowerCase(), resume);
   };
 
   // Template list - ATS-friendly templates
@@ -235,7 +457,10 @@ const ResumeBuilder = () => {
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-emerald-200 to-teal-100 bg-clip-text text-transparent">
                       Resume Editor
                     </h1>
-                    <p className="text-sm text-emerald-300">{editorTemplate.charAt(0).toUpperCase() + editorTemplate.slice(1)} Template</p>
+                    <p className="text-sm text-emerald-300">
+                      {editorTemplate.charAt(0).toUpperCase() + editorTemplate.slice(1)} Template
+                      {editingResume && <span className="ml-2 text-slate-400">(Editing: {editingResume.name})</span>}
+                    </p>
                   </div>
                 </div>
 
@@ -335,10 +560,20 @@ const ResumeBuilder = () => {
                   </Button>
                   <Button
                     onClick={handleSaveResume}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 font-semibold h-12"
+                    disabled={isSaving}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 font-semibold h-12 disabled:opacity-50"
                   >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Save Resume
+                    {isSaving ? (
+                      <>
+                        <Loader className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-4 h-4 mr-2" />
+                        {editingResume ? "Update Resume" : "Save Resume"}
+                      </>
+                    )}
                   </Button>
                 </div>
               )}
@@ -360,13 +595,14 @@ const ResumeBuilder = () => {
       <div className="p-6 space-y-8 bg-slate-950">
          {/* Back to Placement Kit Button */}
         <Button
-          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
+          onClick={() => navigate('/dashboards/placement-kit')}
           variant="outline"
           className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Placement Kit
         </Button>
+        
         {/* ============ Header Section ============ */}
         <div className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl border border-transparent">
           {/* Premium Gradient Background */}
@@ -400,11 +636,11 @@ const ResumeBuilder = () => {
                 <div className="flex flex-wrap items-center gap-3 mt-4">
                   <Badge className="bg-gradient-to-r from-emerald-500/40 to-emerald-600/30 border-emerald-400/60 text-emerald-100 backdrop-blur-sm shadow-md">
                     <FileText className="w-3 h-3 mr-2" />
-                    6 Professional Templates
+                    {resumes.length} Resume{resumes.length !== 1 ? 's' : ''}
                   </Badge>
                   <Badge className="bg-gradient-to-r from-teal-500/40 to-teal-600/30 border-teal-400/60 text-teal-100 backdrop-blur-sm shadow-md">
                     <Settings className="w-3 h-3 mr-2" />
-                    LaTeX Powered
+                    6 Professional Templates
                   </Badge>
                 </div>
               </div>
@@ -413,10 +649,15 @@ const ResumeBuilder = () => {
         </div>
 
         {/* ============ Your Resumes Section ============ */}
-        {resumes.length > 0 && (
+        {isLoadingResumes ? (
+          <div className="text-center py-12">
+            <Loader className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+            <p className="text-slate-400">Loading your resumes...</p>
+          </div>
+        ) : resumes.length > 0 ? (
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-white">Your Resumes</h2>
+              <h2 className="text-2xl font-bold text-white">Your Resumes ({resumes.length})</h2>
               <p className="text-slate-400 mt-1">Manage and edit your saved resumes</p>
             </div>
 
@@ -450,7 +691,7 @@ const ResumeBuilder = () => {
 
                     <div className="flex gap-2 pt-2">
                       <Button
-                        onClick={() => handleOpenEditor(resume.template.toLowerCase())}
+                        onClick={() => handleEditResume(resume)}
                         size="sm"
                         variant="outline"
                         className="flex-1 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20 text-xs"
@@ -481,6 +722,12 @@ const ResumeBuilder = () => {
                 </div>
               ))}
             </div>
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-slate-900/50 rounded-2xl border border-slate-700/50">
+            <FileText className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">No Resumes Yet</h3>
+            <p className="text-slate-400 mb-6">Create your first professional resume using our templates</p>
           </div>
         )}
 
@@ -534,11 +781,11 @@ const ResumeBuilder = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { title: "6 ATS-Optimized Templates", description: "Professional templates designed to pass applicant tracking systems", icon: "✨" },
-              { title: "ATS Optimized", description: "Compatible with all modern applicant tracking systems", icon: "🎯" },
+              { title: "Cloud Storage", description: "Your resumes are safely stored and accessible anywhere", icon: "☁️" },
               { title: "Live PDF Preview", description: "See your resume instantly in PDF format", icon: "👁️" },
               { title: "Format Flexibility", description: "Switch between formats instantly without losing data", icon: "🔄" },
               { title: "Professional Designs", description: "From minimalist to creative - choose your style", icon: "🎨" },
-              { title: "Cloud Compatible", description: "Download in PDF or use directly for online applications", icon: "☁️" }
+              { title: "Easy Editing", description: "Update and modify your resumes anytime", icon: "✏️" }
             ].map((feature, index) => (
               <div
                 key={index}
@@ -570,7 +817,7 @@ const ResumeBuilder = () => {
                 "AI-powered content suggestions",
                 "Cover letter generator",
                 "Multi-language support",
-                "Cloud storage & sync",
+                "Version history tracking",
                 "Portfolio integration",
                 "Interview prep insights"
               ].map((feature, index) => (
