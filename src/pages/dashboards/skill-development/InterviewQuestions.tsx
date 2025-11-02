@@ -16,6 +16,7 @@ import {
   Play,
   X,
   ChevronDown,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,8 +28,10 @@ import geminiInterviewService, {
 } from "@/services/geminiInterviewService";
 import interviewPdfService from "@/services/interviewPdfService";
 import textToSpeechService from "@/services/textToSpeechService";
+import { useNavigate } from "react-router-dom";
 
 const InterviewQuestions = () => {
+  const navigate = useNavigate();
   // State for form
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [jobDescription, setJobDescription] = useState<string>("");
@@ -228,6 +231,15 @@ const InterviewQuestions = () => {
       description="Prepare for interviews with AI-powered role-specific questions"
     >
       <div className="p-6 space-y-8 bg-slate-950">
+        {/* Back to Placement Kit Button */}
+        <Button
+          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
+          variant="outline"
+          className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Placement Kit
+        </Button>
         {/* ============ Header Section ============ */}
         <div className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl border border-transparent">
           {/* Premium Gradient Background */}

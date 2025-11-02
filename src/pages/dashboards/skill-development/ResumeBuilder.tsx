@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useRef } from "react";
-import { FileText, Plus, Eye, Settings, Download, Trash2, Copy, Lock, X, Eye as EyeIcon, Loader } from "lucide-react";
+import { FileText, Plus, Eye, Settings, Download, Trash2, Copy, Lock, X, Eye as EyeIcon, Loader, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import { compileLatexToPdf, initializeLatexCompiler } from "@/services/latexComp
 import { getTemplate, ResumeData, sampleResumeData } from "@/services/latexTemplates";
 import { generateResumeHtml } from "@/services/resumeHtmlGenerator";
 import { toast } from "@/components/ui/sonner";
+import { useNavigate } from "react-router-dom";
 
 interface Resume {
   id: string;
@@ -24,6 +25,7 @@ interface Resume {
 }
 
 const ResumeBuilder = () => {
+  const navigate = useNavigate();
   const [resumes, setResumes] = useState<Resume[]>([
     {
       id: "1",
@@ -217,6 +219,7 @@ const ResumeBuilder = () => {
         description="Edit your resume with LaTeX templates"
       >
         <div className="p-6 space-y-6 bg-slate-950 min-h-screen">
+         
           {/* Header */}
           <div className="relative overflow-hidden rounded-2xl p-6 text-white border border-slate-700/50">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/5 via-teal-600/5 to-blue-600/5 rounded-2xl"></div>
@@ -355,6 +358,15 @@ const ResumeBuilder = () => {
       description="Create professional resumes with AI assistance"
     >
       <div className="p-6 space-y-8 bg-slate-950">
+         {/* Back to Placement Kit Button */}
+        <Button
+          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
+          variant="outline"
+          className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Placement Kit
+        </Button>
         {/* ============ Header Section ============ */}
         <div className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl border border-transparent">
           {/* Premium Gradient Background */}

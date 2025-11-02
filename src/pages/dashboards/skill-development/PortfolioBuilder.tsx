@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Eye, Plus, Download, Trash2, Code, Share2, ArrowRight, Zap } from "lucide-react";
+import { Eye, Plus, Download, Trash2, Code, Share2, ArrowRight, Zap, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -7,6 +7,7 @@ import { PortfolioForm } from "@/components/PortfolioForm";
 import { PortfolioPreview } from "@/components/PortfolioPreview";
 import { PortfolioHTMLGenerator } from "@/services/portfolioService";
 import { PortfolioData } from "@/types/portfolio";
+import { useNavigate } from "react-router-dom";
 
 interface SavedPortfolio {
   id: string;
@@ -93,6 +94,7 @@ const DEFAULT_PORTFOLIO_DATA: PortfolioData = {
 };
 
 const PortfolioBuilder = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "editor">("grid");
   const [portfolios, setPortfolios] = useState<SavedPortfolio[]>([
     {
@@ -199,6 +201,15 @@ const PortfolioBuilder = () => {
         description="Create and showcase your professional portfolio"
       >
         <div className="p-6 space-y-8 bg-slate-950">
+           {/* Back to Placement Kit Button */}
+        <Button
+          onClick={() => navigate('/dashboard/skill-development/placement-kit')}
+          variant="outline"
+          className="border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-orange-500/40 transition-all"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Placement Kit
+        </Button>
           {/* Header Section */}
           <div className="relative overflow-hidden rounded-3xl p-8 text-white shadow-2xl border border-transparent">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-purple-600/5 rounded-3xl"></div>

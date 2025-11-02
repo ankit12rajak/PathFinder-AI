@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Code, Search, Filter, Download, ExternalLink, CheckCircle2, ArrowRight, Rocket, Star, Clock, Users, Building, Sparkles, Brain, Target, Award, FileText, BookOpen, Layers, Activity, Calendar, MapPin, DollarSign, X, Eye, Briefcase } from "lucide-react";
+import { Code, Search, Filter, Download, ExternalLink, CheckCircle2, ArrowRight, Rocket, Star, Clock, Users, Building, Sparkles, Brain, Target, Award, FileText, BookOpen, Layers, Activity, Calendar, MapPin, DollarSign, X, Eye, Briefcase, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,10 @@ const ProjectsInternships = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoadingApplied, setIsLoadingApplied] = useState(true);
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+  
+  // ✅ New state for target roles from learning_paths
+  const [targetRoles, setTargetRoles] = useState<string[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
 
   // Get user ID on mount
   useEffect(() => {
@@ -49,12 +53,47 @@ const ProjectsInternships = () => {
       if (user) {
         setUserId(user.id);
         loadAppliedProjects(user.id);
+        loadTargetRoles(user.id);
       } else {
         setIsLoadingApplied(false);
+        setIsLoadingRoles(false);
       }
     };
     getUserId();
   }, []);
+
+  // ✅ Load target roles from learning_paths table
+  const loadTargetRoles = async (uid: string) => {
+    setIsLoadingRoles(true);
+    try {
+      const { data, error } = await supabase
+        .from('learning_paths')
+        .select('target_role')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading target roles:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load your career goals. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data) {
+        // Extract unique target roles
+        const uniqueRoles = [...new Set(data.map(item => item.target_role).filter(Boolean))];
+        setTargetRoles(uniqueRoles);
+        console.log('✅ Loaded target roles:', uniqueRoles);
+      }
+    } catch (error) {
+      console.error('Error loading target roles:', error);
+    } finally {
+      setIsLoadingRoles(false);
+    }
+  };
 
   // Load applied projects from Supabase
   const loadAppliedProjects = async (uid: string) => {
@@ -97,7 +136,6 @@ const ProjectsInternships = () => {
     setDownloadingIds(prev => new Set(prev).add(application.id));
 
     try {
-      // Option 1: Direct download from public URL
       const link = document.createElement('a');
       link.href = application.offer_letter_url;
       link.download = `Offer_Letter_${application.full_name.replace(/\s+/g, '_')}_${application.project_title.substring(0, 30).replace(/\s+/g, '_')}.pdf`;
@@ -125,6 +163,10 @@ const ProjectsInternships = () => {
         return newSet;
       });
     }
+  };
+
+  const handleBackToPlacementKit = () => {
+    navigate('/dashboards/placement-kit');
   };
 
   const projects = [
@@ -316,16 +358,18 @@ const ProjectsInternships = () => {
   };
 
   const handleApplyNow = (projectId: number) => {
-    navigate(`/dashboard/skill-development/projects-internships/${projectId}`);
+    navigate(`/dashboards/skill-development/projects-internships/${projectId}`);
   };
 
   const handleViewDetails = (projectId: number) => {
-    navigate(`/dashboard/skill-development/projects-internships/${projectId}`);
+    navigate(`/dashboards/skill-development/projects-internships/${projectId}`);
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        
+
         {/* Premium Dark Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 p-8 shadow-2xl border border-purple-500/20">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent"></div>
@@ -498,63 +542,74 @@ const ProjectsInternships = () => {
                 </CardContent>
               </Card>
 
-              {/* Right Side - Active Filters Display */}
+              {/* ✅ Right Side - Active Filters with Target Roles */}
               <Card className="border border-slate-700/50 shadow-xl bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-sm border-purple-500/30">
                 <CardHeader className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-b border-purple-500/30">
-                  <CardTitle className="text-slate-100">Active Filters</CardTitle>
+                  <CardTitle className="text-slate-100 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-purple-400" />
+                    Your Career Goals
+                  </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all"
-                      ? "No filters applied"
-                      : "Currently filtering by:"}
+                    {isLoadingRoles 
+                      ? "Loading your career goals..." 
+                      : targetRoles.length === 0 
+                        ? "No career goals set yet" 
+                        : `${targetRoles.length} career goal${targetRoles.length !== 1 ? 's' : ''} from your learning paths`}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  {selectedDifficulty === "all" && selectedTheme === "all" && selectedDomain === "all" ? (
+                  {isLoadingRoles ? (
                     <div className="text-center py-8">
-                      <Filter className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <p className="text-slate-400">Select filters to narrow down your search</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto mb-3"></div>
+                      <p className="text-slate-400 text-sm">Loading...</p>
+                    </div>
+                  ) : targetRoles.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Target className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                      <p className="text-slate-400 text-sm mb-4">Create a learning path in Career Advisor to see your goals here</p>
+                      <Button
+                        onClick={() => navigate('/dashboards/skill-development/career-advisor')}
+                        size="sm"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      >
+                        <Brain className="w-4 h-4 mr-2" />
+                        Go to Career Advisor
+                      </Button>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {selectedDifficulty !== "all" && (
-                        <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                          <span className="text-sm text-slate-300">Difficulty: <span className="font-semibold text-white capitalize">{selectedDifficulty}</span></span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedDifficulty("all")}
-                            className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
+                      {targetRoles.map((role, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 p-4 bg-slate-800/50 rounded-lg border border-purple-500/30 hover:border-purple-500/50 transition-all group"
+                        >
+                          <div className="p-2 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg group-hover:from-purple-500/40 group-hover:to-pink-500/40 transition-all">
+                            <Rocket className="w-5 h-5 text-purple-300" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-white group-hover:text-purple-300 transition-colors">
+                              {role}
+                            </p>
+                            <p className="text-xs text-slate-400">Target Career Role</p>
+                          </div>
+                          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Active
+                          </Badge>
                         </div>
-                      )}
-                      {selectedTheme !== "all" && (
-                        <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                          <span className="text-sm text-slate-300">Theme: <span className="font-semibold text-white capitalize">{selectedTheme}</span></span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedTheme("all")}
-                            className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
-                      {selectedDomain !== "all" && (
-                        <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                          <span className="text-sm text-slate-300">Domain: <span className="font-semibold text-white capitalize">{selectedDomain}</span></span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedDomain("all")}
-                            className="h-6 w-6 p-0 text-slate-400 hover:text-white"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
+                      ))}
+                      
+                      <div className="mt-4 pt-4 border-t border-slate-700/50">
+                        <Button
+                          onClick={() => navigate('/dashboards/skill-development/career-advisor')}
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                        >
+                          <Brain className="w-4 h-4 mr-2" />
+                          Add More Career Goals
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -638,7 +693,7 @@ const ProjectsInternships = () => {
             )}
           </TabsContent>
 
-          {/* Applied Projects Tab */}
+          {/* Applied Projects Tab - Keep existing code */}
           <TabsContent value="applied" className="space-y-6 mt-6">
             {isLoadingApplied ? (
               <Card className="border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
@@ -732,9 +787,8 @@ const ProjectsInternships = () => {
                         </div>
                       </div>
 
-                      {/* Action Buttons - Grid Layout */}
+                      {/* Action Buttons */}
                       <div className="grid grid-cols-2 gap-2">
-                        {/* View Details Button */}
                         <Button
                           onClick={() => handleViewDetails(application.project_id)}
                           variant="outline"
@@ -744,7 +798,6 @@ const ProjectsInternships = () => {
                           View Details
                         </Button>
 
-                        {/* Download Offer Letter Button */}
                         <Button
                           onClick={() => handleDownloadOfferLetter(application)}
                           disabled={downloadingIds.has(application.id) || !application.offer_letter_url}
