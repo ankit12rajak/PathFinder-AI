@@ -980,8 +980,8 @@ const CareerAdvisor = () => {
                       </div>
 
                       <p className="text-xs text-slate-500 mt-2">
-                        Press <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-400">Enter</kbd> to send, 
-                        <kbd className="ml-1 px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-400">Shift + Enter</kbd> for new line
+                        Type or Speak <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-400">Thank you</kbd> to end conversation and generate your learning path.
+                        
                       </p>
                     </div>
                   )}
